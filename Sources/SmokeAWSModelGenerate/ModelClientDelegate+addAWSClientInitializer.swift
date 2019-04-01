@@ -123,7 +123,8 @@ extension ModelClientDelegate {
                                          endpointPort: endpointPort,
                                          contentType: contentType,
                                          clientDelegate: clientDelegate,
-                                         connectionTimeoutSeconds: connectionTimeoutSeconds)
+                                         connectionTimeoutSeconds: connectionTimeoutSeconds,
+                                         eventLoopProvider: eventLoopProvider)
             """)
         
         addAdditionalHttpClients(
@@ -167,7 +168,8 @@ extension ModelClientDelegate {
                                                   endpointPort: endpointPort,
                                                   contentType: contentType,
                                                   clientDelegate: clientDelegateFor\(postfix),
-                                                  connectionTimeoutSeconds: connectionTimeoutSeconds)
+                                                  connectionTimeoutSeconds: connectionTimeoutSeconds,
+                                                  eventLoopProvider: eventLoopProvider)
                 """)
         }
     }
@@ -321,7 +323,8 @@ extension ModelClientDelegate {
                         \(contentTypeAssignment),
                         \(targetOrVersionParameter),
                         connectionTimeoutSeconds: Int = 10,
-                        retryConfiguration: HTTPClientRetryConfiguration = .default) {
+                        retryConfiguration: HTTPClientRetryConfiguration = .default,
+                        eventLoopProvider: HTTPClient.EventLoopProvider = .spawnNewThreads) {
             """)
     }
 }

@@ -29,6 +29,7 @@ public struct CoralToJSONServiceModel: Decodable {
     public let structureDescriptions: [String: StructureDescription]
     public let errorTypes: Set<String>
     public var typeMappings: [String: String]
+    public var errorCodeMappings: [String: String]
     
     enum CodingKeys: String, CodingKey {
         case metadata
@@ -180,6 +181,19 @@ public struct CoralToJSONServiceModel: Decodable {
         return errorTypes
     }
     
+    private static func getErrorCodeMappings(_ errorTypes: Set<String>, shapes: [String: ShapeAttributes]) -> [String: String] {
+        var errorCodeMapping: [String: String] = [:]
+        
+        errorTypes.forEach { errorType in
+            if let shape = shapes[errorType],
+                case let .structure(attributes) = shape, let errorAttributes = attributes.errorAttributes {
+                errorCodeMapping[errorType] = errorAttributes.code
+            }
+        }
+        
+        return errorCodeMapping
+    }
+    
     private static func getFieldsFromShapes(_ shapes: [String: ShapeAttributes]) -> [String: Fields] {
         
         let fields: [String: Fields?] = shapes.mapValues { shape in
@@ -259,6 +273,8 @@ public struct CoralToJSONServiceModel: Decodable {
         operationDescriptions = newOperationDescriptions
         fieldDescriptions = CoralToJSONServiceModel.getFieldsFromShapes(shapeAttributes)
         errorTypes = CoralToJSONServiceModel.getErrorTypesFromOperations(operations)
+        
+        errorCodeMappings = CoralToJSONServiceModel.getErrorCodeMappings(errorTypes, shapes: shapeAttributes)
         
         var modelStructureDescriptions = CoralToJSONServiceModel.getStructuresFromShapes(shapeAttributes)
         
