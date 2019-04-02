@@ -103,8 +103,15 @@ internal struct Operation: Codable {
     let documentation: String?
 }
 
+internal struct StructureErrorAttributes: Codable {
+    let code: String
+    let httpStatusCode: Int
+    let senderFault: Bool?
+}
+
 internal struct StructureStructureAttributes {
     let structureDescription: StructureDescription
     let memberLocations: [String: MemberLocation]
     let payloadAsMember: String?
+    let errorAttributes: StructureErrorAttributes?
 }

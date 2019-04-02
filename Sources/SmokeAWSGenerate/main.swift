@@ -33,7 +33,7 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.16.32"
+let goRepositoryTag = "v1.17.6"
 
 let fileHeader = """
     // Copyright 2018-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -160,7 +160,7 @@ func generatePackageFile(baseNames: [String]) -> String {
                 .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "1.0.0"),
                 .package(url: "https://github.com/IBM-Swift/LoggerAPI.git", .upToNextMajor(from: "1.0.0")),
                 .package(url: "https://github.com/LiveUI/XMLCoding.git", .upToNextMajor(from: "0.4.0")),
-                .package(url: "https://github.com/amzn/smoke-http.git", .upToNextMajor(from: "0.7.0")),
+                .package(url: "https://github.com/amzn/smoke-http.git", .upToNextMajor(from: "0.8.0")),
             ],
             targets: [\n
         """
@@ -181,6 +181,18 @@ func generatePackageFile(baseNames: [String]) -> String {
                 .testTarget(
                     name: "S3ClientTests",
                     dependencies: ["S3Client"]),
+                .testTarget(
+                    name: "SimpleQueueClientTests",
+                    dependencies: ["SimpleQueueClient"]),
+                .testTarget(
+                    name: "SecurityTokenClientTests",
+                    dependencies: ["SecurityTokenClient"]),
+                .testTarget(
+                    name: "SimpleNotificationClientTests",
+                    dependencies: ["SimpleNotificationClient"]),
+                .testTarget(
+                    name: "ElasticComputeCloudClientTests",
+                    dependencies: ["ElasticComputeCloudClient"]),
             ]
         )
         """

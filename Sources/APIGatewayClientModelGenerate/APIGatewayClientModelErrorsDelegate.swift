@@ -25,26 +25,50 @@ struct APIGatewayClientModelErrorsDelegate: ModelErrorsDelegate {
     let generateCustomStringConvertibleConformance: Bool = false
     let canExpectValidationError: Bool = false
     
-    func errorTypeInitializerGenerator(fileBuilder: FileBuilder,
-                                       errorTypes: [String],
-                                       codingErrorUnknownError: String) {
+    func errorTypeAdditionalImportsGenerator(fileBuilder: FileBuilder,
+                                             errorTypes: [String]) {
+        // nothing to do
+    }
+    
+    func errorTypeAdditionalErrorIdentitiesGenerator(fileBuilder: FileBuilder, errorTypes: [String]) {
+        // nothing to do
+    }
+    
+    func errorTypeWillAddAdditionalCases(fileBuilder: FileBuilder, errorTypes: [String]) -> Int {
+        return 0
+    }
+    
+    func errorTypeAdditionalErrorCasesGenerator(fileBuilder: FileBuilder,
+                                                errorTypes: [String]) {
+        // nothing to do
+    }
+    
+    func errorTypeCodingKeysGenerator(fileBuilder: FileBuilder,
+                                       errorTypes: [String]) {
         fileBuilder.appendLine("""
+        enum CodingKeys: String, CodingKey {
+            case type = "__type"
+            case message = "message"
+        }
+        """)
+    }
+    
+    func errorTypeIdentityGenerator(fileBuilder: FileBuilder) -> String {
+        fileBuilder.appendLine("""
+            let values = try decoder.container(keyedBy: CodingKeys.self)
+            var errorReason = try values.decode(String.self, forKey: .type)
+            let errorMessage = try values.decodeIfPresent(String.self, forKey: .message)
 
-            enum CodingKeys: String, CodingKey {
-                case type = "__type"
-                case message = "message"
+            if let index = errorReason.index(of: "#") {
+                errorReason = String(errorReason[errorReason.index(index, offsetBy: 1)...])
             }
-
-            public init(from decoder: Decoder) throws {
-                let values = try decoder.container(keyedBy: CodingKeys.self)
-                var errorReason = try values.decode(String.self, forKey: .type)
-                let errorMessage = try values.decodeIfPresent(String.self, forKey: .message)
-
-                if let index = errorReason.index(of: "#") {
-                    errorReason = String(errorReason[errorReason.index(index, offsetBy: 1)...])
-                }
-
-                switch errorReason {
             """)
+        
+            return "errorReason"
+    }
+    
+    func errorTypeAdditionalErrorDecodeStatementsGenerator(fileBuilder: FileBuilder,
+                                                           errorTypes: [String]) {
+        // nothing to do
     }
 }

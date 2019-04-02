@@ -38,6 +38,7 @@ internal enum ShapeAttributes: Decodable {
         case value
         case member
         case documentation
+        case error
         case payload
     }
     
@@ -134,6 +135,7 @@ internal enum ShapeAttributes: Decodable {
         let members = try values.decode([String: ShapeReference].self, forKey: .members)
         let required = try values.decodeIfPresent(Set<String>.self, forKey: .required) ?? []
         let documentation = try values.decodeIfPresent(String.self, forKey: .documentation)
+        let errorAttributes = try values.decodeIfPresent(StructureErrorAttributes.self, forKey: .error)
         
         // the map of members is returned without ordering; create a predictable ordering
         let sortedMembers = members.sorted { (left, right) -> Bool in left.key < right.key }
@@ -164,7 +166,8 @@ internal enum ShapeAttributes: Decodable {
         let attributes = StructureStructureAttributes(
             structureDescription: structure,
             memberLocations: memberLocations,
-            payloadAsMember: payloadAsMember)
+            payloadAsMember: payloadAsMember,
+            errorAttributes: errorAttributes)
         return .structure(attributes)
     }
     

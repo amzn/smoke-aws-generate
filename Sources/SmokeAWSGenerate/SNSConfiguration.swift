@@ -19,6 +19,25 @@ import Foundation
 import ServiceModelEntities
 
 internal struct SNSConfiguration {
+    static let modelOverride = ModelOverride(
+        codingKeyOverrides: ["AuthorizationErrorException.message": "Message",
+                             "EndpointDisabledException.message": "Message",
+                             "FilterPolicyLimitExceededException.message": "Message",
+                             "InternalErrorException.message": "Message",
+                             "InvalidParameterException.message": "Message",
+                             "InvalidParameterValueException.message": "Message",
+                             "InvalidSecurityException.message": "Message",
+                             "KMSAccessDeniedException.message": "Message",
+                             "KMSDisabledException.message": "Message",
+                             "KMSInvalidStateException.message": "Message",
+                             "KMSNotFoundException.message": "Message",
+                             "KMSThrottlingException.message": "Message",
+                             "NotFoundException.message": "Message",
+                             "PlatformApplicationDisabledException.message": "Message",
+                             "SubscriptionLimitExceededException.message": "Message",
+                             "ThrottledException.message": "Message",
+                             "TopicLimitExceededException.message": "Message"])
+    
     static let httpClientConfiguration = HttpClientConfiguration(
         retryOnUnknownError: true,
         knownErrorsDefaultRetryBehavior: .fail,
@@ -29,7 +48,7 @@ internal struct SNSConfiguration {
     
     static let serviceModelDetails = ServiceModelDetails(
         serviceName: "sns", serviceVersion: "2010-03-31",
-        baseName: "SimpleNotification", modelOverride: nil,
+        baseName: "SimpleNotification", modelOverride: modelOverride,
         httpClientConfiguration: httpClientConfiguration,
         signAllHeaders: false)
 }
