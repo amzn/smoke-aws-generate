@@ -26,19 +26,22 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
     let canExpectValidationError: Bool = false
     let awsClientAttributes: AWSClientAttributes
     
-    func addAccessDeniedError(errorTypes: [String]) -> Bool {
-        return !(errorTypes.contains("AccessDenied")
-            || errorTypes.contains("AccessDeniedError")
-            || errorTypes.contains("AccessDeniedFault")
-            || errorTypes.contains("AccessDeniedException"))
+    func addAccessDeniedError(errorTypes: [ErrorType]) -> Bool {
+        for error in errorTypes {
+            if error.normalizedName == "accessDenied" {
+                return false
+            }
+        }
+        
+        return true
     }
     
     func errorTypeAdditionalImportsGenerator(fileBuilder: FileBuilder,
-                                             errorTypes: [String]) {
+                                             errorTypes: [ErrorType]) {
         // nothing to do
     }
     
-    func errorTypeAdditionalErrorIdentitiesGenerator(fileBuilder: FileBuilder, errorTypes: [String]) {
+    func errorTypeAdditionalErrorIdentitiesGenerator(fileBuilder: FileBuilder, errorTypes: [ErrorType]) {
         guard addAccessDeniedError(errorTypes: errorTypes) else {
             return
         }
@@ -48,7 +51,8 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
             """)
     }
     
-    func errorTypeWillAddAdditionalCases(fileBuilder: FileBuilder, errorTypes: [String]) -> Int {
+    func errorTypeWillAddAdditionalCases(fileBuilder: FileBuilder,
+                                         errorTypes: [ErrorType]) -> Int {
         guard addAccessDeniedError(errorTypes: errorTypes) else {
             return 0
         }
@@ -57,7 +61,7 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
     }
     
     func errorTypeAdditionalErrorCasesGenerator(fileBuilder: FileBuilder,
-                                                errorTypes: [String]) {
+                                                errorTypes: [ErrorType]) {
         guard addAccessDeniedError(errorTypes: errorTypes) else {
             return
         }
@@ -68,7 +72,7 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
     }
     
     func errorTypeCodingKeysGenerator(fileBuilder: FileBuilder,
-                                       errorTypes: [String]) {
+                                       errorTypes: [ErrorType]) {
         let typeCodingKey: String
         let messageCodingKey: String
         
@@ -89,7 +93,8 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
         """)
     }
     
-    func errorTypeIdentityGenerator(fileBuilder: FileBuilder) -> String {
+    func errorTypeIdentityGenerator(fileBuilder: FileBuilder,
+                                    codingErrorUnknownError: String) -> String {
         fileBuilder.appendLine("""
             let values = try decoder.container(keyedBy: CodingKeys.self)
             var errorReason = try values.decode(String.self, forKey: .type)
@@ -104,7 +109,7 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
     }
     
     func errorTypeAdditionalErrorDecodeStatementsGenerator(fileBuilder: FileBuilder,
-                                                           errorTypes: [String]) {
+                                                           errorTypes: [ErrorType]) {
         guard addAccessDeniedError(errorTypes: errorTypes) else {
             return
         }
