@@ -26,25 +26,27 @@ struct APIGatewayClientModelErrorsDelegate: ModelErrorsDelegate {
     let canExpectValidationError: Bool = false
     
     func errorTypeAdditionalImportsGenerator(fileBuilder: FileBuilder,
-                                             errorTypes: [String]) {
+                                             errorTypes: [ErrorType]) {
         // nothing to do
     }
     
-    func errorTypeAdditionalErrorIdentitiesGenerator(fileBuilder: FileBuilder, errorTypes: [String]) {
+    func errorTypeAdditionalErrorIdentitiesGenerator(fileBuilder: FileBuilder,
+                                                     errorTypes: [ErrorType]) {
         // nothing to do
     }
     
-    func errorTypeWillAddAdditionalCases(fileBuilder: FileBuilder, errorTypes: [String]) -> Int {
+    func errorTypeWillAddAdditionalCases(fileBuilder: FileBuilder,
+                                         errorTypes: [ErrorType]) -> Int {
         return 0
     }
     
     func errorTypeAdditionalErrorCasesGenerator(fileBuilder: FileBuilder,
-                                                errorTypes: [String]) {
+                                                errorTypes: [ErrorType]) {
         // nothing to do
     }
     
     func errorTypeCodingKeysGenerator(fileBuilder: FileBuilder,
-                                       errorTypes: [String]) {
+                                       errorTypes: [ErrorType]) {
         fileBuilder.appendLine("""
         enum CodingKeys: String, CodingKey {
             case type = "__type"
@@ -53,7 +55,8 @@ struct APIGatewayClientModelErrorsDelegate: ModelErrorsDelegate {
         """)
     }
     
-    func errorTypeIdentityGenerator(fileBuilder: FileBuilder) -> String {
+    func errorTypeIdentityGenerator(fileBuilder: FileBuilder,
+                                    codingErrorUnknownError: String) -> String {
         fileBuilder.appendLine("""
             let values = try decoder.container(keyedBy: CodingKeys.self)
             var errorReason = try values.decode(String.self, forKey: .type)
@@ -68,7 +71,7 @@ struct APIGatewayClientModelErrorsDelegate: ModelErrorsDelegate {
     }
     
     func errorTypeAdditionalErrorDecodeStatementsGenerator(fileBuilder: FileBuilder,
-                                                           errorTypes: [String]) {
+                                                           errorTypes: [ErrorType]) {
         // nothing to do
     }
 }
