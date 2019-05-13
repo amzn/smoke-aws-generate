@@ -27,7 +27,7 @@ public struct Metadata: Codable {
     public let globalEndpoint: String?
     public let jsonVersion: String?
     public let protocolName: String
-    public let serviceAbbreviation: String
+    public let serviceAbbreviation: String?
     public let serviceFullName: String
     public let serviceId: String?
     public let signatureVersion: String
