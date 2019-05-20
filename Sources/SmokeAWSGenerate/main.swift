@@ -297,7 +297,8 @@ func handleApplication() throws {
         DynamoDBConfiguration.serviceModelDetails,
         SimpleWorkflowConfiguration.serviceModelDetails,
         CloudwatchConfiguration.serviceModelDetails,
-        RDSConfiguration.serviceModelDetails]
+        RDSConfiguration.serviceModelDetails,
+        RDSDataConfiguration.serviceModelDetails]
     
     var baseFilePath: String?
     var missingOptions: Set<String> = [baseFilePathOption]
