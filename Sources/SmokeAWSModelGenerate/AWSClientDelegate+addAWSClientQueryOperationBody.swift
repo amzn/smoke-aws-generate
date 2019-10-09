@@ -20,7 +20,7 @@ import ServiceModelCodeGeneration
 import ServiceModelEntities
 
 internal extension AWSClientDelegate {
-    internal func addAWSClientQueryOperationBody(
+    func addAWSClientQueryOperationBody(
             name: String,
             fileBuilder: FileBuilder,
             codeGenerator: ServiceModelCodeGenerator,

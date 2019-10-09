@@ -104,7 +104,7 @@ internal struct Operation: Codable {
 }
 
 internal struct StructureErrorAttributes: Codable {
-    let code: String
+    let code: String?
     let httpStatusCode: Int
     let senderFault: Bool?
 }

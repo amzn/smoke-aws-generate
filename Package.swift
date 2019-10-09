@@ -1,4 +1,4 @@
-// swift-tools-version:4.1
+// swift-tools-version:4.2
 //
 // Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 //
@@ -35,7 +35,7 @@ let package = Package(
             targets: ["CoralToJSONServiceModel"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/amzn/service-model-swift-code-generate.git", .upToNextMajor(from: "0.4.0"))
+        .package(url: "https://github.com/amzn/service-model-swift-code-generate.git", .upToNextMajor(from: "0.5.0"))
     ],
     targets: [
         .target(
