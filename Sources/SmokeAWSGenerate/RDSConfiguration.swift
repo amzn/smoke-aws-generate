@@ -33,4 +33,3 @@ internal struct RDSConfiguration {
         httpClientConfiguration: httpClientConfiguration,
         signAllHeaders: false)
 }
-

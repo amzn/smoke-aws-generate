@@ -46,7 +46,7 @@ struct APIGatewayClientModelErrorsDelegate: ModelErrorsDelegate {
     }
     
     func errorTypeCodingKeysGenerator(fileBuilder: FileBuilder,
-                                       errorTypes: [ErrorType]) {
+                                      errorTypes: [ErrorType]) {
         fileBuilder.appendLine("""
         enum CodingKeys: String, CodingKey {
             case type = "__type"

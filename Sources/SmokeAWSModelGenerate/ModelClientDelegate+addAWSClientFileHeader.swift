@@ -93,7 +93,7 @@ extension ModelClientDelegate {
     }
     
     public func addTypedErrorRetriableExtension(codeGenerator: ServiceModelCodeGenerator,
-                                                 fileBuilder: FileBuilder, baseName: String) {
+                                                fileBuilder: FileBuilder, baseName: String) {
         let errorType = "\(baseName)Error"
         let httpClientConfiguration = codeGenerator.customizations.httpClientConfiguration
         
@@ -152,7 +152,7 @@ extension ModelClientDelegate {
     }
     
     public func addErrorRetriableExtension(codeGenerator: ServiceModelCodeGenerator,
-                                            fileBuilder: FileBuilder, baseName: String) {
+                                           fileBuilder: FileBuilder, baseName: String) {
         let errorType = "\(baseName)Error"
         let httpClientConfiguration = codeGenerator.customizations.httpClientConfiguration
         

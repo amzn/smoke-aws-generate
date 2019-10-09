@@ -27,10 +27,8 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
     let awsClientAttributes: AWSClientAttributes
     
     func addAccessDeniedError(errorTypes: [ErrorType]) -> Bool {
-        for error in errorTypes {
-            if error.normalizedName == "accessDenied" {
-                return false
-            }
+        for error in errorTypes where error.normalizedName == "accessDenied" {
+            return false
         }
         
         return true
@@ -72,7 +70,7 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
     }
     
     func errorTypeCodingKeysGenerator(fileBuilder: FileBuilder,
-                                       errorTypes: [ErrorType]) {
+                                      errorTypes: [ErrorType]) {
         let typeCodingKey: String
         let messageCodingKey: String
         
