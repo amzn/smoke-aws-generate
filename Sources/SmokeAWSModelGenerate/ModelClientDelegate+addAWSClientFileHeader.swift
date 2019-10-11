@@ -93,7 +93,7 @@ extension ModelClientDelegate {
     }
     
     public func addTypedErrorRetriableExtension(codeGenerator: ServiceModelCodeGenerator,
-                                                 fileBuilder: FileBuilder, baseName: String) {
+                                                fileBuilder: FileBuilder, baseName: String) {
         let errorType = "\(baseName)Error"
         let httpClientConfiguration = codeGenerator.customizations.httpClientConfiguration
         
@@ -101,13 +101,21 @@ extension ModelClientDelegate {
         var unretriableErrors: [String] = []
         var defaultBehaviorErrorsCount: Int = 0
         
-        codeGenerator.model.errorTypes.forEach { errorIdentity in
+        let sortedErrors = codeGenerator.getSortedErrors(allErrorTypes: codeGenerator.model.errorTypes)
+        
+        sortedErrors.forEach { errorType in
+            let errorIdentity = errorType.identity
+            let enumName = codeGenerator.getNormalizedEnumCaseName(
+                modelTypeName: errorType.normalizedName,
+                inStructure: "\(baseName)Error",
+                usingUpperCamelCase: true)
+            
             if case .fail = httpClientConfiguration.knownErrorsDefaultRetryBehavior,
                 httpClientConfiguration.retriableUnknownErrors.contains(errorIdentity) {
-                retriableErrors.append( ".\(errorIdentity.normalizedErrorName)")
+                retriableErrors.append( ".\(enumName)")
             } else if case .retry = httpClientConfiguration.knownErrorsDefaultRetryBehavior,
                 httpClientConfiguration.unretriableUnknownErrors.contains(errorIdentity) {
-                unretriableErrors.append( ".\(errorIdentity.normalizedErrorName)")
+                unretriableErrors.append( ".\(enumName)")
             } else {
                 defaultBehaviorErrorsCount += 1
             }
@@ -144,7 +152,7 @@ extension ModelClientDelegate {
     }
     
     public func addErrorRetriableExtension(codeGenerator: ServiceModelCodeGenerator,
-                                            fileBuilder: FileBuilder, baseName: String) {
+                                           fileBuilder: FileBuilder, baseName: String) {
         let errorType = "\(baseName)Error"
         let httpClientConfiguration = codeGenerator.customizations.httpClientConfiguration
         

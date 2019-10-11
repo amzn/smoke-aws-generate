@@ -19,12 +19,8 @@ import Foundation
 import ServiceModelCodeGeneration
 import ServiceModelEntities
 
-import Foundation
-import ServiceModelCodeGeneration
-import ServiceModelEntities
-
 internal extension AWSClientDelegate {
-    internal func addAWSClientOperationBody(
+    func addAWSClientOperationBody(
             name: String,
             fileBuilder: FileBuilder,
             codeGenerator: ServiceModelCodeGenerator,
