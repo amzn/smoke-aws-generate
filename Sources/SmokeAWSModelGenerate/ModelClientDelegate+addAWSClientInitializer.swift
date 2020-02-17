@@ -26,7 +26,8 @@ extension ModelClientDelegate {
                                  clientAttributes: AWSClientAttributes,
                                  codeGenerator: ServiceModelCodeGenerator,
                                  targetsAPIGateway: Bool,
-                                 contentType: String) {
+                                 contentType: String,
+                                 sortedOperations: [(String, OperationDescription)]) {
         let targetValue: String
         if let target = clientAttributes.target {
             targetValue = "\"\(target)\""
@@ -82,8 +83,12 @@ extension ModelClientDelegate {
             contentTypeAssignment = "contentType: String = \"\(clientAttributes.contentType)\""
         }
         
+        fileBuilder.appendEmptyLine()
+        addAWSClientOperationMetricsParameters(fileBuilder: fileBuilder, baseName: baseName,
+                                               codeGenerator: codeGenerator, sortedOperations: sortedOperations)
+        
         addAWSClientInitializerSignature(
-            fileBuilder: fileBuilder, regionDefault: regionDefault,
+            fileBuilder: fileBuilder, baseName: baseName, regionDefault: regionDefault,
             endpointDefault: endpointDefault, targetsAPIGateway: targetsAPIGateway,
             clientAttributes: clientAttributes,
             contentTypeAssignment: contentTypeAssignment,
@@ -93,8 +98,36 @@ extension ModelClientDelegate {
             fileBuilder: fileBuilder, contentType: contentType,
             httpClientConfiguration: httpClientConfiguration, baseName: baseName,
             codeGenerator: codeGenerator, regionAssignmentPostfix: regionAssignmentPostfix,
-            targetAssignment: targetAssignment, targetsAPIGateway: targetsAPIGateway)
+            targetAssignment: targetAssignment, targetsAPIGateway: targetsAPIGateway, sortedOperations: sortedOperations)
         fileBuilder.appendLine("}")
+    }
+    
+    private func addAWSClientOperationMetricsParameters(fileBuilder: FileBuilder, baseName: String,
+                                              codeGenerator: ServiceModelCodeGenerator,
+                                              sortedOperations: [(String, OperationDescription)]) {
+        sortedOperations.forEach { (name, operation) in
+            let variableName = codeGenerator.getNormalizedVariableName(modelTypeName: name)
+            
+            fileBuilder.appendLine("""
+                let \(variableName)OperationReporting: StandardSmokeAWSOperationReporting<\(baseName)ModelOperations>
+                """)
+        }
+    }
+    
+    private func addAWSClientOperationMetricsInitializerBody(fileBuilder: FileBuilder,
+                                              codeGenerator: ServiceModelCodeGenerator,
+                                              sortedOperations: [(String, OperationDescription)]) {
+        guard case .struct(let clientName, _) = clientType else {
+            fatalError()
+        }
+        sortedOperations.forEach { (name, operation) in
+            let variableName = codeGenerator.getNormalizedVariableName(modelTypeName: name)
+            
+            fileBuilder.appendLine("""
+                self.\(variableName)OperationReporting = StandardSmokeAWSOperationReporting(
+                    clientName: "\(clientName)", operation: .\(variableName), configuration: reportingConfiguration)
+                """)
+        }
     }
     
     private func addAWSClientInitializerBody(
@@ -105,7 +138,8 @@ extension ModelClientDelegate {
             codeGenerator: ServiceModelCodeGenerator,
             regionAssignmentPostfix: String,
             targetAssignment: String,
-            targetsAPIGateway: Bool) {
+            targetsAPIGateway: Bool,
+            sortedOperations: [(String, OperationDescription)]) {
         fileBuilder.incIndent()
         switch contentType.contentTypePayloadType {
         case .xml:
@@ -153,6 +187,11 @@ extension ModelClientDelegate {
                 self.stage = stage
                 """)
         }
+        
+        fileBuilder.appendEmptyLine()
+        addAWSClientOperationMetricsInitializerBody(fileBuilder: fileBuilder,
+                                                    codeGenerator: codeGenerator, sortedOperations: sortedOperations)
+        
         fileBuilder.decIndent()
     }
     
@@ -298,6 +337,7 @@ extension ModelClientDelegate {
     
     private func addAWSClientInitializerSignature(
             fileBuilder: FileBuilder,
+            baseName: String,
             regionDefault: String,
             endpointDefault: String,
             targetsAPIGateway: Bool,
@@ -322,9 +362,11 @@ extension ModelClientDelegate {
                         service: String = "\(clientAttributes.service)",
                         \(contentTypeAssignment),
                         \(targetOrVersionParameter),
-                        connectionTimeoutSeconds: Int = 10,
+                        connectionTimeoutSeconds: Int64 = 10,
                         retryConfiguration: HTTPClientRetryConfiguration = .default,
-                        eventLoopProvider: HTTPClient.EventLoopProvider = .spawnNewThreads) {
+                        eventLoopProvider: HTTPClient.EventLoopProvider = .spawnNewThreads,
+                        reportingConfiguration: SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>
+                            = SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>() ) {
             """)
     }
 }

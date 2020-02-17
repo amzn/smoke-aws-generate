@@ -51,22 +51,27 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
     
     func errorTypeWillAddAdditionalCases(fileBuilder: FileBuilder,
                                          errorTypes: [ErrorType]) -> Int {
-        guard addAccessDeniedError(errorTypes: errorTypes) else {
-            return 0
+        var additionCount = 2
+        
+        if addAccessDeniedError(errorTypes: errorTypes) {
+            additionCount += 1
         }
         
-        return 1
+        return additionCount
     }
     
     func errorTypeAdditionalErrorCasesGenerator(fileBuilder: FileBuilder,
                                                 errorTypes: [ErrorType]) {
-        guard addAccessDeniedError(errorTypes: errorTypes) else {
-            return
+        if addAccessDeniedError(errorTypes: errorTypes) {
+            fileBuilder.appendLine("""
+                case accessDenied(message: String?)
+                """)
         }
         
         fileBuilder.appendLine("""
-            case accessDenied(message: String?)
-            """)
+        case validationError(reason: String)
+        case unrecognizedError(String, String?)
+        """)
     }
     
     func errorTypeCodingKeysGenerator(fileBuilder: FileBuilder,
@@ -98,7 +103,7 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
             var errorReason = try values.decode(String.self, forKey: .type)
             let errorMessage = try values.decodeIfPresent(String.self, forKey: .message)
 
-            if let index = errorReason.index(of: "#") {
+            if let index = errorReason.firstIndex(of: "#") {
                 errorReason = String(errorReason[errorReason.index(index, offsetBy: 1)...])
             }
             """)

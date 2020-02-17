@@ -33,7 +33,7 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.25.3"
+let goRepositoryTag = "v1.25.35"
 
 let fileHeader = """
     // Copyright 2018-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -125,21 +125,24 @@ func getPackageTargetEntriesPackageFile(name: String) -> String {
                         dependencies: ["\(name)Model", "SmokeAWSHttp"]),
                     .target(
                         name: "\(name)Model",
-                        dependencies: ["LoggerAPI"]),\n
+                        dependencies: ["Logging"]),\n
             """
 }
 
 func generatePackageFile(baseNames: [String]) -> String {
     
     var packageFileContents = """
-        // swift-tools-version:4.1
+        // swift-tools-version:5.0
         //
         \(fileHeader)
-            
+        
         import PackageDescription
 
         let package = Package(
             name: "SmokeAWS",
+            platforms: [
+                .macOS(.v10_12), .iOS(.v10)
+                ],
             products: [\n
         """
     
@@ -156,11 +159,13 @@ func generatePackageFile(baseNames: [String]) -> String {
                     targets: ["SmokeAWSHttp"]),
             ],
             dependencies: [
-                .package(url: "https://github.com/apple/swift-nio.git", from: "1.8.0"),
-                .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "1.0.0"),
-                .package(url: "https://github.com/IBM-Swift/LoggerAPI.git", .upToNextMajor(from: "1.0.0")),
+                .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
+                .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.0.0"),
+                .package(url: "https://github.com/apple/swift-log", .upToNextMajor(from: "1.0.0")),
+                .package(url: "https://github.com/apple/swift-metrics", .upToNextMajor(from: "1.0.0")),
                 .package(url: "https://github.com/LiveUI/XMLCoding.git", .upToNextMajor(from: "0.4.1")),
-                .package(url: "https://github.com/amzn/smoke-http.git", .upToNextMajor(from: "1.0.0")),
+                .package(url: "https://github.com/amzn/smoke-http.git", .branch("2.0.0.alpha.1")),
+                .package(url: "https://github.com/IBM-Swift/BlueCryptor.git", .upToNextMajor(from: "1.0.0")),
             ],
             targets: [\n
         """
@@ -172,12 +177,12 @@ func generatePackageFile(baseNames: [String]) -> String {
     packageFileContents += """
                 .target(
                     name: "SmokeAWSCore",
-                    dependencies: ["LoggerAPI", "XMLCoding"]),
+                    dependencies: ["Logging", "Metrics", "XMLCoding"]),
                 .target(
                     name: "SmokeAWSHttp",
-                    dependencies: ["LoggerAPI", "NIO", "NIOHTTP1", "NIOOpenSSL",
+                    dependencies: ["Logging", "NIO", "NIOHTTP1",
                                    "SmokeAWSCore", "SmokeHTTPClient", "QueryCoding",
-                                   "HTTPPathCoding", "HTTPHeadersCoding"]),
+                                   "HTTPPathCoding", "HTTPHeadersCoding", "Cryptor"]),
                 .testTarget(
                     name: "S3ClientTests",
                     dependencies: ["S3Client"]),
@@ -196,8 +201,10 @@ func generatePackageFile(baseNames: [String]) -> String {
                 .testTarget(
                     name: "RDSClientTests",
                     dependencies: ["RDSClient"]),
-            ]
+            ],
+            swiftLanguageVersions: [.v5]
         )
+        
         """
     
     return packageFileContents

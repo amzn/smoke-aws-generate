@@ -26,7 +26,7 @@ import ServiceModelEntities
 public struct AWSClientDelegate: ModelClientDelegate {
     public let clientType: ClientType
     public let clientAttributes: AWSClientAttributes
-    public let asyncResultType: AsyncResultType
+    public let asyncResultType: AsyncResultType?
     public let baseName: String
     public let typeDescription: String
     public let signAllHeaders: Bool
@@ -46,8 +46,8 @@ public struct AWSClientDelegate: ModelClientDelegate {
      */
     public init(baseName: String,
                 clientAttributes: AWSClientAttributes,
-                asyncResultType: AsyncResultType,
-                signAllHeaders: Bool) {
+                signAllHeaders: Bool,
+                asyncResultType: AsyncResultType? = nil) {
         self.baseName = baseName
         self.clientAttributes = clientAttributes
         self.asyncResultType = asyncResultType
@@ -71,7 +71,8 @@ public struct AWSClientDelegate: ModelClientDelegate {
                                     clientAttributes: clientAttributes,
                                     codeGenerator: codeGenerator,
                                     targetsAPIGateway: false,
-                                    contentType: clientAttributes.contentType)
+                                    contentType: clientAttributes.contentType,
+                                    sortedOperations: sortedOperations)
     }
     
     public func addOperationBody(codeGenerator: ServiceModelCodeGenerator,

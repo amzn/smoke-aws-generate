@@ -25,7 +25,6 @@ extension ModelClientDelegate {
     func addAWSClientFileHeader(codeGenerator: ServiceModelCodeGenerator,
                                 fileBuilder: FileBuilder, baseName: String) {
         fileBuilder.appendLine("""
-            import SmokeAWSCore
             import SmokeAWSHttp
             import NIO
             import NIOHTTP1
