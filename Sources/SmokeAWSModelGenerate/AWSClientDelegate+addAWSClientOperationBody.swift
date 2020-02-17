@@ -52,6 +52,12 @@ internal extension AWSClientDelegate {
         
         fileBuilder.appendEmptyLine()
         
+        fileBuilder.appendLine("""
+            let httpClientInvocationReporting = SmokeAWSHTTPClientInvocationReporting(smokeAWSInvocationReporting: reporting,
+                                                                                      smokeAWSOperationReporting: \(function.name)OperationReporting)
+            let invocationContext = HTTPClientInvocationContext(reporting: httpClientInvocationReporting, handlerDelegate: handlerDelegate)
+            """)
+        
         if function.inputType != nil {
             fileBuilder.appendLine("""
                 let requestInput = \(typeName)OperationHTTPRequestInput(encodable: input)
@@ -88,7 +94,7 @@ internal extension AWSClientDelegate {
                 endpointPath: "\(http.url)",
                 httpMethod: .\(http.verb),
                 input: requestInput,
-                handlerDelegate: handlerDelegate,
+                invocationContext: invocationContext,
                 retryConfiguration: retryConfiguration,
                 retryOnError: retryOnErrorProvider)
             """
@@ -99,7 +105,7 @@ internal extension AWSClientDelegate {
                 httpMethod: .\(http.verb),
                 input: requestInput,
                 completion: completion,
-                handlerDelegate: handlerDelegate,
+                invocationContext: invocationContext,
                 retryConfiguration: retryConfiguration,
                 retryOnError: retryOnErrorProvider)
             """
@@ -117,7 +123,7 @@ internal extension AWSClientDelegate {
                 endpointPath: "\(http.url)",
                 httpMethod: .\(http.verb),
                 input: requestInput,
-                handlerDelegate: handlerDelegate,
+                invocationContext: invocationContext,
                 retryConfiguration: retryConfiguration,
                 retryOnError: retryOnErrorProvider)
             """
@@ -128,7 +134,7 @@ internal extension AWSClientDelegate {
                 httpMethod: .\(http.verb),
                 input: requestInput,
                 completion: completion,
-                handlerDelegate: handlerDelegate,
+                invocationContext: invocationContext,
                 retryConfiguration: retryConfiguration,
                 retryOnError: retryOnErrorProvider)
             """

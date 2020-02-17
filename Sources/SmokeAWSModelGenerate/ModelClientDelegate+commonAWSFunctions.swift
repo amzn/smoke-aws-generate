@@ -26,13 +26,15 @@ extension ModelClientDelegate {
                                      clientAttributes: AWSClientAttributes,
                                      codeGenerator: ServiceModelCodeGenerator,
                                      targetsAPIGateway: Bool,
-                                     contentType: String) {
+                                     contentType: String,
+                                     sortedOperations: [(String, OperationDescription)]) {
         addAWSClientInitializer(fileBuilder: fileBuilder,
                                 baseName: baseName,
                                 clientAttributes: clientAttributes,
                                 codeGenerator: codeGenerator,
                                 targetsAPIGateway: targetsAPIGateway,
-                                contentType: contentType)
+                                contentType: contentType,
+                                sortedOperations: sortedOperations)
         
         addAWSClientDeinitializer(fileBuilder: fileBuilder,
                                   baseName: baseName,

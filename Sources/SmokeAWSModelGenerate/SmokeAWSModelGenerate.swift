@@ -22,8 +22,6 @@ import CoralToJSONServiceModel
 import ServiceModelGenerate
 
 public struct SmokeAWSModelGenerate {
-    static let asyncResultType = AsyncResultType(typeName: "HTTPResult",
-                                                 libraryImport: "SmokeHTTPClient")
     
     public static func generateFromModel(
         modelFilePath: String,
@@ -56,20 +54,16 @@ extension ServiceModelCodeGenerator {
         let awsClientAttributes = coralToJSONServiceModel.getAWSClientAttributes()
         
         let clientProtocolDelegate = ClientProtocolDelegate(
-            baseName: applicationDescription.baseName,
-            asyncResultType: SmokeAWSModelGenerate.asyncResultType)
+            baseName: applicationDescription.baseName)
         let mockClientDelegate = MockClientDelegate(
             baseName: applicationDescription.baseName,
-            isThrowingMock: false,
-            asyncResultType: SmokeAWSModelGenerate.asyncResultType)
+            isThrowingMock: false)
         let throwingClientDelegate = MockClientDelegate(
             baseName: applicationDescription.baseName,
-            isThrowingMock: true,
-            asyncResultType: SmokeAWSModelGenerate.asyncResultType)
+            isThrowingMock: true)
         let awsClientDelegate = AWSClientDelegate(
             baseName: applicationDescription.baseName,
             clientAttributes: awsClientAttributes,
-            asyncResultType: SmokeAWSModelGenerate.asyncResultType,
             signAllHeaders: signAllHeaders)
         let awsModelErrorsDelegate = AWSModelErrorsDelegate(awsClientAttributes: awsClientAttributes)
         

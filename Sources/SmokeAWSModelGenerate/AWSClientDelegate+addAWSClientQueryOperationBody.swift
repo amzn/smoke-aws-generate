@@ -59,6 +59,9 @@ internal extension AWSClientDelegate {
 
         fileBuilder.appendLine("""
             
+            let httpClientInvocationReporting = SmokeAWSHTTPClientInvocationReporting(smokeAWSInvocationReporting: reporting,
+                                                                                      smokeAWSOperationReporting: \(function.name)OperationReporting)
+            let invocationContext = HTTPClientInvocationContext(reporting: httpClientInvocationReporting, handlerDelegate: handlerDelegate)
             let wrappedInput = \(wrappedTypeDeclaration)
             
             let requestInput = QueryWrapperHTTPRequestInput(
@@ -93,7 +96,7 @@ internal extension AWSClientDelegate {
                 endpointPath: "\(http.url)",
                 httpMethod: .\(http.verb),
                 input: requestInput,
-                handlerDelegate: handlerDelegate,
+                invocationContext: invocationContext,
                 retryConfiguration: retryConfiguration,
                 retryOnError: retryOnErrorProvider)
             """
@@ -104,7 +107,7 @@ internal extension AWSClientDelegate {
                 httpMethod: .\(http.verb),
                 input: requestInput,
                 completion: completion,
-                handlerDelegate: handlerDelegate,
+                invocationContext: invocationContext,
                 retryConfiguration: retryConfiguration,
                 retryOnError: retryOnErrorProvider)
             """
@@ -122,7 +125,7 @@ internal extension AWSClientDelegate {
                 endpointPath: "\(http.url)",
                 httpMethod: .\(http.verb),
                 input: requestInput,
-                handlerDelegate: handlerDelegate,
+                invocationContext: invocationContext,
                 retryConfiguration: retryConfiguration,
                 retryOnError: retryOnErrorProvider)
             """
@@ -133,7 +136,7 @@ internal extension AWSClientDelegate {
                 httpMethod: .\(http.verb),
                 input: requestInput,
                 completion: completion,
-                handlerDelegate: handlerDelegate,
+                invocationContext: invocationContext,
                 retryConfiguration: retryConfiguration,
                 retryOnError: retryOnErrorProvider)
             """

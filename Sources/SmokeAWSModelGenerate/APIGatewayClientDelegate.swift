@@ -25,7 +25,7 @@ import ServiceModelEntities
  */
 public struct APIGatewayClientDelegate: ModelClientDelegate {
     public let clientType: ClientType
-    public let asyncResultType: AsyncResultType
+    public let asyncResultType: AsyncResultType?
     public let baseName: String
     public let typeDescription: String
     public let contentType: String
@@ -78,7 +78,8 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                                     clientAttributes: clientAttributes,
                                     codeGenerator: codeGenerator,
                                     targetsAPIGateway: true,
-                                    contentType: contentType)
+                                    contentType: contentType,
+                                    sortedOperations: sortedOperations)
     }
     
     public func addOperationBody(codeGenerator: ServiceModelCodeGenerator,
@@ -120,7 +121,7 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                         endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(functionName).operationPath,
                         httpMethod: .\(httpVerb),
                         input: requestInput,
-                        handlerDelegate: handlerDelegate,
+                        invocationContext: invocationContext,
                         retryConfiguration: retryConfiguration,
                         retryOnError: retryOnErrorProvider)
                     """
@@ -131,7 +132,7 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                         httpMethod: .\(httpVerb),
                         input: requestInput,
                         completion: completion,
-                        handlerDelegate: handlerDelegate,
+                        invocationContext: invocationContext,
                         retryConfiguration: retryConfiguration,
                         retryOnError: retryOnErrorProvider)
                     """
@@ -144,7 +145,7 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                         endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(functionName).operationPath,
                         httpMethod: .\(httpVerb),
                         input: requestInput,
-                        handlerDelegate: handlerDelegate,
+                        invocationContext: invocationContext,
                         retryConfiguration: retryConfiguration,
                         retryOnError: retryOnErrorProvider)
                     """
@@ -155,7 +156,7 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                         httpMethod: .\(httpVerb),
                         input: requestInput,
                         completion: completion,
-                        handlerDelegate: handlerDelegate,
+                        invocationContext: invocationContext,
                         retryConfiguration: retryConfiguration,
                         retryOnError: retryOnErrorProvider)
                     """
@@ -199,6 +200,9 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
 
         fileBuilder.appendLine("""
             
+            let httpClientInvocationReporting = SmokeAWSHTTPClientInvocationReporting(smokeAWSInvocationReporting: reporting,
+                                                                                      smokeAWSOperationReporting: \(typeName)OperationReporting)
+            let invocationContext = HTTPClientInvocationContext(reporting: httpClientInvocationReporting, handlerDelegate: handlerDelegate)
             let requestInput = \(typeName)OperationHTTPRequestInput(encodable: \(input))
             """)
         
