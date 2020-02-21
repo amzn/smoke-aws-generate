@@ -28,7 +28,6 @@ public struct AWSClientDelegate: ModelClientDelegate {
     public let clientAttributes: AWSClientAttributes
     public let asyncResultType: AsyncResultType?
     public let baseName: String
-    public let typeDescription: String
     public let signAllHeaders: Bool
     
     struct AWSClientFunction {
@@ -51,28 +50,38 @@ public struct AWSClientDelegate: ModelClientDelegate {
         self.baseName = baseName
         self.clientAttributes = clientAttributes
         self.asyncResultType = asyncResultType
-        self.clientType = .struct(name: "AWS\(baseName)Client",
+        let genericParameters: [(String, String?)] = [("InvocationReportingType", "SmokeAWSInvocationReporting")]
+        self.clientType = .struct(name: "AWS\(baseName)Client", genericParameters: genericParameters,
                                   conformingProtocolName: "\(baseName)ClientProtocol")
-        self.typeDescription = "AWS Client for the \(baseName) service."
         self.signAllHeaders = signAllHeaders
+    }
+    
+    public func getFileDescription(isGenerator: Bool) -> String {
+        if isGenerator {
+            return "AWS Client Generator for the \(baseName) service."
+        } else {
+            return "AWS Client for the \(baseName) service."
+        }
     }
     
     public func addCustomFileHeader(codeGenerator: ServiceModelCodeGenerator,
                                     delegate: ModelClientDelegate,
-                                    fileBuilder: FileBuilder) {
-        addAWSClientFileHeader(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName)
+                                    fileBuilder: FileBuilder,
+                                    isGenerator: Bool) {
+        addAWSClientFileHeader(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName, isGenerator: isGenerator)
     }
     
     public func addCommonFunctions(codeGenerator: ServiceModelCodeGenerator,
                                    delegate: ModelClientDelegate,
                                    fileBuilder: FileBuilder,
-                                   sortedOperations: [(String, OperationDescription)]) {
+                                   sortedOperations: [(String, OperationDescription)],
+                                   isGenerator: Bool) {
         addAWSClientCommonFunctions(fileBuilder: fileBuilder, baseName: baseName,
                                     clientAttributes: clientAttributes,
                                     codeGenerator: codeGenerator,
                                     targetsAPIGateway: false,
                                     contentType: clientAttributes.contentType,
-                                    sortedOperations: sortedOperations)
+                                    sortedOperations: sortedOperations, isGenerator: isGenerator)
     }
     
     public func addOperationBody(codeGenerator: ServiceModelCodeGenerator,
@@ -82,7 +91,8 @@ public struct AWSClientDelegate: ModelClientDelegate {
                                  operationName: String,
                                  operationDescription: OperationDescription,
                                  functionInputType: String?,
-                                 functionOutputType: String?) {
+                                 functionOutputType: String?,
+                                 isGenerator: Bool) {
         guard let httpVerb = operationDescription.httpVerb,
             let httpUrl = operationDescription.httpUrl else {
             fatalError("Unable to create an AWSClient operation that doesn't have a HTTP verb or path")

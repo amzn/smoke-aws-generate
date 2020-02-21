@@ -70,6 +70,8 @@ extension ServiceModelCodeGenerator {
         generateClient(delegate: throwingClientDelegate)
         generateClient(delegate: awsClientDelegate)
         generateModelOperationsEnum()
+        generateOperationsReporting()
+        generateInvocationsReporting()
         generateModelOperationClientInput()
         generateModelOperationClientOutput()
         generateModelStructures()

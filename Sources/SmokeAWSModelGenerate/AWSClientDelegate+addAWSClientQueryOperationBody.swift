@@ -59,9 +59,8 @@ internal extension AWSClientDelegate {
 
         fileBuilder.appendLine("""
             
-            let httpClientInvocationReporting = SmokeAWSHTTPClientInvocationReporting(smokeAWSInvocationReporting: reporting,
-                                                                                      smokeAWSOperationReporting: \(function.name)OperationReporting)
-            let invocationContext = HTTPClientInvocationContext(reporting: httpClientInvocationReporting, handlerDelegate: handlerDelegate)
+            let invocationContext = HTTPClientInvocationContext(reporting: self.invocationsReporting.\(function.name),
+                                                                handlerDelegate: handlerDelegate)
             let wrappedInput = \(wrappedTypeDeclaration)
             
             let requestInput = QueryWrapperHTTPRequestInput(
@@ -88,6 +87,7 @@ internal extension AWSClientDelegate {
     private func getQueryOperationNoOutputReturnStatement(
             invokeType: InvokeType,
             httpClientName: String,
+            outputType: String,
             http: (verb: String, url: String)) -> String {
         switch invokeType {
         case .sync:
@@ -102,11 +102,24 @@ internal extension AWSClientDelegate {
             """
         case .async:
             return """
+            func innerCompletion(result: Result<\(baseName)Model.\(outputType), HTTPClientError>) {
+                switch result {
+                case .success(let payload):
+                    completion(.success(payload))
+                case .failure(let error):
+                    if let typedError = error.cause as? \(baseName)Error {
+                        completion(.failure(typedError))
+                    } else {
+                        completion(.failure(error.cause.asUnrecognized\(baseName)Error()))
+                    }
+                }
+            }
+            
             _ = try \(httpClientName).executeAsyncRetriableWithOutput(
                 endpointPath: "\(http.url)",
                 httpMethod: .\(http.verb),
                 input: requestInput,
-                completion: completion,
+                completion: innerCompletion,
                 invocationContext: invocationContext,
                 retryConfiguration: retryConfiguration,
                 retryOnError: retryOnErrorProvider)
@@ -131,11 +144,23 @@ internal extension AWSClientDelegate {
             """
         case .async:
             return """
+            func innerCompletion(error: HTTPClientError?) {
+                if let error = error {
+                    if let typedError = error.cause as? \(baseName)Error {
+                        completion(typedError)
+                    } else {
+                        completion(error.cause.asUnrecognized\(baseName)Error())
+                    }
+                } else {
+                    completion(nil)
+                }
+            }
+            
             _ = try \(httpClientName).executeAsyncRetriableWithoutOutput(
                 endpointPath: "\(http.url)",
                 httpMethod: .\(http.verb),
                 input: requestInput,
-                completion: completion,
+                completion: innerCompletion,
                 invocationContext: invocationContext,
                 retryConfiguration: retryConfiguration,
                 retryOnError: retryOnErrorProvider)
@@ -146,10 +171,10 @@ internal extension AWSClientDelegate {
     private func getQueryOperationReturnStatement(
             functionOutputType: String?, invokeType: InvokeType,
             httpClientName: String, http: (verb: String, url: String)) -> String {
-        if functionOutputType != nil {
+        if let outputType = functionOutputType {
             return getQueryOperationNoOutputReturnStatement(
                 invokeType: invokeType,
-                httpClientName: httpClientName,
+                httpClientName: httpClientName, outputType: outputType,
                 http: http)
         } else {
             return getQueryOperationWithOutputReturnStatement(
