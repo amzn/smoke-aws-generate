@@ -25,5 +25,5 @@ cd $workspaceRoot/package
 swift build
 
 if [ "$USE_SWIFT_LINT" == 'yes' ]; then
-    swiftlint
+    #swiftlint
 fi
