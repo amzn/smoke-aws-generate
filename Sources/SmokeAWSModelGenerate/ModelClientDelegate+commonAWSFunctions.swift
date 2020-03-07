@@ -27,14 +27,16 @@ extension ModelClientDelegate {
                                      codeGenerator: ServiceModelCodeGenerator,
                                      targetsAPIGateway: Bool,
                                      contentType: String,
-                                     sortedOperations: [(String, OperationDescription)]) {
-        addAWSClientInitializer(fileBuilder: fileBuilder,
-                                baseName: baseName,
-                                clientAttributes: clientAttributes,
-                                codeGenerator: codeGenerator,
-                                targetsAPIGateway: targetsAPIGateway,
-                                contentType: contentType,
-                                sortedOperations: sortedOperations)
+                                     sortedOperations: [(String, OperationDescription)],
+                                     isGenerator: Bool) {
+        addAWSClientInitializerAndMembers(fileBuilder: fileBuilder,
+                                          baseName: baseName,
+                                          clientAttributes: clientAttributes,
+                                          codeGenerator: codeGenerator,
+                                          targetsAPIGateway: targetsAPIGateway,
+                                          contentType: contentType,
+                                          sortedOperations: sortedOperations,
+                                          isGenerator: isGenerator)
         
         addAWSClientDeinitializer(fileBuilder: fileBuilder,
                                   baseName: baseName,
@@ -42,5 +44,11 @@ extension ModelClientDelegate {
                                   codeGenerator: codeGenerator,
                                   targetsAPIGateway: targetsAPIGateway,
                                   contentType: contentType)
+        
+        if isGenerator {
+            addAWSClientInvocationCopy(fileBuilder: fileBuilder, baseName: baseName,
+                                       codeGenerator: codeGenerator, targetsAPIGateway: targetsAPIGateway,
+                                       clientAttributes: clientAttributes, contentType: contentType)
+        }
     }
 }

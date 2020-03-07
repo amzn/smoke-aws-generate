@@ -23,20 +23,26 @@ import CoralToJSONServiceModel
 
 extension ModelClientDelegate {
     func addAWSClientFileHeader(codeGenerator: ServiceModelCodeGenerator,
-                                fileBuilder: FileBuilder, baseName: String) {
+                                fileBuilder: FileBuilder, baseName: String,
+                                isGenerator: Bool) {
         fileBuilder.appendLine("""
             import SmokeAWSHttp
             import NIO
             import NIOHTTP1
-            
-            public enum \(baseName)ClientError: Swift.Error {
-                case invalidEndpoint(String)
-                case unsupportedPayload
-                case unknownError(String?)
-            }
             """)
         
-        addTypedErrorRetriableExtension(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName)
+        if !isGenerator {
+            fileBuilder.appendLine("""
+                
+                public enum \(baseName)ClientError: Swift.Error {
+                    case invalidEndpoint(String)
+                    case unsupportedPayload
+                    case unknownError(String?)
+                }
+                """)
+        
+            addTypedErrorRetriableExtension(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName)
+        }
         addErrorRetriableExtension(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName)
     }
     
@@ -122,7 +128,7 @@ extension ModelClientDelegate {
         
         fileBuilder.appendLine("""
             
-            private extension \(errorType) {
+            internal extension \(errorType) {
                 func isRetriable() -> Bool {
             """)
         

@@ -27,7 +27,6 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
     public let clientType: ClientType
     public let asyncResultType: AsyncResultType?
     public let baseName: String
-    public let typeDescription: String
     public let contentType: String
     public let signAllHeaders: Bool
     
@@ -50,23 +49,33 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                 signAllHeaders: Bool) {
         self.baseName = baseName
         self.asyncResultType = asyncResultType
-        self.clientType = .struct(name: "APIGateway\(baseName)Client",
+        let genericParameters: [(String, String?)] = [("InvocationReportingType", "SmokeAWSInvocationReporting")]
+        self.clientType = .struct(name: "APIGateway\(baseName)Client", genericParameters: genericParameters,
                                   conformingProtocolName: "\(baseName)ClientProtocol")
-        self.typeDescription = "API Gateway Client for the \(baseName) service."
         self.contentType = contentType
         self.signAllHeaders = signAllHeaders
     }
     
+    public func getFileDescription(isGenerator: Bool) -> String {
+        if isGenerator {
+            return "API Gateway Client Generator for the \(baseName) service."
+        } else {
+            return "API Gateway Client for the \(baseName) service."
+        }
+    }
+    
     public func addCustomFileHeader(codeGenerator: ServiceModelCodeGenerator,
                                     delegate: ModelClientDelegate,
-                                    fileBuilder: FileBuilder) {
-        addAWSClientFileHeader(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName)
+                                    fileBuilder: FileBuilder,
+                                    isGenerator: Bool) {
+        addAWSClientFileHeader(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName, isGenerator: isGenerator)
     }
     
     public func addCommonFunctions(codeGenerator: ServiceModelCodeGenerator,
                                    delegate: ModelClientDelegate,
                                    fileBuilder: FileBuilder,
-                                   sortedOperations: [(String, OperationDescription)]) {
+                                   sortedOperations: [(String, OperationDescription)],
+                                   isGenerator: Bool) {
         // An API Gateway client is essentially an AWS service client calling execute-api
         let clientAttributes = AWSClientAttributes(apiVersion: "2017-07-25",
                                                    service: "execute-api",
@@ -79,7 +88,7 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                                     codeGenerator: codeGenerator,
                                     targetsAPIGateway: true,
                                     contentType: contentType,
-                                    sortedOperations: sortedOperations)
+                                    sortedOperations: sortedOperations, isGenerator: isGenerator)
     }
     
     public func addOperationBody(codeGenerator: ServiceModelCodeGenerator,
@@ -88,7 +97,8 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                                  operationName: String,
                                  operationDescription: OperationDescription,
                                  functionInputType: String?,
-                                 functionOutputType: String?) {
+                                 functionOutputType: String?,
+                                 isGenerator: Bool) {
         guard let httpVerb = operationDescription.httpVerb else {
             fatalError("Unable to create an APIGateway operation that doesn't have a HTTP verb")
         }
@@ -200,9 +210,8 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
 
         fileBuilder.appendLine("""
             
-            let httpClientInvocationReporting = SmokeAWSHTTPClientInvocationReporting(smokeAWSInvocationReporting: reporting,
-                                                                                      smokeAWSOperationReporting: \(typeName)OperationReporting)
-            let invocationContext = HTTPClientInvocationContext(reporting: httpClientInvocationReporting, handlerDelegate: handlerDelegate)
+            let invocationContext = HTTPClientInvocationContext(reporting: self.invocationsReporting.\(function.name),
+                                                                handlerDelegate: handlerDelegate)
             let requestInput = \(typeName)OperationHTTPRequestInput(encodable: \(input))
             """)
         
