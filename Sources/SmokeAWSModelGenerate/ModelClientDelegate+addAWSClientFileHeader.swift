@@ -29,6 +29,7 @@ extension ModelClientDelegate {
             import SmokeAWSHttp
             import NIO
             import NIOHTTP1
+            import AsyncHTTPClient
             """)
         
         if !isGenerator {

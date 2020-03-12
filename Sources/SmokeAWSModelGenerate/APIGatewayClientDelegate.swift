@@ -137,7 +137,7 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                     """
             case .async:
                 return """
-                    func innerCompletion(result: Result<\(baseName)Model.\(functionOutputType), HTTPClientError>) {
+                    func innerCompletion(result: Result<\(baseName)Model.\(functionOutputType), SmokeHTTPClient.HTTPClientError>) {
                         switch result {
                         case .success(let payload):
                             completion(.success(payload))
@@ -203,7 +203,7 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
         let input = function.inputType != nil ? "input" : "Data()"
         
         fileBuilder.appendLine("""
-            let handlerDelegate = AWSClientChannelInboundHandlerDelegate(
+            let handlerDelegate = AWSClientInvocationDelegate(
                         credentialsProvider: credentialsProvider,
                         awsRegion: awsRegion,
                         service: service,

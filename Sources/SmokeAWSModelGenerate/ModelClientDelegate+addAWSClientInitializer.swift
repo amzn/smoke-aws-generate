@@ -204,12 +204,12 @@ extension ModelClientDelegate {
             }
             
             fileBuilder.appendLine("""
-                self.httpClient = HTTPClient(endpointHostName: endpointHostName,
-                                             endpointPort: endpointPort,
-                                             contentType: contentType,
-                                             clientDelegate: clientDelegate,
-                                             connectionTimeoutSeconds: connectionTimeoutSeconds,
-                                             eventLoopProvider: eventLoopProvider)
+                self.httpClient = HTTPOperationsClient(endpointHostName: endpointHostName,
+                                                       endpointPort: endpointPort,
+                                                       contentType: contentType,
+                                                       clientDelegate: clientDelegate,
+                                                       connectionTimeoutSeconds: connectionTimeoutSeconds,
+                                                       eventLoopProvider: eventLoopProvider)
                 """)
         } else {
             fileBuilder.appendLine("""
@@ -276,12 +276,12 @@ extension ModelClientDelegate {
             if !isCopyInitializer {
                 let postfix = key.startingWithUppercase
                 fileBuilder.appendLine("""
-                    self.\(variableName) = HTTPClient(endpointHostName: endpointHostName,
-                                                      endpointPort: endpointPort,
-                                                      contentType: contentType,
-                                                      clientDelegate: clientDelegateFor\(postfix),
-                                                      connectionTimeoutSeconds: connectionTimeoutSeconds,
-                                                      eventLoopProvider: eventLoopProvider)
+                    self.\(variableName) = HTTPOperationsClient(endpointHostName: endpointHostName,
+                                                                endpointPort: endpointPort,
+                                                                contentType: contentType,
+                                                                clientDelegate: clientDelegateFor\(postfix),
+                                                                connectionTimeoutSeconds: connectionTimeoutSeconds,
+                                                                eventLoopProvider: eventLoopProvider)
                     """)
             } else {
                 fileBuilder.appendLine("""
@@ -360,13 +360,13 @@ extension ModelClientDelegate {
             codeGenerator: ServiceModelCodeGenerator,
             isGenerator: Bool) {
         fileBuilder.appendLine("""
-                let httpClient: HTTPClient
+                let httpClient: HTTPOperationsClient
                 """)
         
         httpClientConfiguration.additionalClients?.forEach { (key, _) in
             let variableName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
             fileBuilder.appendLine("""
-                let \(variableName): HTTPClient
+                let \(variableName): HTTPOperationsClient
                 """)
         }
         
@@ -395,13 +395,13 @@ extension ModelClientDelegate {
             targetsAPIGateway: Bool,
             isGenerator: Bool) {
         fileBuilder.appendLine("""
-                let httpClient: HTTPClient
+                let httpClient: HTTPOperationsClient
                 """)
         
         httpClientConfiguration.additionalClients?.forEach { (key, _) in
             let variableName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
             fileBuilder.appendLine("""
-                let \(variableName): HTTPClient
+                let \(variableName): HTTPOperationsClient
                 """)
         }
         
@@ -460,7 +460,7 @@ extension ModelClientDelegate {
         } else {
             let additionalClients: [String]? = httpClientConfiguration.additionalClients?.map { (key, _) in
                 let variableName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
-                return "\(variableName): HTTPClient"
+                return "\(variableName): HTTPOperationsClient"
             }
             let additionalClientsString: String
             if let additionalClients = additionalClients {
@@ -470,7 +470,7 @@ extension ModelClientDelegate {
             }
             
             fileBuilder.appendLine("""
-                            httpClient: HTTPClient\(additionalClientsString),
+                            httpClient: HTTPOperationsClient\(additionalClientsString),
                 """)
         }
         
@@ -489,7 +489,7 @@ extension ModelClientDelegate {
                             \(targetOrVersionParameter),
                             connectionTimeoutSeconds: Int64 = 10,
                             retryConfiguration: HTTPClientRetryConfiguration = .default,
-                            eventLoopProvider: HTTPClient.EventLoopProvider = .spawnNewThreads,
+                            eventLoopProvider: HTTPClient.EventLoopGroupProvider = .createNew,
                             reportingConfiguration: SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>
                                 = SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>() ) {
                 """)

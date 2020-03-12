@@ -32,7 +32,7 @@ internal extension AWSClientDelegate {
         let typeName = function.name.getNormalizedTypeName(forModel: codeGenerator.model)
         
         fileBuilder.appendLine("""
-            let handlerDelegate = AWSClientChannelInboundHandlerDelegate(
+            let handlerDelegate = AWSClientInvocationDelegate(
                         credentialsProvider: credentialsProvider,
                         awsRegion: awsRegion,
                         service: service,
@@ -100,7 +100,7 @@ internal extension AWSClientDelegate {
             """
         case .async:
             return """
-            func innerCompletion(result: Result<\(baseName)Model.\(outputType), HTTPClientError>) {
+            func innerCompletion(result: Result<\(baseName)Model.\(outputType), SmokeHTTPClient.HTTPClientError>) {
                 switch result {
                 case .success(let payload):
                     completion(.success(payload))
@@ -142,7 +142,7 @@ internal extension AWSClientDelegate {
             """
         case .async:
             return """
-            func innerCompletion(error: HTTPClientError?) {
+            func innerCompletion(error: SmokeHTTPClient.HTTPClientError?) {
                 if let error = error {
                     if let typedError = error.cause as? \(baseName)Error {
                         completion(typedError)
