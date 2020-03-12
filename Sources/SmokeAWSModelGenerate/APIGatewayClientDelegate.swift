@@ -44,12 +44,12 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
         - asyncResultType: The name of the result type to use for async functions.
      */
     public init(baseName: String,
-                asyncResultType: AsyncResultType,
+                asyncResultType: AsyncResultType? = nil,
                 contentType: String,
                 signAllHeaders: Bool) {
         self.baseName = baseName
         self.asyncResultType = asyncResultType
-        let genericParameters: [(String, String?)] = [("InvocationReportingType", "SmokeAWSInvocationReporting")]
+        let genericParameters: [(String, String?)] = [("InvocationReportingType", "HTTPClientCoreInvocationReporting")]
         self.clientType = .struct(name: "APIGateway\(baseName)Client", genericParameters: genericParameters,
                                   conformingProtocolName: "\(baseName)ClientProtocol")
         self.contentType = contentType
@@ -123,7 +123,7 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
             httpClientName: String,
             functionName: String,
             httpVerb: String) -> String {
-        if functionOutputType != nil {
+        if let functionOutputType = functionOutputType {
             switch invokeType {
             case .sync:
                 return """
@@ -137,11 +137,24 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                     """
             case .async:
                 return """
+                    func innerCompletion(result: Result<\(baseName)Model.\(functionOutputType), HTTPClientError>) {
+                        switch result {
+                        case .success(let payload):
+                            completion(.success(payload))
+                        case .failure(let error):
+                            if let typedError = error.cause as? \(baseName)Error {
+                                completion(.failure(typedError))
+                            } else {
+                                completion(.failure(error.cause.asUnrecognized\(baseName)Error()))
+                            }
+                        }
+                    }
+                    
                     _ = try \(httpClientName).executeAsyncRetriableWithOutput(
                         endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(functionName).operationPath,
                         httpMethod: .\(httpVerb),
                         input: requestInput,
-                        completion: completion,
+                        completion: innerCompletion,
                         invocationContext: invocationContext,
                         retryConfiguration: retryConfiguration,
                         retryOnError: retryOnErrorProvider)

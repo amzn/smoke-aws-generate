@@ -517,7 +517,7 @@ extension ModelClientDelegate {
         
         fileBuilder.appendLine("""
             
-            public func with<NewInvocationReportingType: SmokeAWSInvocationReporting>(
+            public func with<NewInvocationReportingType: HTTPClientCoreInvocationReporting>(
                     reporting: NewInvocationReportingType) -> \(clientName)<NewInvocationReportingType> {
                 return \(clientName)<NewInvocationReportingType>(
                     credentialsProvider: self.credentialsProvider,

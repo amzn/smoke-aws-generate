@@ -74,4 +74,14 @@ struct APIGatewayClientModelErrorsDelegate: ModelErrorsDelegate {
                                                            errorTypes: [ErrorType]) {
         // nothing to do
     }
+    
+    func errorTypeAdditionalErrorEncodeStatementsGenerator(fileBuilder: FileBuilder,
+                                                           errorTypes: [ErrorType]) {
+        // nothing to do
+    }
+    
+    func errorTypeAdditionalDescriptionCases(fileBuilder: FileBuilder,
+                                             errorTypes: [ErrorType]) {
+        // nothing to do
+    }
 }
