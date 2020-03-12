@@ -122,4 +122,21 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
                 self = .accessDenied(message: errorMessage)
             """)
     }
+    
+    func errorTypeAdditionalErrorEncodeStatementsGenerator(fileBuilder: FileBuilder,
+                                                           errorTypes: [ErrorType]) {
+        // nothing to do
+    }
+    
+    func errorTypeAdditionalDescriptionCases(fileBuilder: FileBuilder,
+                                             errorTypes: [ErrorType]) {
+        guard addAccessDeniedError(errorTypes: errorTypes) else {
+            return
+        }
+        
+        fileBuilder.appendLine("""
+            case .accessDenied
+                return __accessDeniedIdentity
+            """)
+    }
 }
