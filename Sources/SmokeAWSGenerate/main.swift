@@ -33,7 +33,7 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.29.3"
+let goRepositoryTag = "v1.29.24"
 
 let fileHeader = """
     // Copyright 2018-2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -161,11 +161,11 @@ func generatePackageFile(baseNames: [String]) -> String {
             dependencies: [
                 .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
                 .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.0.0"),
-                .package(url: "https://github.com/apple/swift-log", .upToNextMajor(from: "1.0.0")),
+                .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
                 .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
-                .package(url: "https://github.com/LiveUI/XMLCoding.git", .upToNextMajor(from: "0.4.1")),
-                .package(url: "https://github.com/amzn/smoke-http.git", .branch("async-http-client")),
-                .package(url: "https://github.com/IBM-Swift/BlueCryptor.git", .upToNextMajor(from: "1.0.0")),
+                .package(url: "https://github.com/LiveUI/XMLCoding.git", from: "0.4.1"),
+                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.0.0-alpha.7"),
+                .package(url: "https://github.com/IBM-Swift/BlueCryptor.git", from: "1.0.0"),
             ],
             targets: [\n
         """
