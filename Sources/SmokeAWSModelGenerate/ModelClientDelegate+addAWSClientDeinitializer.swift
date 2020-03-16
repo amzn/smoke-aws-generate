@@ -35,35 +35,14 @@ extension ModelClientDelegate {
              Gracefully shuts down this client. This function is idempotent and
              will handle being called multiple times.
              */
-            public func close() {
-                httpClient.close()
+            public func close() throws {
+                try httpClient.close()
             """)
         
         fileBuilder.incIndent()
         httpClientConfiguration.additionalClients?.forEach { (key, _) in
             let clientName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
-            fileBuilder.appendLine("\(clientName).close()")
-        }
-        fileBuilder.decIndent()
-        
-        fileBuilder.appendLine("""
-            }
-            """)
-   
-        fileBuilder.appendEmptyLine()
-        fileBuilder.appendLine("""
-            /**
-             Waits for the client to be closed. If close() is not called,
-             this will block forever.
-             */
-            public func wait() {
-                httpClient.wait()
-            """)
-        
-        fileBuilder.incIndent()
-        httpClientConfiguration.additionalClients?.forEach { (key, _) in
-            let clientName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
-            fileBuilder.appendLine("\(clientName).wait()")
+            fileBuilder.appendLine("try \(clientName).close()")
         }
         fileBuilder.decIndent()
         
