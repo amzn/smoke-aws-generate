@@ -30,6 +30,7 @@ extension ModelClientDelegate {
             import NIO
             import NIOHTTP1
             import AsyncHTTPClient
+            import Logging
             """)
         
         if !isGenerator {

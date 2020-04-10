@@ -2,15 +2,6 @@
   "object": {
     "pins": [
       {
-        "package": "ServiceModelSwiftCodeGenerate",
-        "repositoryURL": "https://github.com/amzn/service-model-swift-code-generate.git",
-        "state": {
-          "branch": null,
-          "revision": "734498f7a49db9a586b2c924f41cf6b1a81659ba",
-          "version": "2.0.0-alpha.3"
-        }
-      },
-      {
         "package": "SwaggerParser",
         "repositoryURL": "https://github.com/tachyonics/SwaggerParser.git",
         "state": {
