@@ -504,7 +504,7 @@ extension ModelClientDelegate {
         }
     }
     
-    public func addAWSClientInvocationCopy(
+    public func addAWSClientGeneratorWithReporting(
             fileBuilder: FileBuilder,
             baseName: String,
             codeGenerator: ServiceModelCodeGenerator,
@@ -562,5 +562,58 @@ extension ModelClientDelegate {
                 operationsReporting: self.operationsReporting)
         }
         """)
+    }
+    
+    public func addAWSClientGeneratorWithTraceContext(
+            fileBuilder: FileBuilder,
+            baseName: String,
+            codeGenerator: ServiceModelCodeGenerator,
+            targetsAPIGateway: Bool,
+            clientAttributes: AWSClientAttributes,
+            contentType: String) {
+        guard case .struct(let clientName, _, _) = clientType else {
+            fatalError()
+        }
+        
+        fileBuilder.appendLine("""
+            
+            public func with<NewTraceContextType: InvocationTraceContext>(
+                    logger: Logging.Logger,
+                    internalRequestId: String = "none",
+                    traceContext: NewTraceContextType) -> \(clientName)<StandardHTTPClientCoreInvocationReporting<NewTraceContextType>> {
+                let reporting = StandardHTTPClientCoreInvocationReporting(
+                    logger: logger,
+                    internalRequestId: internalRequestId,
+                    traceContext: traceContext)
+                
+                return with(reporting: reporting)
+            }
+            """)
+    }
+    
+    public func addAWSClientGeneratorWithAWSTraceContext(
+            fileBuilder: FileBuilder,
+            baseName: String,
+            codeGenerator: ServiceModelCodeGenerator,
+            targetsAPIGateway: Bool,
+            clientAttributes: AWSClientAttributes,
+            contentType: String) {
+        guard case .struct(let clientName, _, _) = clientType else {
+            fatalError()
+        }
+        
+        fileBuilder.appendLine("""
+            
+            public func with(
+                    logger: Logging.Logger,
+                    internalRequestId: String = "none") -> \(clientName)<StandardHTTPClientCoreInvocationReporting<AWSClientInvocationTraceContext>> {
+                let reporting = StandardHTTPClientCoreInvocationReporting(
+                    logger: logger,
+                    internalRequestId: internalRequestId,
+                    traceContext: AWSClientInvocationTraceContext())
+                
+                return with(reporting: reporting)
+            }
+            """)
     }
 }

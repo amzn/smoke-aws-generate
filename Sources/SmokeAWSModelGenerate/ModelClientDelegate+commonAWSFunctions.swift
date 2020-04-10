@@ -46,9 +46,20 @@ extension ModelClientDelegate {
                                   contentType: contentType)
         
         if isGenerator {
-            addAWSClientInvocationCopy(fileBuilder: fileBuilder, baseName: baseName,
-                                       codeGenerator: codeGenerator, targetsAPIGateway: targetsAPIGateway,
-                                       clientAttributes: clientAttributes, contentType: contentType)
+            addAWSClientGeneratorWithReporting(
+                fileBuilder: fileBuilder, baseName: baseName,
+                codeGenerator: codeGenerator, targetsAPIGateway: targetsAPIGateway,
+                clientAttributes: clientAttributes, contentType: contentType)
+            
+            addAWSClientGeneratorWithTraceContext(
+                fileBuilder: fileBuilder, baseName: baseName,
+                codeGenerator: codeGenerator, targetsAPIGateway: targetsAPIGateway,
+                clientAttributes: clientAttributes, contentType: contentType)
+            
+            addAWSClientGeneratorWithAWSTraceContext(
+                fileBuilder: fileBuilder, baseName: baseName,
+                codeGenerator: codeGenerator, targetsAPIGateway: targetsAPIGateway,
+                clientAttributes: clientAttributes, contentType: contentType)
         }
     }
 }
