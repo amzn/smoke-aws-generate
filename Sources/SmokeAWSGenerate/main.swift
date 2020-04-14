@@ -33,7 +33,7 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.29.24"
+let goRepositoryTag = "v1.30.7"
 
 let fileHeader = """
     // Copyright 2018-2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -178,7 +178,7 @@ func generateLegacyPackageFile(baseNames: [String]) -> String {
                 .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
                 .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
                 .package(url: "https://github.com/LiveUI/XMLCoding.git", from: "0.4.1"),
-                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.0.0-alpha.8"),
+                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.0.0-beta.1"),
                 .package(url: "https://github.com/IBM-Swift/BlueCryptor.git", from: "1.0.0"),
             ],
             targets: [\n
@@ -259,7 +259,7 @@ func generatePackageFile(baseNames: [String]) -> String {
                 .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
                 .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
                 .package(url: "https://github.com/LiveUI/XMLCoding.git", from: "0.4.1"),
-                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.0.0-alpha.9"),
+                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.0.0-beta.1"),
                 .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"),
             ],
             targets: [\n
