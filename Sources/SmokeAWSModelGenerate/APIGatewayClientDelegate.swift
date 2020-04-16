@@ -174,11 +174,23 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                     """
             case .async:
                 return """
+                    func innerCompletion(error: SmokeHTTPClient.HTTPClientError?) {
+                        if let error = error {
+                            if let typedError = error.cause as? \(baseName)Error {
+                                completion(typedError)
+                            } else {
+                                completion(error.cause.asUnrecognized\(baseName)Error())
+                            }
+                        } else {
+                            completion(nil)
+                        }
+                    }
+                    
                     _ = try \(httpClientName).executeAsyncRetriableWithoutOutput(
                         endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(functionName).operationPath,
                         httpMethod: .\(httpVerb),
                         input: requestInput,
-                        completion: completion,
+                        completion: innerCompletion,
                         invocationContext: invocationContext,
                         retryConfiguration: retryConfiguration,
                         retryOnError: retryOnErrorProvider)
