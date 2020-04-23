@@ -130,7 +130,11 @@ extension ModelClientDelegate {
         
         fileBuilder.appendLine("""
             
-            internal extension \(errorType) {
+             extension \(errorType): ConvertableError {
+                public static func asUnrecognizedError(error: Swift.Error) -> \(errorType) {
+                    return error.asUnrecognized\(baseName)Error()
+                }
+            
                 func isRetriable() -> Bool {
             """)
         

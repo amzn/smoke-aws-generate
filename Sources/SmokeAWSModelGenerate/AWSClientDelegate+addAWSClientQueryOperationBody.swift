@@ -92,34 +92,26 @@ internal extension AWSClientDelegate {
         switch invokeType {
         case .sync:
             return """
-            return try \(httpClientName).executeSyncRetriableWithOutput(
-                endpointPath: "\(http.url)",
-                httpMethod: .\(http.verb),
-                input: requestInput,
-                invocationContext: invocationContext,
-                retryConfiguration: retryConfiguration,
-                retryOnError: retryOnErrorProvider)
+            do {
+                return try \(httpClientName).executeSyncRetriableWithOutput(
+                    endpointPath: "\(http.url)",
+                    httpMethod: .\(http.verb),
+                    input: requestInput,
+                    invocationContext: invocationContext,
+                    retryConfiguration: retryConfiguration,
+                    retryOnError: retryOnErrorProvider)
+            } catch {
+                let typedError: \(baseName)Error = error.asTypedError()
+                throw typedError
+            }
             """
         case .async:
             return """
-            func innerCompletion(result: Result<\(baseName)Model.\(outputType), SmokeHTTPClient.HTTPClientError>) {
-                switch result {
-                case .success(let payload):
-                    completion(.success(payload))
-                case .failure(let error):
-                    if let typedError = error.cause as? \(baseName)Error {
-                        completion(.failure(typedError))
-                    } else {
-                        completion(.failure(error.cause.asUnrecognized\(baseName)Error()))
-                    }
-                }
-            }
-            
-            _ = try \(httpClientName).executeAsyncRetriableWithOutput(
+            _ = try \(httpClientName).executeOperationAsyncRetriableWithOutput(
                 endpointPath: "\(http.url)",
                 httpMethod: .\(http.verb),
                 input: requestInput,
-                completion: innerCompletion,
+                completion: completion,
                 invocationContext: invocationContext,
                 retryConfiguration: retryConfiguration,
                 retryOnError: retryOnErrorProvider)
@@ -134,33 +126,26 @@ internal extension AWSClientDelegate {
         switch invokeType {
         case .sync:
             return """
-            try \(httpClientName).executeSyncRetriableWithoutOutput(
-                endpointPath: "\(http.url)",
-                httpMethod: .\(http.verb),
-                input: requestInput,
-                invocationContext: invocationContext,
-                retryConfiguration: retryConfiguration,
-                retryOnError: retryOnErrorProvider)
+            do {
+                try \(httpClientName).executeSyncRetriableWithoutOutput(
+                    endpointPath: "\(http.url)",
+                    httpMethod: .\(http.verb),
+                    input: requestInput,
+                    invocationContext: invocationContext,
+                    retryConfiguration: retryConfiguration,
+                    retryOnError: retryOnErrorProvider)
+            } catch {
+                let typedError: \(baseName)Error = error.asTypedError()
+                throw typedError
+            }
             """
         case .async:
             return """
-            func innerCompletion(error: SmokeHTTPClient.HTTPClientError?) {
-                if let error = error {
-                    if let typedError = error.cause as? \(baseName)Error {
-                        completion(typedError)
-                    } else {
-                        completion(error.cause.asUnrecognized\(baseName)Error())
-                    }
-                } else {
-                    completion(nil)
-                }
-            }
-            
-            _ = try \(httpClientName).executeAsyncRetriableWithoutOutput(
+            _ = try \(httpClientName).executeOperationAsyncRetriableWithoutOutput(
                 endpointPath: "\(http.url)",
                 httpMethod: .\(http.verb),
                 input: requestInput,
-                completion: innerCompletion,
+                completion: completion,
                 invocationContext: invocationContext,
                 retryConfiguration: retryConfiguration,
                 retryOnError: retryOnErrorProvider)
