@@ -192,6 +192,10 @@ extension ModelClientDelegate {
         fileBuilder.incIndent()
         
         if !isCopyInitializer {
+            fileBuilder.appendLine("""
+                let useTLS = requiresTLS ?? AWSHTTPClientDelegate.requiresTLS(forEndpointPort: endpointPort)
+                """)
+            
             switch contentType.contentTypePayloadType {
             case .xml:
                 addXmlDelegate(fileBuilder: fileBuilder,
@@ -293,11 +297,11 @@ extension ModelClientDelegate {
     
     private func createDelegate(name: String, fileBuilder: FileBuilder, delegateName: String, errorType: String, parameters: [String]?) {
         guard let concreteParameters = parameters, !concreteParameters.isEmpty else {
-            fileBuilder.appendLine("let \(name) = \(delegateName)<\(errorType)>()")
+            fileBuilder.appendLine("let \(name) = \(delegateName)<\(errorType)>(requiresTLS: useTLS)")
             return
         }
         
-        fileBuilder.appendLine("let \(name) = \(delegateName)<\(errorType)>(")
+        fileBuilder.appendLine("let \(name) = \(delegateName)<\(errorType)>(requiresTLS: useTLS,")
         
         fileBuilder.incIndent()
         concreteParameters.enumerated().forEach { (index, parameter) in
@@ -484,6 +488,7 @@ extension ModelClientDelegate {
         if !isCopyInitializer {
             fileBuilder.appendLine("""
                             endpointPort: Int = 443,
+                            requiresTLS: Bool? = nil,
                             service: String = "\(clientAttributes.service)",
                             \(contentTypeAssignment),
                             \(targetOrVersionParameter),
