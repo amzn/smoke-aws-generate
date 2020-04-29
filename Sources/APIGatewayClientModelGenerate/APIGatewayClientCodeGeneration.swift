@@ -22,8 +22,6 @@ import ServiceModelGenerate
 import SmokeAWSModelGenerate
 
 public struct APIGatewayClientCodeGeneration {
-    static let asyncResultType = AsyncResultType(typeName: "HTTPResult",
-                                                 libraryImport: "SmokeHTTPClient")
     
     public static func generateFromModel<ModelType: ServiceModel>(
         modelFilePath: String,
@@ -49,19 +47,15 @@ extension ServiceModelCodeGenerator {
     
     func generateFromModel<ModelType: ServiceModel>(serviceModel: ModelType) throws {
         let clientProtocolDelegate = ClientProtocolDelegate(
-            baseName: applicationDescription.baseName,
-            asyncResultType: APIGatewayClientCodeGeneration.asyncResultType)
+            baseName: applicationDescription.baseName)
         let mockClientDelegate = MockClientDelegate(
             baseName: applicationDescription.baseName,
-            isThrowingMock: false,
-            asyncResultType: APIGatewayClientCodeGeneration.asyncResultType)
+            isThrowingMock: false)
         let throwingClientDelegate = MockClientDelegate(
             baseName: applicationDescription.baseName,
-            isThrowingMock: true,
-            asyncResultType: APIGatewayClientCodeGeneration.asyncResultType)
+            isThrowingMock: true)
         let awsClientDelegate = APIGatewayClientDelegate(
             baseName: applicationDescription.baseName,
-            asyncResultType: APIGatewayClientCodeGeneration.asyncResultType,
             contentType: "application/json", signAllHeaders: false)
         let awsModelErrorsDelegate = APIGatewayClientModelErrorsDelegate()
         

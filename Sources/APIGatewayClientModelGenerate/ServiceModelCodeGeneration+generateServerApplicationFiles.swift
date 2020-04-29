@@ -23,18 +23,20 @@ extension ServiceModelCodeGenerator {
      Generate the main Swift file for the generated application as a Container Server.
      */
     func generateServerApplicationFiles() {
-        generatePackageFile()
+        generatePackageFile(fileName: "Package.swift")
+        generateLegacyPackageFile(fileName: "Package@swift-5.0.swift")
+        generateLegacyPackageFile(fileName: "Package@swift-5.1.swift")
         generateGitIgnoreFile()
     }
-
-    private func generatePackageFile() {
+    
+    private func generatePackageFile(fileName: String) {
         
         let fileBuilder = FileBuilder()
         let baseName = applicationDescription.baseName
         let baseFilePath = applicationDescription.baseFilePath
         
         fileBuilder.appendLine("""
-            // swift-tools-version:4.1
+            // swift-tools-version:5.2
             """)
         
         if let fileHeader = customizations.fileHeader {
@@ -47,6 +49,9 @@ extension ServiceModelCodeGenerator {
 
             let package = Package(
                 name: "\(baseName)",
+                platforms: [
+                    .macOS(.v10_15), .iOS(.v10)
+                    ],
                 products: [
                     // Products define the executables and libraries produced by a package, and make them visible to other packages.
                     .library(
@@ -57,8 +62,62 @@ extension ServiceModelCodeGenerator {
                         targets: ["\(baseName)Client"]),
                     ],
                 dependencies: [
-                    .package(url: "https://github.com/amzn/smoke-aws.git", .upToNextMajor(from: "1.0.0")),
-                    .package(url: "https://github.com/apple/swift-log", .upToNextMajor(from: "1.0.0")),
+                    .package(url: "https://github.com/amzn/smoke-aws.git", from: "2.0.0-rc.1"),
+                    .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
+                    ],
+                targets: [
+                    // Targets are the basic building blocks of a package. A target can define a module or a test suite.
+                    // Targets can depend on other targets in this package, and on products in packages which this package depends on.
+                    .target(name: "\(baseName)Model", dependencies: [
+                        .product(name: "Logging", package: "swift-log"),
+                    ]),
+                    .target(name: "\(baseName)Client", dependencies: [
+                        .target(name: "\(baseName)Model"),
+                        .product(name: "SmokeAWSHttp", package: "smoke-aws"),
+                    ]),
+                ],
+                swiftLanguageVersions: [.v5]
+            )
+            """)
+
+        fileBuilder.write(toFile: fileName, atFilePath: baseFilePath)
+    }
+
+    private func generateLegacyPackageFile(fileName: String) {
+        
+        let fileBuilder = FileBuilder()
+        let baseName = applicationDescription.baseName
+        let baseFilePath = applicationDescription.baseFilePath
+        
+        fileBuilder.appendLine("""
+            // swift-tools-version:5.0
+            """)
+        
+        if let fileHeader = customizations.fileHeader {
+            fileBuilder.appendLine(fileHeader)
+        }
+
+        fileBuilder.appendLine("""
+            
+            import PackageDescription
+
+            let package = Package(
+                name: "\(baseName)",
+                platforms: [
+                    .macOS(.v10_12), .iOS(.v10)
+                    ],
+                products: [
+                    // Products define the executables and libraries produced by a package, and make them visible to other packages.
+                    .library(
+                        name: "\(baseName)Model",
+                        targets: ["\(baseName)Model"]),
+                    .library(
+                        name: "\(baseName)Client",
+                        targets: ["\(baseName)Client"]),
+                    ],
+                dependencies: [
+                    .package(url: "https://github.com/amzn/smoke-aws.git", from: "2.0.0-rc.1"),
+                    .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
                     ],
                 targets: [
                     // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -69,11 +128,11 @@ extension ServiceModelCodeGenerator {
                     .target(
                         name: "\(baseName)Client",
                         dependencies: ["\(baseName)Model", "SmokeAWSHttp"]),
-                    ]
+                ],
+                swiftLanguageVersions: [.v5]
             )
             """)
 
-        let fileName = "Package.swift"
         fileBuilder.write(toFile: fileName, atFilePath: baseFilePath)
     }
     
