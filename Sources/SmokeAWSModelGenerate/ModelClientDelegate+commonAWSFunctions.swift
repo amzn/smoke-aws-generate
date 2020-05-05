@@ -43,7 +43,8 @@ extension ModelClientDelegate {
                                   clientAttributes: clientAttributes,
                                   codeGenerator: codeGenerator,
                                   targetsAPIGateway: targetsAPIGateway,
-                                  contentType: contentType)
+                                  contentType: contentType,
+                                  isGenerator: isGenerator)
         
         if isGenerator {
             addAWSClientGeneratorWithReporting(

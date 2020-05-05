@@ -26,7 +26,8 @@ extension ModelClientDelegate {
                                    clientAttributes: AWSClientAttributes,
                                    codeGenerator: ServiceModelCodeGenerator,
                                    targetsAPIGateway: Bool,
-                                   contentType: String) {
+                                   contentType: String,
+                                   isGenerator: Bool) {
         let httpClientConfiguration = codeGenerator.customizations.httpClientConfiguration
 
         fileBuilder.appendEmptyLine()
@@ -36,8 +37,18 @@ extension ModelClientDelegate {
              will handle being called multiple times.
              */
             public func close() throws {
-                try httpClient.close()
             """)
+        
+        if !isGenerator {
+            fileBuilder.appendLine("""
+                if self.ownsHttpClients {
+            """)
+            fileBuilder.incIndent()
+        }
+        
+        fileBuilder.appendLine("""
+            try httpClient.close()
+        """)
         
         fileBuilder.incIndent()
         httpClientConfiguration.additionalClients?.forEach { (key, _) in
@@ -45,6 +56,13 @@ extension ModelClientDelegate {
             fileBuilder.appendLine("try \(clientName).close()")
         }
         fileBuilder.decIndent()
+        
+        if !isGenerator {
+            fileBuilder.decIndent()
+            fileBuilder.appendLine("""
+                }
+            """)
+        }
         
         fileBuilder.appendLine("""
             }
