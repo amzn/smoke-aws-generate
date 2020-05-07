@@ -208,12 +208,13 @@ extension ModelClientDelegate {
             }
             
             fileBuilder.appendLine("""
-                self.httpClient = HTTPOperationsClient(endpointHostName: endpointHostName,
-                                                       endpointPort: endpointPort,
-                                                       contentType: contentType,
-                                                       clientDelegate: clientDelegate,
-                                                       connectionTimeoutSeconds: connectionTimeoutSeconds,
-                                                       eventLoopProvider: eventLoopProvider)
+                self.httpClient = HTTPOperationsClient(
+                    endpointHostName: endpointHostName,
+                    endpointPort: endpointPort,
+                    contentType: contentType,
+                    clientDelegate: clientDelegate,
+                    connectionTimeoutSeconds: connectionTimeoutSeconds,
+                    eventLoopProvider: eventLoopProvider)
                 """)
         } else {
             fileBuilder.appendLine("""
@@ -224,6 +225,12 @@ extension ModelClientDelegate {
         addAdditionalHttpClients(
             httpClientConfiguration: httpClientConfiguration,
             codeGenerator: codeGenerator, fileBuilder: fileBuilder, isCopyInitializer: isCopyInitializer)
+        
+        if !isGenerator {
+            fileBuilder.appendLine("""
+                self.ownsHttpClients = \(String(describing: !isCopyInitializer))
+                """)
+        }
         
         fileBuilder.appendLine("""
             self.awsRegion = awsRegion\(regionAssignmentPostfix)
@@ -280,17 +287,18 @@ extension ModelClientDelegate {
             if !isCopyInitializer {
                 let postfix = key.startingWithUppercase
                 fileBuilder.appendLine("""
-                    self.\(variableName) = HTTPOperationsClient(endpointHostName: endpointHostName,
-                                                                endpointPort: endpointPort,
-                                                                contentType: contentType,
-                                                                clientDelegate: clientDelegateFor\(postfix),
-                                                                connectionTimeoutSeconds: connectionTimeoutSeconds,
-                                                                eventLoopProvider: eventLoopProvider)
+                    self.\(variableName) = HTTPOperationsClient(
+                        endpointHostName: endpointHostName,
+                        endpointPort: endpointPort,
+                        contentType: contentType,
+                        clientDelegate: clientDelegateFor\(postfix),
+                        connectionTimeoutSeconds: connectionTimeoutSeconds,
+                        eventLoopProvider: eventLoopProvider)
                     """)
             } else {
                 fileBuilder.appendLine("""
                     self.\(variableName) = \(variableName)
-                """)
+                    """)
             }
         }
     }
@@ -374,6 +382,12 @@ extension ModelClientDelegate {
                 """)
         }
         
+        if !isGenerator {
+            fileBuilder.appendLine("""
+                let ownsHttpClients: Bool
+                """)
+        }
+        
         fileBuilder.appendLine("""
                 let awsRegion: AWSRegion
                 let service: String
@@ -406,6 +420,12 @@ extension ModelClientDelegate {
             let variableName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
             fileBuilder.appendLine("""
                 let \(variableName): HTTPOperationsClient
+                """)
+        }
+        
+        if !isGenerator {
+            fileBuilder.appendLine("""
+                let ownsHttpClients: Bool
                 """)
         }
         
