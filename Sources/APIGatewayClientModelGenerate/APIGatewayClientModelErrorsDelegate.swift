@@ -37,12 +37,15 @@ struct APIGatewayClientModelErrorsDelegate: ModelErrorsDelegate {
     
     func errorTypeWillAddAdditionalCases(fileBuilder: FileBuilder,
                                          errorTypes: [ErrorType]) -> Int {
-        return 0
+        return 2
     }
     
     func errorTypeAdditionalErrorCasesGenerator(fileBuilder: FileBuilder,
                                                 errorTypes: [ErrorType]) {
-        // nothing to do
+        fileBuilder.appendLine("""
+        case validationError(reason: String)
+        case unrecognizedError(String, String?)
+        """)
     }
     
     func errorTypeCodingKeysGenerator(fileBuilder: FileBuilder,
