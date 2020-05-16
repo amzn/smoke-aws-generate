@@ -23,7 +23,9 @@ internal struct CloudwatchConfiguration {
         retryOnUnknownError: true,
         knownErrorsDefaultRetryBehavior: .fail,
         unretriableUnknownErrors: [],
-        retriableUnknownErrors: ["LimitExceededFault", "LimitExceededException"])
+        retriableUnknownErrors: ["LimitExceededFault", "LimitExceededException"],
+        clientDelegateParameters: ["outputListDecodingStrategy: .collapseListUsingItemTag(\"member\")",
+                                   "inputQueryListEncodingStrategy: .expandListWithIndexAndItemTag(itemTag: \"member\")"])
     
     static let serviceModelDetails = ServiceModelDetails(
         serviceName: "monitoring", serviceVersion: "2010-08-01",
