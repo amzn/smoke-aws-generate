@@ -11,25 +11,49 @@
 // express or implied. See the License for the specific language governing
 // permissions and limitations under the License.
 //
-// CloudwatchConfiguration.swift
+// ECSConfiguration.swift
 // SmokeAWSGenerate
 //
 
 import Foundation
 import ServiceModelEntities
 
-internal struct CloudwatchConfiguration {
+private let additionalErrors: Set<String> = [
+    "AccessDeniedException",
+    "IncompleteSignature",
+    "InternalFailure",
+    "InvalidAction",
+    "InvalidClientTokenId",
+    "InvalidParameterCombination",
+    "InvalidParameterValue",
+    "InvalidQueryParameter",
+    "MalformedQueryString",
+    "MissingAction",
+    "MissingAuthenticationToken",
+    "MissingParameter",
+    "OptInRequired",
+    "RequestExpired",
+    "ServiceUnavailable",
+    "ThrottlingException",
+    "ValidationError"]
+
+internal struct CloudFormationConfiguration {
+    static let modelOverride = ModelOverride(enumerations:
+        EnumerationNaming(usingUpperCamelCase: ["ChangeSource", "ChangeAction", "ChangeType", "EvaluationType",
+                                                "HandlerErrorCode", "Replacement", "RequiresRecreation", "ResourceAttribute"]),
+                                             additionalErrors: additionalErrors)
+    
     static let httpClientConfiguration = HttpClientConfiguration(
         retryOnUnknownError: true,
         knownErrorsDefaultRetryBehavior: .fail,
         unretriableUnknownErrors: [],
-        retriableUnknownErrors: ["LimitExceededFault", "LimitExceededException"],
+        retriableUnknownErrors: ["ThrottlingException"],
         clientDelegateParameters: ["outputListDecodingStrategy: .collapseListUsingItemTag(\"member\")",
                                    "inputQueryListEncodingStrategy: .expandListWithIndexAndItemTag(itemTag: \"member\")"])
     
     static let serviceModelDetails = ServiceModelDetails(
-        serviceName: "monitoring", serviceVersion: "2010-08-01",
-        baseName: "CloudWatch", modelOverride: nil,
+        serviceName: "cloudformation", serviceVersion: "2010-05-15",
+        baseName: "Cloudformation", modelOverride: modelOverride,
         httpClientConfiguration: httpClientConfiguration,
         signAllHeaders: false)
 }
