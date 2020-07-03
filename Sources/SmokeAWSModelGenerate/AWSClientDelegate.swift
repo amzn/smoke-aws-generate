@@ -68,7 +68,8 @@ public struct AWSClientDelegate: ModelClientDelegate {
                                     delegate: ModelClientDelegate,
                                     fileBuilder: FileBuilder,
                                     isGenerator: Bool) {
-        addAWSClientFileHeader(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName, isGenerator: isGenerator)
+        addAWSClientFileHeader(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName, isGenerator: isGenerator,
+                               defaultInvocationTraceContext: self.clientAttributes.defaultInvocationTraceContext)
     }
     
     public func addCommonFunctions(codeGenerator: ServiceModelCodeGenerator,

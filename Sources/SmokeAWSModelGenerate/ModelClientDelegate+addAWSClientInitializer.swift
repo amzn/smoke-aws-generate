@@ -528,13 +528,26 @@ extension ModelClientDelegate {
             """)
         }
     }
-    
+
     public func addAWSClientGeneratorWithReporting(
             fileBuilder: FileBuilder,
             baseName: String,
             codeGenerator: ServiceModelCodeGenerator,
             targetsAPIGateway: Bool,
             clientAttributes: AWSClientAttributes,
+            contentType: String) {
+        addAWSClientGeneratorWithReporting(fileBuilder: fileBuilder,
+                                           baseName: baseName,
+                                           codeGenerator: codeGenerator,
+                                           targetsAPIGateway: targetsAPIGateway,
+                                           contentType: contentType)
+    }
+ 
+    public func addAWSClientGeneratorWithReporting(
+            fileBuilder: FileBuilder,
+            baseName: String,
+            codeGenerator: ServiceModelCodeGenerator,
+            targetsAPIGateway: Bool,
             contentType: String) {
         guard case .struct(let clientName, _, _) = clientType else {
             fatalError()
@@ -588,13 +601,26 @@ extension ModelClientDelegate {
         }
         """)
     }
-    
+   
     public func addAWSClientGeneratorWithTraceContext(
             fileBuilder: FileBuilder,
             baseName: String,
             codeGenerator: ServiceModelCodeGenerator,
             targetsAPIGateway: Bool,
             clientAttributes: AWSClientAttributes,
+            contentType: String) {
+        addAWSClientGeneratorWithTraceContext(fileBuilder: fileBuilder,
+                                              baseName: baseName,
+                                              codeGenerator: codeGenerator,
+                                              targetsAPIGateway: targetsAPIGateway,
+                                              contentType: contentType)
+    }
+    
+    public func addAWSClientGeneratorWithTraceContext(
+            fileBuilder: FileBuilder,
+            baseName: String,
+            codeGenerator: ServiceModelCodeGenerator,
+            targetsAPIGateway: Bool,
             contentType: String) {
         guard case .struct(let clientName, _, _) = clientType else {
             fatalError()
@@ -623,6 +649,21 @@ extension ModelClientDelegate {
             targetsAPIGateway: Bool,
             clientAttributes: AWSClientAttributes,
             contentType: String) {
+        addAWSClientGeneratorWithLogger(fileBuilder: fileBuilder,
+                                        baseName: baseName,
+                                        codeGenerator: codeGenerator,
+                                        targetsAPIGateway: targetsAPIGateway,
+                                        invocationTraceContext: clientAttributes.defaultInvocationTraceContext,
+                                        contentType: contentType)
+    }
+    
+    public func addAWSClientGeneratorWithLogger(
+            fileBuilder: FileBuilder,
+            baseName: String,
+            codeGenerator: ServiceModelCodeGenerator,
+            targetsAPIGateway: Bool,
+            invocationTraceContext: InvocationTraceContextDeclaration,
+            contentType: String) {
         guard case .struct(let clientName, _, _) = clientType else {
             fatalError()
         }
@@ -631,11 +672,11 @@ extension ModelClientDelegate {
             
             public func with(
                     logger: Logging.Logger,
-                    internalRequestId: String = "none") -> \(clientName)<StandardHTTPClientCoreInvocationReporting<AWSClientInvocationTraceContext>> {
+                    internalRequestId: String = "none") -> \(clientName)<StandardHTTPClientCoreInvocationReporting<\(invocationTraceContext.name)>> {
                 let reporting = StandardHTTPClientCoreInvocationReporting(
                     logger: logger,
                     internalRequestId: internalRequestId,
-                    traceContext: AWSClientInvocationTraceContext())
+                    traceContext: \(invocationTraceContext.name)())
                 
                 return with(reporting: reporting)
             }

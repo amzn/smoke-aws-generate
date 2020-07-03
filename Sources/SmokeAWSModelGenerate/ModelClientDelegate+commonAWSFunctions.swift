@@ -50,17 +50,17 @@ extension ModelClientDelegate {
             addAWSClientGeneratorWithReporting(
                 fileBuilder: fileBuilder, baseName: baseName,
                 codeGenerator: codeGenerator, targetsAPIGateway: targetsAPIGateway,
-                clientAttributes: clientAttributes, contentType: contentType)
+                contentType: contentType)
             
             addAWSClientGeneratorWithTraceContext(
                 fileBuilder: fileBuilder, baseName: baseName,
                 codeGenerator: codeGenerator, targetsAPIGateway: targetsAPIGateway,
-                clientAttributes: clientAttributes, contentType: contentType)
+                contentType: contentType)
             
-            addAWSClientGeneratorWithAWSTraceContext(
+            addAWSClientGeneratorWithLogger(
                 fileBuilder: fileBuilder, baseName: baseName,
                 codeGenerator: codeGenerator, targetsAPIGateway: targetsAPIGateway,
-                clientAttributes: clientAttributes, contentType: contentType)
+                invocationTraceContext: clientAttributes.defaultInvocationTraceContext, contentType: contentType)
         }
     }
 }
