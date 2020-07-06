@@ -29,6 +29,7 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
     public let baseName: String
     public let contentType: String
     public let signAllHeaders: Bool
+    public let defaultInvocationTraceContext: InvocationTraceContextDeclaration
     
     private struct APIGatewayClientFunction {
         let name: String
@@ -46,7 +47,8 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
     public init(baseName: String,
                 asyncResultType: AsyncResultType? = nil,
                 contentType: String,
-                signAllHeaders: Bool) {
+                signAllHeaders: Bool,
+                defaultInvocationTraceContext: InvocationTraceContextDeclaration = InvocationTraceContextDeclaration(name: "AWSClientInvocationTraceContext")) {
         self.baseName = baseName
         self.asyncResultType = asyncResultType
         let genericParameters: [(String, String?)] = [("InvocationReportingType", "HTTPClientCoreInvocationReporting")]
@@ -54,6 +56,7 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                                   conformingProtocolName: "\(baseName)ClientProtocol")
         self.contentType = contentType
         self.signAllHeaders = signAllHeaders
+        self.defaultInvocationTraceContext = defaultInvocationTraceContext
     }
     
     public func getFileDescription(isGenerator: Bool) -> String {
@@ -68,7 +71,8 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                                     delegate: ModelClientDelegate,
                                     fileBuilder: FileBuilder,
                                     isGenerator: Bool) {
-        addAWSClientFileHeader(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName, isGenerator: isGenerator)
+        addAWSClientFileHeader(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName, isGenerator: isGenerator,
+                               defaultInvocationTraceContext: self.defaultInvocationTraceContext)
     }
     
     public func addCommonFunctions(codeGenerator: ServiceModelCodeGenerator,
@@ -81,7 +85,8 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                                                    service: "execute-api",
                                                    target: nil,
                                                    contentType: contentType,
-                                                   globalEndpoint: nil)
+                                                   globalEndpoint: nil,
+                                                   defaultInvocationTraceContext: self.defaultInvocationTraceContext)
     
         addAWSClientCommonFunctions(fileBuilder: fileBuilder, baseName: baseName,
                                     clientAttributes: clientAttributes,

@@ -24,7 +24,7 @@ import CoralToJSONServiceModel
 extension ModelClientDelegate {
     func addAWSClientFileHeader(codeGenerator: ServiceModelCodeGenerator,
                                 fileBuilder: FileBuilder, baseName: String,
-                                isGenerator: Bool) {
+                                isGenerator: Bool, defaultInvocationTraceContext: InvocationTraceContextDeclaration) {
         fileBuilder.appendLine("""
             import SmokeAWSHttp
             import NIO
@@ -33,7 +33,13 @@ extension ModelClientDelegate {
             import Logging
             """)
         
-        if !isGenerator {
+        if isGenerator {
+            if let importPackage = defaultInvocationTraceContext.importPackage {
+                fileBuilder.appendLine("""
+                    import \(importPackage)
+                    """)
+            }
+        } else {
             fileBuilder.appendLine("""
                 
                 public enum \(baseName)ClientError: Swift.Error {

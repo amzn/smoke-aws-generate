@@ -18,6 +18,16 @@
 import Foundation
 import CoralToJSONServiceModel
 
+public struct InvocationTraceContextDeclaration {
+    public let name: String
+    public let importPackage: String?
+    
+    public init(name: String, importPackage: String? = nil) {
+        self.name = name
+        self.importPackage = importPackage
+    }
+}
+
 /**
  Structure that specifies the attributes of an AWS client.
  */
@@ -32,6 +42,8 @@ public struct AWSClientAttributes {
     public let contentType: String
     /// If the service has a global endpoint that should be used as its default endpoint.
     public let globalEndpoint: String?
+    /// The name of the InvocationTraceContext implementation to use.
+    public let defaultInvocationTraceContext: InvocationTraceContextDeclaration
     
     /**
      Initializer.
@@ -42,16 +54,19 @@ public struct AWSClientAttributes {
         - target: The service target this client is targeting.
         - contentType: The request content type used by this client.
         - globalEndpoint: If the service has a global endpoint that should be used as its default endpoint.
+        - defaultInvocationTraceContextName: The name of the InvocationTraceContext implementation to use.
      */
     public init(apiVersion: String,
                 service: String,
                 target: String?,
                 contentType: String,
-                globalEndpoint: String?) {
+                globalEndpoint: String?,
+                defaultInvocationTraceContext: InvocationTraceContextDeclaration = InvocationTraceContextDeclaration(name: "AWSClientInvocationTraceContext")) {
         self.apiVersion = apiVersion
         self.service = service
         self.target = target
         self.contentType = contentType
         self.globalEndpoint = globalEndpoint
+        self.defaultInvocationTraceContext = defaultInvocationTraceContext
     }
 }
