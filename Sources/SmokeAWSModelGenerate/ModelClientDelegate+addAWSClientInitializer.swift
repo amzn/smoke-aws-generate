@@ -394,7 +394,7 @@ extension ModelClientDelegate {
                 let apiVersion: String
                 let target: String?
                 let retryConfiguration: HTTPClientRetryConfiguration
-                let retryOnErrorProvider: (Swift.Error) -> Bool
+                let retryOnErrorProvider: (SmokeHTTPClient.HTTPClientError) -> Bool
                 let credentialsProvider: CredentialsProvider
                 """)
         
@@ -434,7 +434,7 @@ extension ModelClientDelegate {
                 let service: String
                 let target: String?
                 let retryConfiguration: HTTPClientRetryConfiguration
-                let retryOnErrorProvider: (Swift.Error) -> Bool
+                let retryOnErrorProvider: (SmokeHTTPClient.HTTPClientError) -> Bool
                 let credentialsProvider: CredentialsProvider
                 """)
     
@@ -522,7 +522,7 @@ extension ModelClientDelegate {
             fileBuilder.appendLine("""
                         service: String,
                         \(targetOrVersionParameter),
-                        retryOnErrorProvider: @escaping (Swift.Error) -> Bool,
+                        retryOnErrorProvider: @escaping (SmokeHTTPClient.HTTPClientError) -> Bool,
                         retryConfiguration: HTTPClientRetryConfiguration,
                         operationsReporting: \(baseName)OperationsReporting) {
             """)

@@ -21,6 +21,8 @@ import ServiceModelEntities
 import ServiceModelGenerate
 import CoralToJSONServiceModel
 
+private typealias SpecificErrorBehaviour = (retriableErrors: [String], unretriableErrors: [String], defaultBehaviorErrorsCount: Int)
+
 extension ModelClientDelegate {
     func addAWSClientFileHeader(codeGenerator: ServiceModelCodeGenerator,
                                 fileBuilder: FileBuilder, baseName: String,
@@ -32,6 +34,8 @@ extension ModelClientDelegate {
             import AsyncHTTPClient
             import Logging
             """)
+        
+        let specificErrorBehaviour = getSpecificErrors(codeGenerator: codeGenerator, baseName: baseName)
         
         if isGenerator {
             if let importPackage = defaultInvocationTraceContext.importPackage {
@@ -49,9 +53,13 @@ extension ModelClientDelegate {
                 }
                 """)
         
-            addTypedErrorRetriableExtension(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName)
+            addTypedErrorRetriableExtension(codeGenerator: codeGenerator, fileBuilder: fileBuilder,
+                                            baseName: baseName, specificErrorBehaviour: specificErrorBehaviour)
         }
-        addErrorRetriableExtension(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName)
+        
+        if !(specificErrorBehaviour.retriableErrors.isEmpty && specificErrorBehaviour.unretriableErrors.isEmpty) {
+            addErrorRetriableExtension(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName)
+        }
     }
     
     private func addRetriableSwitchStatement(fileBuilder: FileBuilder, retriableErrors: [String],
@@ -84,18 +92,10 @@ extension ModelClientDelegate {
         }
         
         if defaultBehaviorErrorsCount != 0 {
-            switch httpClientConfiguration.knownErrorsDefaultRetryBehavior {
-            case .retry:
-                fileBuilder.appendLine("""
-                    default:
-                        return true
-                    """)
-            case .fail:
-                fileBuilder.appendLine("""
-                    default:
-                        return false
-                    """)
-            }
+            fileBuilder.appendLine("""
+                default:
+                    return nil
+                """)
         }
         
         fileBuilder.appendLine("""
@@ -105,16 +105,14 @@ extension ModelClientDelegate {
         fileBuilder.decIndent()
     }
     
-    public func addTypedErrorRetriableExtension(codeGenerator: ServiceModelCodeGenerator,
-                                                fileBuilder: FileBuilder, baseName: String) {
-        let errorType = "\(baseName)Error"
-        let httpClientConfiguration = codeGenerator.customizations.httpClientConfiguration
+    private func getSpecificErrors(codeGenerator: ServiceModelCodeGenerator, baseName: String) -> SpecificErrorBehaviour {
+        let sortedErrors = codeGenerator.getSortedErrors(allErrorTypes: codeGenerator.model.errorTypes)
         
         var retriableErrors: [String] = []
         var unretriableErrors: [String] = []
         var defaultBehaviorErrorsCount: Int = 0
         
-        let sortedErrors = codeGenerator.getSortedErrors(allErrorTypes: codeGenerator.model.errorTypes)
+        let httpClientConfiguration = codeGenerator.customizations.httpClientConfiguration
         
         sortedErrors.forEach { errorType in
             let errorIdentity = errorType.identity
@@ -134,36 +132,44 @@ extension ModelClientDelegate {
             }
         }
         
+        return (retriableErrors, unretriableErrors, defaultBehaviorErrorsCount)
+    }
+    
+    private func addTypedErrorRetriableExtension(codeGenerator: ServiceModelCodeGenerator,
+                                                fileBuilder: FileBuilder, baseName: String,
+                                                specificErrorBehaviour: SpecificErrorBehaviour) {
+        let errorType = "\(baseName)Error"
+        let httpClientConfiguration = codeGenerator.customizations.httpClientConfiguration
+        
+        let retriableErrors = specificErrorBehaviour.retriableErrors
+        let unretriableErrors = specificErrorBehaviour.unretriableErrors
+        let defaultBehaviorErrorsCount = specificErrorBehaviour.defaultBehaviorErrorsCount
+        
         fileBuilder.appendLine("""
             
              extension \(errorType): ConvertableError {
                 public static func asUnrecognizedError(error: Swift.Error) -> \(errorType) {
                     return error.asUnrecognized\(baseName)Error()
                 }
-            
-                func isRetriable() -> Bool {
             """)
         
-        if retriableErrors.isEmpty && unretriableErrors.isEmpty {
-            switch httpClientConfiguration.knownErrorsDefaultRetryBehavior {
-            case .retry:
-                fileBuilder.appendLine("""
-                        return true
+        if !(retriableErrors.isEmpty && unretriableErrors.isEmpty) {
+            fileBuilder.appendLine("""
+                
+                    func isRetriable() -> Bool? {
                 """)
-            case .fail:
-                fileBuilder.appendLine("""
-                        return false
-                """)
-            }
-        } else {
+            
             addRetriableSwitchStatement(fileBuilder: fileBuilder, retriableErrors: retriableErrors,
                                         unretriableErrors: unretriableErrors,
                                         defaultBehaviorErrorsCount: defaultBehaviorErrorsCount,
                                         httpClientConfiguration: httpClientConfiguration)
+            
+            fileBuilder.appendLine("""
+                }
+            """)
         }
         
         fileBuilder.appendLine("""
-            }
         }
         """)
     }
@@ -171,18 +177,15 @@ extension ModelClientDelegate {
     public func addErrorRetriableExtension(codeGenerator: ServiceModelCodeGenerator,
                                            fileBuilder: FileBuilder, baseName: String) {
         let errorType = "\(baseName)Error"
-        let httpClientConfiguration = codeGenerator.customizations.httpClientConfiguration
-        
-        let unknownErrorIsRetriable = httpClientConfiguration.retryOnUnknownError.description
-        
+                
         fileBuilder.appendLine("""
             
-            private extension Swift.Error {
+            private extension SmokeHTTPClient.HTTPClientError {
                 func isRetriable() -> Bool {
-                    if let typedError = self as? \(errorType) {
-                        return typedError.isRetriable()
+                    if let typedError = self.cause as? \(errorType), let isRetriable = typedError.isRetriable() {
+                        return isRetriable
                     } else {
-                        return \(unknownErrorIsRetriable)
+                        return self.isRetriableAccordingToCategory
                     }
                 }
             }
