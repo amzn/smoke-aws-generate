@@ -24,7 +24,6 @@ extension ServiceModelCodeGenerator {
      */
     func generateServerApplicationFiles() {
         generatePackageFile(fileName: "Package.swift")
-        generateLegacyPackageFile(fileName: "Package@swift-5.0.swift")
         generateLegacyPackageFile(fileName: "Package@swift-5.1.swift")
         generateGitIgnoreFile()
     }
