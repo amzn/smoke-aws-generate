@@ -21,7 +21,7 @@ import ServiceModelEntities
 import ServiceModelGenerate
 import CoralToJSONServiceModel
 
-private typealias SpecificErrorBehaviour = (retriableErrors: [String], unretriableErrors: [String], defaultBehaviorErrorsCount: Int)
+public typealias SpecificErrorBehaviour = (retriableErrors: [String], unretriableErrors: [String], defaultBehaviorErrorsCount: Int)
 
 extension ModelClientDelegate {
     func addAWSClientFileHeader(codeGenerator: ServiceModelCodeGenerator,
@@ -105,7 +105,7 @@ extension ModelClientDelegate {
         fileBuilder.decIndent()
     }
     
-    private func getSpecificErrors(codeGenerator: ServiceModelCodeGenerator, baseName: String) -> SpecificErrorBehaviour {
+    public func getSpecificErrors(codeGenerator: ServiceModelCodeGenerator, baseName: String) -> SpecificErrorBehaviour {
         let sortedErrors = codeGenerator.getSortedErrors(allErrorTypes: codeGenerator.model.errorTypes)
         
         var retriableErrors: [String] = []
@@ -135,7 +135,7 @@ extension ModelClientDelegate {
         return (retriableErrors, unretriableErrors, defaultBehaviorErrorsCount)
     }
     
-    private func addTypedErrorRetriableExtension(codeGenerator: ServiceModelCodeGenerator,
+    public func addTypedErrorRetriableExtension(codeGenerator: ServiceModelCodeGenerator,
                                                 fileBuilder: FileBuilder, baseName: String,
                                                 specificErrorBehaviour: SpecificErrorBehaviour) {
         let errorType = "\(baseName)Error"
