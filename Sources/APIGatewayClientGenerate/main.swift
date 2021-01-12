@@ -169,7 +169,7 @@ func handleApplication() throws {
                 validationErrorDeclaration: validationErrorDeclaration,
                 unrecognizedErrorDeclaration: unrecognizedErrorDeclaration,
                 generateModelShapeConversions: false,
-                optionalsInitializeEmpty: false,
+                optionalsInitializeEmpty: true,
                 fileHeader: nil,
                 httpClientConfiguration: httpClientConfiguration)
             
