@@ -1,4 +1,4 @@
-// Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// Copyright 2019-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License").
 // You may not use this file except in compliance with the License.
@@ -31,7 +31,8 @@ internal struct S3Configuration {
         additionalClients: ["dataHttpClient": additionalHttpClient])
     
     static let modelOverride = ModelOverride(enumerations:
-        EnumerationNaming(usingUpperCamelCase: ["Event"]))
+        EnumerationNaming(usingUpperCamelCase: ["Event"]),
+                                             fieldRawTypeOverride: ["Long": CommonConfiguration.intOverride])
     
     static let serviceModelDetails = ServiceModelDetails(
         serviceName: "s3", serviceVersion: "2006-03-01",

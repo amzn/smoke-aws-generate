@@ -1,4 +1,4 @@
-// Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// Copyright 2019-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License").
 // You may not use this file except in compliance with the License.
@@ -372,6 +372,7 @@ private let additionalErrors: Set<String> = [
 
 internal struct EC2Configuration {
     static let modelOverride = ModelOverride(
+        fieldRawTypeOverride: ["Long": CommonConfiguration.intOverride],
         additionalErrors: additionalErrors)
     
     static let httpClientConfiguration = HttpClientConfiguration(

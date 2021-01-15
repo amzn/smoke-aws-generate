@@ -1,4 +1,4 @@
-// Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// Copyright 2019-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License").
 // You may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ import Foundation
 import ServiceModelEntities
 
 internal struct ECSConfiguration {
+    static let modelOverride = ModelOverride(fieldRawTypeOverride: ["Long": CommonConfiguration.intOverride])
+
     static let httpClientConfiguration = HttpClientConfiguration(
         retryOnUnknownError: true,
         knownErrorsDefaultRetryBehavior: .fail,
@@ -27,7 +29,7 @@ internal struct ECSConfiguration {
     
     static let serviceModelDetails = ServiceModelDetails(
         serviceName: "ecs", serviceVersion: "2014-11-13",
-        baseName: "ElasticContainer", modelOverride: nil,
+        baseName: "ElasticContainer", modelOverride: modelOverride,
         httpClientConfiguration: httpClientConfiguration,
         signAllHeaders: false)
 }

@@ -1,4 +1,4 @@
-// Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// Copyright 2019-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License").
 // You may not use this file except in compliance with the License.
@@ -19,7 +19,8 @@ import Foundation
 import ServiceModelEntities
 
 internal struct DynamoDBConfiguration {
-    static let modelOverride = ModelOverride(matchCase: ["AttributeValue"])
+    static let modelOverride = ModelOverride(matchCase: ["AttributeValue"],
+                                             fieldRawTypeOverride: ["Long": CommonConfiguration.intOverride])
     
     static let httpClientConfiguration = HttpClientConfiguration(
         retryOnUnknownError: true,

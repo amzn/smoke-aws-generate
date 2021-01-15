@@ -1,4 +1,4 @@
-// Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// Copyright 2019-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License").
 // You may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import SmokeAWSModelGenerate
 struct CommonConfiguration {
     static let integerDateOverride = RawTypeOverride(typeName: "Double",
                                                      defaultValue: "1.52953091375E9")
+    static let intOverride = RawTypeOverride(typeName: "Int", defaultValue: "0")
     
     static let defaultHttpClientConfiguration = HttpClientConfiguration(
         retryOnUnknownError: true,
@@ -33,7 +34,7 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.36.24"
+let goRepositoryTag = "v1.36.27"
 
 let fileHeader = """
     // Copyright 2018-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
