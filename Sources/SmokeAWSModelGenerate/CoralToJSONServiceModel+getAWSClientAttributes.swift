@@ -28,7 +28,7 @@ extension CoralToJSONServiceModel {
         }
 
         return AWSClientAttributes(apiVersion: metadata.apiVersion,
-                                   service: metadata.endpointPrefix,
+                                   service: metadata.signingName ?? metadata.endpointPrefix,
                                    target: metadata.targetPrefix,
                                    contentType: "application/x-amz-\(protocolName)",
                                    globalEndpoint: metadata.globalEndpoint)

@@ -32,6 +32,7 @@ public struct Metadata: Codable {
     public let serviceId: String?
     public let signatureVersion: String
     public let targetPrefix: String?
+    public let signingName: String?
     public let uid: String?
     
     enum CodingKeys: String, CodingKey {
@@ -45,6 +46,7 @@ public struct Metadata: Codable {
         case serviceId
         case signatureVersion
         case targetPrefix
+        case signingName
         case uid
     }
 }

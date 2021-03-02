@@ -24,6 +24,8 @@ import SmokeAWSModelGenerate
 struct CommonConfiguration {
     static let integerDateOverride = RawTypeOverride(typeName: "Double",
                                                      defaultValue: "1.52953091375E9")
+    static let longDateOverride = RawTypeOverride(typeName: "Int64",
+                                                  defaultValue: "0")
     static let intOverride = RawTypeOverride(typeName: "Int", defaultValue: "0")
     
     static let defaultHttpClientConfiguration = HttpClientConfiguration(
@@ -34,7 +36,7 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.37.17"
+let goRepositoryTag = "v1.37.22"
 
 let fileHeader = """
     // Copyright 2018-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -439,7 +441,11 @@ func handleApplication() throws {
         SimpleWorkflowConfiguration.serviceModelDetails,
         CloudwatchConfiguration.serviceModelDetails,
         RDSConfiguration.serviceModelDetails,
-        RDSDataConfiguration.serviceModelDetails]
+        RDSDataConfiguration.serviceModelDetails,
+        // disabled; currently untested
+        //CodeBuildConfiguration.serviceModelDetails,
+        //CodePipelineConfiguration.serviceModelDetails,
+        ECRConfiguration.serviceModelDetails]
     
     var baseFilePath: String?
     var missingOptions: Set<String> = [baseFilePathOption]
