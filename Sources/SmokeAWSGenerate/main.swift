@@ -20,6 +20,7 @@ import ServiceModelCodeGeneration
 import ServiceModelEntities
 import ServiceModelGenerate
 import SmokeAWSModelGenerate
+import ArgumentParser
 
 struct CommonConfiguration {
     static let integerDateOverride = RawTypeOverride(typeName: "Double",
@@ -90,19 +91,6 @@ func call(arguments: [String], environment: [String: String]? = nil,
     }
 
     return outputPipe.fileHandleForReading.availableData
-}
-
-func printUsage() {
-    let usage = """
-        OVERVIEW: Retrieves the current AWS service models and updated the SmokeAWS package.
-
-        USAGE: SmokeAWSGenerate [options]
-
-        OPTIONS:
-          --base-file-path     The file path to place the root of the generated Swift package.
-        """
-    
-    print(usage)
 }
 
 struct AWSServiceModelDetails {
@@ -425,9 +413,7 @@ func createTempDirectory(errorMessage: inout String?) -> URL? {
     return tempDirURL
 }
 
-func handleApplication() throws {
-    let baseFilePathOption = "--base-file-path"
-    
+func handleApplication(baseFilePath: String) throws {    
     let serviceModelDetails: [ServiceModelDetails] = [
         CloudFormationConfiguration.serviceModelDetails,
         EC2Configuration.serviceModelDetails,
@@ -447,57 +433,34 @@ func handleApplication() throws {
         //CodePipelineConfiguration.serviceModelDetails,
         ECRConfiguration.serviceModelDetails]
     
-    var baseFilePath: String?
-    var missingOptions: Set<String> = [baseFilePathOption]
-    
-    var currentOption: String?
     var errorMessage: String?
-    for argument in CommandLine.arguments.dropFirst() {
-        if currentOption == nil && argument.hasPrefix("--") {
-            currentOption = argument
-            missingOptions.remove(argument)
-        } else if let option = currentOption, !argument.hasPrefix("--") {
-            switch option {
-            case baseFilePathOption:
-                baseFilePath = argument
-            default:
-                errorMessage = "Unrecognized option: \(option)"
-            }
-            
-            currentOption = nil
-        } else {
-            printUsage()
-            
-            break
-        }
-        
-    }
-    
     let tempDirURL = createTempDirectory(errorMessage: &errorMessage)
     
-    if errorMessage == nil {
-        if let baseFilePath = baseFilePath,
-            let tempDirURL = tempDirURL {
-            try generateSmokeAWS(tempDirURL: tempDirURL,
-                                 serviceModelDetails: serviceModelDetails,
-                                 baseFilePath: baseFilePath)
-        } else {
-            var missingOptionsString: String = ""
-            missingOptions.forEach { option in missingOptionsString += " " + option }
-            
-            errorMessage = "Missing required options:" + missingOptionsString
-        }
+    if errorMessage == nil, let tempDirURL = tempDirURL {
+        try generateSmokeAWS(tempDirURL: tempDirURL,
+                             serviceModelDetails: serviceModelDetails,
+                             baseFilePath: baseFilePath)
     }
     
     if let errorMessage = errorMessage {
         print("ERROR: \(errorMessage)\n")
-        
-        printUsage()
     }
 }
 
-if isUsage {
-    printUsage()
-} else {
-    try handleApplication()
+struct SmokeAWSGenerateCommand: ParsableCommand {
+    static var configuration: CommandConfiguration {
+        return CommandConfiguration(
+            commandName: "SmokeAWSGenerate",
+            abstract: "Retrieves the current AWS service models and updated the SmokeAWS package."
+        )
+    }
+    
+    @Option(name: .customLong("base-file-path"), help: "The file path to place the root of the generated Swift package.")
+    var baseFilePath: String
+
+    mutating func run() throws {
+        try handleApplication(baseFilePath: baseFilePath)
+    }
 }
+
+SmokeAWSGenerateCommand.main()
