@@ -156,7 +156,7 @@ extension ModelClientDelegate {
         if !(retriableErrors.isEmpty && unretriableErrors.isEmpty) {
             fileBuilder.appendLine("""
                 
-                    func isRetriable() -> Bool? {
+                    public func isRetriable() -> Bool? {
                 """)
             
             addRetriableSwitchStatement(fileBuilder: fileBuilder, retriableErrors: retriableErrors,
