@@ -172,7 +172,8 @@ func generateLegacyPackageFile(baseNames: [String]) -> String {
                 .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
                 .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
                 .package(url: "https://github.com/LiveUI/XMLCoding.git", from: "0.4.1"),
-                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.7.0"),
+                .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.5.1"),
+                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.4.0"),
                 .package(url: "https://github.com/IBM-Swift/BlueCryptor.git", from: "1.0.0"),
             ],
             targets: [\n
@@ -190,7 +191,7 @@ func generateLegacyPackageFile(baseNames: [String]) -> String {
                     name: "SmokeAWSHttp",
                     dependencies: ["Logging", "NIO", "NIOHTTP1",
                                    "SmokeAWSCore", "SmokeHTTPClient", "QueryCoding",
-                                   "HTTPPathCoding", "HTTPHeadersCoding", "Cryptor"]),
+                                   "HTTPPathCoding", "HTTPHeadersCoding", "Cryptor", "NIOTransportServices"]),
                 .target(
                     name: "SmokeAWSMetrics",
                     dependencies: ["Logging", "Metrics", "CloudWatchClient"]),
@@ -259,7 +260,8 @@ func generatePackageFile(baseNames: [String]) -> String {
                 .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
                 .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
                 .package(url: "https://github.com/LiveUI/XMLCoding.git", from: "0.4.1"),
-                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.7.0"),
+                .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.5.1"),
+                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.4.0"),
                 .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"),
             ],
             targets: [\n
@@ -288,6 +290,7 @@ func generatePackageFile(baseNames: [String]) -> String {
                         .product(name: "HTTPPathCoding", package: "smoke-http"),
                         .product(name: "HTTPHeadersCoding", package: "smoke-http"),
                         .product(name: "Crypto", package: "swift-crypto"),
+                        .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
                     ]),
                 .target(
                     name: "SmokeAWSMetrics", dependencies: [

@@ -47,12 +47,20 @@ public struct AWSClientDelegate: ModelClientDelegate {
                 clientAttributes: AWSClientAttributes,
                 signAllHeaders: Bool,
                 asyncResultType: AsyncResultType? = nil) {
+        let clientProtocol: String
+        switch clientAttributes.contentType.contentTypeDefaultInputLocation {
+        case .query:
+            clientProtocol = "AWSQueryClientProtocol"
+        case .body:
+            clientProtocol = "AWSClientProtocol"
+        }
+        
         self.baseName = baseName
         self.clientAttributes = clientAttributes
         self.asyncResultType = asyncResultType
         let genericParameters: [(String, String?)] = [("InvocationReportingType", "HTTPClientCoreInvocationReporting")]
         self.clientType = .struct(name: "AWS\(baseName)Client", genericParameters: genericParameters,
-                                  conformingProtocolName: "\(baseName)ClientProtocol")
+                                  conformingProtocolNames: ["\(baseName)ClientProtocol", clientProtocol])
         self.signAllHeaders = signAllHeaders
     }
     

@@ -193,6 +193,7 @@ extension ModelClientDelegate {
         
         if !isCopyInitializer {
             fileBuilder.appendLine("""
+                self.eventLoopGroup = AWSClientHelper.getEventLoop(eventLoopGroupProvider: eventLoopProvider)
                 let useTLS = requiresTLS ?? AWSHTTPClientDelegate.requiresTLS(forEndpointPort: endpointPort)
                 """)
             
@@ -214,10 +215,11 @@ extension ModelClientDelegate {
                     contentType: contentType,
                     clientDelegate: clientDelegate,
                     connectionTimeoutSeconds: connectionTimeoutSeconds,
-                    eventLoopProvider: eventLoopProvider)
+                    eventLoopProvider: .shared(self.eventLoopGroup))
                 """)
         } else {
             fileBuilder.appendLine("""
+                self.eventLoopGroup = eventLoopGroup
                 self.httpClient = httpClient
                 """)
         }
@@ -293,7 +295,7 @@ extension ModelClientDelegate {
                         contentType: contentType,
                         clientDelegate: clientDelegateFor\(postfix),
                         connectionTimeoutSeconds: connectionTimeoutSeconds,
-                        eventLoopProvider: eventLoopProvider)
+                        eventLoopProvider: .shared(self.eventLoopGroup))
                     """)
             } else {
                 fileBuilder.appendLine("""
@@ -385,10 +387,16 @@ extension ModelClientDelegate {
         if !isGenerator {
             fileBuilder.appendLine("""
                 let ownsHttpClients: Bool
+                public let awsRegion: AWSRegion
+                public let service: String
+                public let apiVersion: String
+                public let target: String?
+                public let retryConfiguration: HTTPClientRetryConfiguration
+                public let retryOnErrorProvider: (SmokeHTTPClient.HTTPClientError) -> Bool
+                public let credentialsProvider: CredentialsProvider
                 """)
-        }
-        
-        fileBuilder.appendLine("""
+        } else {
+            fileBuilder.appendLine("""
                 let awsRegion: AWSRegion
                 let service: String
                 let apiVersion: String
@@ -397,10 +405,15 @@ extension ModelClientDelegate {
                 let retryOnErrorProvider: (SmokeHTTPClient.HTTPClientError) -> Bool
                 let credentialsProvider: CredentialsProvider
                 """)
+        }
+        
+        fileBuilder.appendLine("""
+
+            public let eventLoopGroup: EventLoopGroup
+            """)
         
         if !isGenerator {
             fileBuilder.appendLine("""
-
                 public let reporting: InvocationReportingType
                 """)
         }
@@ -426,10 +439,15 @@ extension ModelClientDelegate {
         if !isGenerator {
             fileBuilder.appendLine("""
                 let ownsHttpClients: Bool
+                public let awsRegion: AWSRegion
+                public let service: String
+                public let target: String?
+                public let retryConfiguration: HTTPClientRetryConfiguration
+                public let retryOnErrorProvider: (SmokeHTTPClient.HTTPClientError) -> Bool
+                public let credentialsProvider: CredentialsProvider
                 """)
-        }
-        
-        fileBuilder.appendLine("""
+        } else {
+            fileBuilder.appendLine("""
                 let awsRegion: AWSRegion
                 let service: String
                 let target: String?
@@ -437,10 +455,15 @@ extension ModelClientDelegate {
                 let retryOnErrorProvider: (SmokeHTTPClient.HTTPClientError) -> Bool
                 let credentialsProvider: CredentialsProvider
                 """)
+        }
+        
+        fileBuilder.appendLine("""
+
+            public let eventLoopGroup: EventLoopGroup
+            """)
     
         if !isGenerator {
             fileBuilder.appendLine("""
-
                 public let reporting: InvocationReportingType
                 """)
         }
@@ -522,6 +545,7 @@ extension ModelClientDelegate {
             fileBuilder.appendLine("""
                         service: String,
                         \(targetOrVersionParameter),
+                        eventLoopGroup: EventLoopGroup,
                         retryOnErrorProvider: @escaping (SmokeHTTPClient.HTTPClientError) -> Bool,
                         retryConfiguration: HTTPClientRetryConfiguration,
                         operationsReporting: \(baseName)OperationsReporting) {
@@ -595,6 +619,7 @@ extension ModelClientDelegate {
         fileBuilder.appendLine("""
                 service: self.service,
                 \(targetOrVersionParameter),
+                eventLoopGroup: self.eventLoopGroup,
                 retryOnErrorProvider: self.retryOnErrorProvider,
                 retryConfiguration: self.retryConfiguration,
                 operationsReporting: self.operationsReporting)
@@ -631,11 +656,13 @@ extension ModelClientDelegate {
             public func with<NewTraceContextType: InvocationTraceContext>(
                     logger: Logging.Logger,
                     internalRequestId: String = "none",
-                    traceContext: NewTraceContextType) -> \(clientName)<StandardHTTPClientCoreInvocationReporting<NewTraceContextType>> {
+                    traceContext: NewTraceContextType,
+                    eventLoop: EventLoop? = nil) -> \(clientName)<StandardHTTPClientCoreInvocationReporting<NewTraceContextType>> {
                 let reporting = StandardHTTPClientCoreInvocationReporting(
                     logger: logger,
                     internalRequestId: internalRequestId,
-                    traceContext: traceContext)
+                    traceContext: traceContext,
+                    eventLoop: eventLoop)
                 
                 return with(reporting: reporting)
             }
@@ -672,11 +699,13 @@ extension ModelClientDelegate {
             
             public func with(
                     logger: Logging.Logger,
-                    internalRequestId: String = "none") -> \(clientName)<StandardHTTPClientCoreInvocationReporting<\(invocationTraceContext.name)>> {
+                    internalRequestId: String = "none",
+                    eventLoop: EventLoop? = nil) -> \(clientName)<StandardHTTPClientCoreInvocationReporting<\(invocationTraceContext.name)>> {
                 let reporting = StandardHTTPClientCoreInvocationReporting(
                     logger: logger,
                     internalRequestId: internalRequestId,
-                    traceContext: \(invocationTraceContext.name)())
+                    traceContext: \(invocationTraceContext.name)(),
+                    eventLoop: eventLoop)
                 
                 return with(reporting: reporting)
             }

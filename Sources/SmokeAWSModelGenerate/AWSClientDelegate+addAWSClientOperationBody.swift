@@ -31,141 +31,34 @@ internal extension AWSClientDelegate {
         
         let typeName = function.name.getNormalizedTypeName(forModel: codeGenerator.model)
         
-        fileBuilder.appendLine("""
-            let handlerDelegate = AWSClientInvocationDelegate(
-                        credentialsProvider: credentialsProvider,
-                        awsRegion: awsRegion,
-                        service: service,
-                        operation: \(baseName)ModelOperations.\(function.name).rawValue,
-            """)
-        
-        if signAllHeaders {
-            fileBuilder.appendLine("""
-                            target: target,
-                            signAllHeaders: true)
-                """)
-        } else {
-            fileBuilder.appendLine("""
-                            target: target)
-                """)
-        }
-        
-        fileBuilder.appendEmptyLine()
-        
-        fileBuilder.appendLine("""
-            let invocationContext = HTTPClientInvocationContext(reporting: self.invocationsReporting.\(function.name),
-                                                                handlerDelegate: handlerDelegate)
-            """)
-        
-        if function.inputType != nil {
-            fileBuilder.appendLine("""
-                let requestInput = \(typeName)OperationHTTPRequestInput(encodable: input)
-                """)
-        } else {
-            fileBuilder.appendLine("""
-                let requestInput = NoHTTPRequestInput()
-                """)
-        }
-        
-        fileBuilder.appendEmptyLine()
-        
         let httpClientName = getHttpClientForOperation(name: name,
                                                        httpClientConfiguration: codeGenerator.customizations.httpClientConfiguration)
         
-        let returnStatement = getOperationReturnStatement(
-            function: function,
-            invokeType: invokeType,
-            httpClientName: httpClientName,
-            http: http)
-        fileBuilder.appendLine(returnStatement)
+        var requestInputDeclaration: String
+        if function.inputType != nil {
+            requestInputDeclaration = "\(typeName)OperationHTTPRequestInput(encodable: input)"
+        } else {
+            requestInputDeclaration = "NoHTTPRequestInput()"
+        }
+        
+        if function.outputType != nil {
+            fileBuilder.appendLine("""
+                return executeWithOutput(httpClient: \(httpClientName),
+                                         requestInput: \(requestInputDeclaration),
+                                         operation: \(baseName)ModelOperations.\(function.name).rawValue,
+                                         reporting: self.invocationsReporting.\(function.name),
+                                         errorType: \(baseName)Error.self)
+                """)
+        } else {
+            fileBuilder.appendLine("""
+                return executeWithoutOutput(httpClient: \(httpClientName),
+                                            requestInput: \(requestInputDeclaration),
+                                            operation: \(baseName)ModelOperations.\(function.name).rawValue,
+                                            reporting: self.invocationsReporting.\(function.name),
+                                            errorType: \(baseName)Error.self)
+                """)
+        }
         
         fileBuilder.appendLine("}", preDec: true)
-    }
-    
-    private func getOperationNoOutputReturnStatement(
-            invokeType: InvokeType,
-            httpClientName: String,
-            outputType: String,
-            http: (verb: String, url: String)) -> String {
-        switch invokeType {
-        case .sync:
-            return """
-            do {
-                return try \(httpClientName).executeSyncRetriableWithOutput(
-                    endpointPath: "\(http.url)",
-                    httpMethod: .\(http.verb),
-                    input: requestInput,
-                    invocationContext: invocationContext,
-                    retryConfiguration: retryConfiguration,
-                    retryOnError: retryOnErrorProvider)
-            } catch {
-                let typedError: \(baseName)Error = error.asTypedError()
-                throw typedError
-            }
-            """
-        case .async:
-            return """
-            _ = try \(httpClientName).executeOperationAsyncRetriableWithOutput(
-                endpointPath: "\(http.url)",
-                httpMethod: .\(http.verb),
-                input: requestInput,
-                completion: completion,
-                invocationContext: invocationContext,
-                retryConfiguration: retryConfiguration,
-                retryOnError: retryOnErrorProvider)
-            """
-        }
-    }
-    
-    private func getOperationWithOutputReturnStatement(
-            invokeType: InvokeType,
-            httpClientName: String,
-            http: (verb: String, url: String)) -> String {
-        switch invokeType {
-        case .sync:
-            return """
-            do {
-                try \(httpClientName).executeSyncRetriableWithoutOutput(
-                    endpointPath: "\(http.url)",
-                    httpMethod: .\(http.verb),
-                    input: requestInput,
-                    invocationContext: invocationContext,
-                    retryConfiguration: retryConfiguration,
-                    retryOnError: retryOnErrorProvider)
-            } catch {
-                let typedError: \(baseName)Error = error.asTypedError()
-                throw typedError
-            }
-            """
-        case .async:
-            return """
-            _ = try \(httpClientName).executeOperationAsyncRetriableWithoutOutput(
-                endpointPath: "\(http.url)",
-                httpMethod: .\(http.verb),
-                input: requestInput,
-                completion: completion,
-                invocationContext: invocationContext,
-                retryConfiguration: retryConfiguration,
-                retryOnError: retryOnErrorProvider)
-            """
-        }
-    }
-    
-    private func getOperationReturnStatement(
-            function: AWSClientDelegate.AWSClientFunction,
-            invokeType: InvokeType,
-            httpClientName: String,
-            http: (verb: String, url: String)) -> String {
-        if let outputType = function.outputType {
-            return getOperationNoOutputReturnStatement(
-                invokeType: invokeType,
-                httpClientName: httpClientName, outputType: outputType,
-                http: http)
-        } else {
-            return getOperationWithOutputReturnStatement(
-                invokeType: invokeType,
-                httpClientName: httpClientName,
-                http: http)
-        }
     }
 }
