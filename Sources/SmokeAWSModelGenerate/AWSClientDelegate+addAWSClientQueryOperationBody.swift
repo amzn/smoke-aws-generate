@@ -39,133 +39,27 @@ internal extension AWSClientDelegate {
             wrappedTypeDeclaration = "NoHTTPRequestInput(encodable: input)"
         }
         
-        fileBuilder.appendLine("""
-            let handlerDelegate = AWSClientInvocationDelegate(
-                        credentialsProvider: credentialsProvider,
-                        awsRegion: awsRegion,
-                        service: service,
-            """)
-        
-        if signAllHeaders {
-            fileBuilder.appendLine("""
-                            target: target,
-                            signAllHeaders: true)
-                """)
-        } else {
-            fileBuilder.appendLine("""
-                            target: target)
-                """)
-        }
-
-        fileBuilder.appendLine("""
-            
-            let invocationContext = HTTPClientInvocationContext(reporting: self.invocationsReporting.\(function.name),
-                                                                handlerDelegate: handlerDelegate)
-            let wrappedInput = \(wrappedTypeDeclaration)
-            
-            let requestInput = QueryWrapperHTTPRequestInput(
-                wrappedInput: wrappedInput,
-                action: \(baseName)ModelOperations.\(function.name).rawValue,
-                version: apiVersion)
-            """)
-
-        fileBuilder.appendEmptyLine()
-        
         let httpClientName = getHttpClientForOperation(name: name,
                                                        httpClientConfiguration: codeGenerator.customizations.httpClientConfiguration)
         
-        let returnStatement = getQueryOperationReturnStatement(
-            functionOutputType: function.outputType,
-            invokeType: invokeType,
-            httpClientName: httpClientName,
-            http: http)
-        fileBuilder.appendLine(returnStatement)
+        if function.outputType != nil {
+            fileBuilder.appendLine("""
+                return executeWithOutput(httpClient: \(httpClientName),
+                                         wrappedInput: \(wrappedTypeDeclaration),
+                                         action: \(baseName)ModelOperations.\(function.name).rawValue,
+                                         reporting: self.invocationsReporting.\(function.name),
+                                         errorType: \(baseName)Error.self)
+                """)
+        } else {
+            fileBuilder.appendLine("""
+                return executeWithoutOutput(httpClient: \(httpClientName),
+                                            wrappedInput: \(wrappedTypeDeclaration),
+                                            action: \(baseName)ModelOperations.\(function.name).rawValue,
+                                            reporting: self.invocationsReporting.\(function.name),
+                                            errorType: \(baseName)Error.self)
+                """)
+        }
         
         fileBuilder.appendLine("}", preDec: true)
-    }
-    
-    private func getQueryOperationNoOutputReturnStatement(
-            invokeType: InvokeType,
-            httpClientName: String,
-            outputType: String,
-            http: (verb: String, url: String)) -> String {
-        switch invokeType {
-        case .sync:
-            return """
-            do {
-                return try \(httpClientName).executeSyncRetriableWithOutput(
-                    endpointPath: "\(http.url)",
-                    httpMethod: .\(http.verb),
-                    input: requestInput,
-                    invocationContext: invocationContext,
-                    retryConfiguration: retryConfiguration,
-                    retryOnError: retryOnErrorProvider)
-            } catch {
-                let typedError: \(baseName)Error = error.asTypedError()
-                throw typedError
-            }
-            """
-        case .async:
-            return """
-            _ = try \(httpClientName).executeOperationAsyncRetriableWithOutput(
-                endpointPath: "\(http.url)",
-                httpMethod: .\(http.verb),
-                input: requestInput,
-                completion: completion,
-                invocationContext: invocationContext,
-                retryConfiguration: retryConfiguration,
-                retryOnError: retryOnErrorProvider)
-            """
-        }
-    }
-    
-    private func getQueryOperationWithOutputReturnStatement(
-            invokeType: InvokeType,
-            httpClientName: String,
-            http: (verb: String, url: String)) -> String {
-        switch invokeType {
-        case .sync:
-            return """
-            do {
-                try \(httpClientName).executeSyncRetriableWithoutOutput(
-                    endpointPath: "\(http.url)",
-                    httpMethod: .\(http.verb),
-                    input: requestInput,
-                    invocationContext: invocationContext,
-                    retryConfiguration: retryConfiguration,
-                    retryOnError: retryOnErrorProvider)
-            } catch {
-                let typedError: \(baseName)Error = error.asTypedError()
-                throw typedError
-            }
-            """
-        case .async:
-            return """
-            _ = try \(httpClientName).executeOperationAsyncRetriableWithoutOutput(
-                endpointPath: "\(http.url)",
-                httpMethod: .\(http.verb),
-                input: requestInput,
-                completion: completion,
-                invocationContext: invocationContext,
-                retryConfiguration: retryConfiguration,
-                retryOnError: retryOnErrorProvider)
-            """
-        }
-    }
-    
-    private func getQueryOperationReturnStatement(
-            functionOutputType: String?, invokeType: InvokeType,
-            httpClientName: String, http: (verb: String, url: String)) -> String {
-        if let outputType = functionOutputType {
-            return getQueryOperationNoOutputReturnStatement(
-                invokeType: invokeType,
-                httpClientName: httpClientName, outputType: outputType,
-                http: http)
-        } else {
-            return getQueryOperationWithOutputReturnStatement(
-                invokeType: invokeType,
-                httpClientName: httpClientName,
-                http: http)
-        }
     }
 }

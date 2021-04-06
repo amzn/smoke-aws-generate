@@ -53,7 +53,7 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
         self.asyncResultType = asyncResultType
         let genericParameters: [(String, String?)] = [("InvocationReportingType", "HTTPClientCoreInvocationReporting")]
         self.clientType = .struct(name: "APIGateway\(baseName)Client", genericParameters: genericParameters,
-                                  conformingProtocolName: "\(baseName)ClientProtocol")
+                                  conformingProtocolNames: ["\(baseName)ClientProtocol", "AWSClientProtocol"])
         self.contentType = contentType
         self.signAllHeaders = signAllHeaders
         self.defaultInvocationTraceContext = defaultInvocationTraceContext
@@ -121,73 +121,6 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
             invokeType: invokeType,
             signAllHeaders: signAllHeaders)
     }
-        
-    private func getOperationReturnStatement(
-            functionOutputType: String?,
-            invokeType: InvokeType,
-            httpClientName: String,
-            functionName: String,
-            httpVerb: String) -> String {
-        if functionOutputType != nil {
-            switch invokeType {
-            case .sync:
-                return """
-                    do {
-                        return try \(httpClientName).executeSyncRetriableWithOutput(
-                            endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(functionName).operationPath,
-                            httpMethod: .\(httpVerb),
-                            input: requestInput,
-                            invocationContext: invocationContext,
-                            retryConfiguration: retryConfiguration,
-                            retryOnError: retryOnErrorProvider)
-                    } catch {
-                        let typedError: \(baseName)Error = error.asTypedError()
-                        throw typedError
-                    }
-                    """
-            case .async:
-                return """
-                    _ = try \(httpClientName).executeOperationAsyncRetriableWithOutput(
-                        endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(functionName).operationPath,
-                        httpMethod: .\(httpVerb),
-                        input: requestInput,
-                        completion: completion,
-                        invocationContext: invocationContext,
-                        retryConfiguration: retryConfiguration,
-                        retryOnError: retryOnErrorProvider)
-                    """
-            }
-        } else {
-            switch invokeType {
-            case .sync:
-                return """
-                    do {
-                        try \(httpClientName).executeSyncRetriableWithoutOutput(
-                            endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(functionName).operationPath,
-                            httpMethod: .\(httpVerb),
-                            input: requestInput,
-                            invocationContext: invocationContext,
-                            retryConfiguration: retryConfiguration,
-                            retryOnError: retryOnErrorProvider)
-                        } catch {
-                            let typedError: \(baseName)Error = error.asTypedError()
-                            throw typedError
-                        }
-                    """
-            case .async:
-                return """
-                    _ = try \(httpClientName).executeOperationAsyncRetriableWithoutOutput(
-                        endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(functionName).operationPath,
-                        httpMethod: .\(httpVerb),
-                        input: requestInput,
-                        completion: completion,
-                        invocationContext: invocationContext,
-                        retryConfiguration: retryConfiguration,
-                        retryOnError: retryOnErrorProvider)
-                    """
-            }
-        }
-    }
     
     private func addAPIGatewayClientOperationBody(
             operationName: String,
@@ -204,43 +137,48 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
         
         let input = function.inputType != nil ? "input" : "Data()"
         
-        fileBuilder.appendLine("""
-            let handlerDelegate = AWSClientInvocationDelegate(
-                        credentialsProvider: credentialsProvider,
-                        awsRegion: awsRegion,
-                        service: service,
-                        operation: \(baseName)ModelOperations.\(function.name).rawValue,
-            """)
-        
-        if signAllHeaders {
-            fileBuilder.appendLine("""
-                            target: target,
-                            signAllHeaders: true)
-                """)
-        } else {
-            fileBuilder.appendLine("""
-                            target: target)
-                """)
-        }
-
-        fileBuilder.appendLine("""
-            
-            let invocationContext = HTTPClientInvocationContext(reporting: self.invocationsReporting.\(function.name),
-                                                                handlerDelegate: handlerDelegate)
-            let requestInput = \(typeName)OperationHTTPRequestInput(encodable: \(input))
-            """)
-        
-        fileBuilder.appendEmptyLine()
-        
         let httpClientName = getHttpClientForOperation(name: operationName,
                                                        httpClientConfiguration: httpClientConfiguration)
         
-        let returnStatement = getOperationReturnStatement(functionOutputType: function.outputType,
-                                                          invokeType: invokeType,
-                                                          httpClientName: httpClientName,
-                                                          functionName: function.name,
-                                                          httpVerb: httpVerb)
-        fileBuilder.appendLine(returnStatement)
+        if function.outputType != nil {
+            fileBuilder.appendLine("""
+                return executeWithOutput(httpClient: \(httpClientName),
+                                         endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(function.name).operationPath,
+                                         httpMethod: .\(httpVerb),
+                                         requestInput: \(typeName)OperationHTTPRequestInput(encodable: \(input)),
+                                         operation: \(baseName)ModelOperations.\(function.name).rawValue,
+                                         reporting: self.invocationsReporting.\(function.name),
+                """)
+            
+            if signAllHeaders {
+                fileBuilder.appendLine("""
+                                            signAllHeaders: true,
+                    """)
+            }
+            
+            fileBuilder.appendLine("""
+                                         errorType: \(baseName)Error.self)
+                """)
+        } else {
+            fileBuilder.appendLine("""
+                return executeWithoutOutput(httpClient: \(httpClientName),
+                                            endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(function.name).operationPath,
+                                            httpMethod: .\(httpVerb),
+                                            requestInput: \(typeName)OperationHTTPRequestInput(encodable: \(input)),
+                                            operation: \(baseName)ModelOperations.\(function.name).rawValue,
+                                            reporting: self.invocationsReporting.\(function.name),
+                """)
+            
+            if signAllHeaders {
+                fileBuilder.appendLine("""
+                                                signAllHeaders: true,
+                    """)
+            }
+            
+            fileBuilder.appendLine("""
+                                            errorType: \(baseName)Error.self)
+                """)
+        }
         
         fileBuilder.appendLine("}", preDec: true)
     }
