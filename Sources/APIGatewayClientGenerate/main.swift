@@ -179,7 +179,7 @@ func handleApplication() throws {
                 applicationDescription: "The \(baseName) Swift client.",
                 applicationSuffix: "Client")
             
-            try APIGatewayClientCodeGeneration.generateFromModel(
+            _ = try APIGatewayClientCodeGeneration.generateFromModel(
                 modelFilePath: modelFilePath,
                 modelType: SwaggerServiceModel.self,
                 customizations: customizations,

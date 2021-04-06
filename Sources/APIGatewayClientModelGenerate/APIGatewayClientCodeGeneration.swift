@@ -28,13 +28,13 @@ public struct APIGatewayClientCodeGeneration {
         modelType: ModelType.Type,
         customizations: CodeGenerationCustomizations,
         applicationDescription: ApplicationDescription,
-        modelOverride: ModelOverride?) throws {
+        modelOverride: ModelOverride?) throws -> ModelType {
             func generatorFunction(codeGenerator: ServiceModelCodeGenerator,
                                    serviceModel: ModelType) throws {
                 try codeGenerator.generateFromModel(serviceModel: serviceModel)
             }
         
-            try ServiceModelGenerate.generateFromModel(
+            return try ServiceModelGenerate.generateFromModel(
                     modelFilePath: modelFilePath,
                     customizations: customizations,
                     applicationDescription: applicationDescription,
