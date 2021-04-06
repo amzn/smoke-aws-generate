@@ -381,7 +381,7 @@ private func generateSmokeAWS(tempDirURL: URL,
             applicationDescription: applicationDescription,
             applicationSuffix: "Service")
         
-        try SmokeAWSModelGenerate.generateFromModel(
+        _ = try SmokeAWSModelGenerate.generateFromModel(
             modelFilePath: modelFilePath,
             customizations: customizations,
             applicationDescription: fullApplicationDescription,

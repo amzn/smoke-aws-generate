@@ -28,7 +28,7 @@ public struct SmokeAWSModelGenerate {
         customizations: CodeGenerationCustomizations,
         applicationDescription: ApplicationDescription,
         modelOverride: ModelOverride?,
-        signAllHeaders: Bool) throws {
+        signAllHeaders: Bool) throws -> CoralToJSONServiceModel {
             func generatorFunction(codeGenerator: ServiceModelCodeGenerator,
                                    serviceModel: CoralToJSONServiceModel) throws {
                 try codeGenerator.generateFromCoralToJSONServiceModel(
@@ -37,7 +37,7 @@ public struct SmokeAWSModelGenerate {
                 )
             }
         
-            try ServiceModelGenerate.generateFromModel(
+            return try ServiceModelGenerate.generateFromModel(
                     modelFilePath: modelFilePath,
                     customizations: customizations,
                     applicationDescription: applicationDescription,
