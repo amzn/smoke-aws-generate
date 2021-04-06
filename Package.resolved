@@ -6,7 +6,7 @@
         "repositoryURL": "https://github.com/amzn/service-model-swift-code-generate.git",
         "state": {
           "branch": "main",
-          "revision": "33019d1cbcec119cec12e1614e0323878ab4c2d6",
+          "revision": "88371c148d2d582cbc11614f2c5d41ce6b93d498",
           "version": null
         }
       },
@@ -29,21 +29,12 @@
         }
       },
       {
-        "package": "SwiftSyntax",
-        "repositoryURL": "https://github.com/apple/swift-syntax.git",
-        "state": {
-          "branch": null,
-          "revision": "844574d683f53d0737a9c6d706c3ef31ed2955eb",
-          "version": "0.50300.0"
-        }
-      },
-      {
         "package": "Yams",
         "repositoryURL": "https://github.com/jpsim/Yams.git",
         "state": {
           "branch": null,
-          "revision": "9003d51672e516cc59297b7e96bff1dfdedcb4ea",
-          "version": "4.0.4"
+          "revision": "4ec0a3c5d6a2446667a2b22c8c7d0fc82dd1d3de",
+          "version": "4.0.5"
         }
       }
     ]
