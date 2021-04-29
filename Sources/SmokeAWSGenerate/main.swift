@@ -36,7 +36,7 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.37.29"
+let goRepositoryTag = "v1.38.25"
 
 let fileHeader = """
     // Copyright 2018-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -262,6 +262,9 @@ func generatePackageFile(baseNames: [String]) -> String {
                     name: "SmokeAWSHttp",
                     targets: ["SmokeAWSHttp"]),
                 .library(
+                    name: "_SmokeAWSHttpConcurrency",
+                    targets: ["_SmokeAWSHttpConcurrency"]),
+                .library(
                     name: "SmokeAWSMetrics",
                     targets: ["SmokeAWSMetrics"]),
             ],
@@ -271,7 +274,7 @@ func generatePackageFile(baseNames: [String]) -> String {
                 .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
                 .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
                 .package(url: "https://github.com/LiveUI/XMLCoding.git", from: "0.4.1"),
-                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.7.0"),
+                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.8.0"),
                 .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"),
             ],
             targets: [\n
@@ -300,6 +303,11 @@ func generatePackageFile(baseNames: [String]) -> String {
                         .product(name: "HTTPPathCoding", package: "smoke-http"),
                         .product(name: "HTTPHeadersCoding", package: "smoke-http"),
                         .product(name: "Crypto", package: "swift-crypto"),
+                    ]),
+                .target(
+                    name: "_SmokeAWSHttpConcurrency", dependencies: [
+                        .target(name: "SmokeAWSHttp"),
+                        .product(name: "_SmokeHTTPClientConcurrency", package: "smoke-http"),
                     ]),
                 .target(
                     name: "SmokeAWSMetrics", dependencies: [
