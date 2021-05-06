@@ -31,7 +31,8 @@ public struct APIGatewayClientCodeGeneration {
         modelOverride: ModelOverride?) throws -> ModelType {
             func generatorFunction(codeGenerator: ServiceModelCodeGenerator,
                                    serviceModel: ModelType) throws {
-                try codeGenerator.generateFromModel(serviceModel: serviceModel)
+                try codeGenerator.generateFromModel(serviceModel: serviceModel,
+                                                    asyncAwaitGeneration: customizations.asyncAwaitGeneration)
             }
         
             return try ServiceModelGenerate.generateFromModel(
@@ -45,17 +46,22 @@ public struct APIGatewayClientCodeGeneration {
 
 extension ServiceModelCodeGenerator {
     
-    func generateFromModel<ModelType: ServiceModel>(serviceModel: ModelType) throws {
+    func generateFromModel<ModelType: ServiceModel>(serviceModel: ModelType,
+                                                    asyncAwaitGeneration: AsyncAwaitGeneration) throws {
         let clientProtocolDelegate = ClientProtocolDelegate(
-            baseName: applicationDescription.baseName)
+            baseName: applicationDescription.baseName,
+            asyncAwaitGeneration: asyncAwaitGeneration)
         let mockClientDelegate = MockClientDelegate(
             baseName: applicationDescription.baseName,
-            isThrowingMock: false)
+            isThrowingMock: false,
+            asyncAwaitGeneration: asyncAwaitGeneration)
         let throwingClientDelegate = MockClientDelegate(
             baseName: applicationDescription.baseName,
-            isThrowingMock: true)
+            isThrowingMock: true,
+            asyncAwaitGeneration: asyncAwaitGeneration)
         let awsClientDelegate = APIGatewayClientDelegate(
             baseName: applicationDescription.baseName,
+            asyncAwaitGeneration: asyncAwaitGeneration,
             contentType: "application/json", signAllHeaders: false)
         let awsModelErrorsDelegate = APIGatewayClientModelErrorsDelegate()
         

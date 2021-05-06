@@ -35,6 +35,15 @@ extension ModelClientDelegate {
             import Logging
             """)
         
+        if case .experimental = self.asyncAwaitGeneration, !isGenerator {
+            fileBuilder.appendLine("""
+                
+                #if compiler(>=5.5) && $AsyncAwait
+                import _SmokeAWSHttpConcurrency
+                #endif
+                """)
+        }
+        
         let specificErrorBehaviour = getSpecificErrors(codeGenerator: codeGenerator, baseName: baseName)
         
         if isGenerator {

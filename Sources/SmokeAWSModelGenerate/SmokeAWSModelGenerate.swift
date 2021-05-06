@@ -33,6 +33,7 @@ public struct SmokeAWSModelGenerate {
                                    serviceModel: CoralToJSONServiceModel) throws {
                 try codeGenerator.generateFromCoralToJSONServiceModel(
                     coralToJSONServiceModel: serviceModel,
+                    asyncAwaitGeneration: customizations.asyncAwaitGeneration,
                     signAllHeaders: signAllHeaders
                 )
             }
@@ -50,21 +51,26 @@ extension ServiceModelCodeGenerator {
     
     func generateFromCoralToJSONServiceModel(
             coralToJSONServiceModel: CoralToJSONServiceModel,
+            asyncAwaitGeneration: AsyncAwaitGeneration,
             signAllHeaders: Bool) throws {
         let awsClientAttributes = coralToJSONServiceModel.getAWSClientAttributes()
         
         let clientProtocolDelegate = ClientProtocolDelegate(
-            baseName: applicationDescription.baseName)
+            baseName: applicationDescription.baseName,
+            asyncAwaitGeneration: asyncAwaitGeneration)
         let mockClientDelegate = MockClientDelegate(
             baseName: applicationDescription.baseName,
-            isThrowingMock: false)
+            isThrowingMock: false,
+            asyncAwaitGeneration: asyncAwaitGeneration)
         let throwingClientDelegate = MockClientDelegate(
             baseName: applicationDescription.baseName,
-            isThrowingMock: true)
+            isThrowingMock: true,
+            asyncAwaitGeneration: asyncAwaitGeneration)
         let awsClientDelegate = AWSClientDelegate(
             baseName: applicationDescription.baseName,
             clientAttributes: awsClientAttributes,
-            signAllHeaders: signAllHeaders)
+            signAllHeaders: signAllHeaders,
+            asyncAwaitGeneration: asyncAwaitGeneration)
         let awsModelErrorsDelegate = AWSModelErrorsDelegate(awsClientAttributes: awsClientAttributes)
         
         generateClient(delegate: clientProtocolDelegate, isGenerator: false)
