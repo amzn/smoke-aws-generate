@@ -42,21 +42,31 @@ internal extension AWSClientDelegate {
         let httpClientName = getHttpClientForOperation(name: name,
                                                        httpClientConfiguration: codeGenerator.customizations.httpClientConfiguration)
         
+        let callPrefix: String
+        switch invokeType {
+        case .eventLoopFutureAsync:
+            callPrefix = ""
+        case .asyncFunction:
+            callPrefix = "try await "
+        }
+        
         if function.outputType != nil {
             fileBuilder.appendLine("""
-                return executeWithOutput(httpClient: \(httpClientName),
-                                         wrappedInput: \(wrappedTypeDeclaration),
-                                         action: \(baseName)ModelOperations.\(function.name).rawValue,
-                                         reporting: self.invocationsReporting.\(function.name),
-                                         errorType: \(baseName)Error.self)
+                return \(callPrefix)executeWithOutput(
+                    httpClient: \(httpClientName),
+                    wrappedInput: \(wrappedTypeDeclaration),
+                    action: \(baseName)ModelOperations.\(function.name).rawValue,
+                    reporting: self.invocationsReporting.\(function.name),
+                    errorType: \(baseName)Error.self)
                 """)
         } else {
             fileBuilder.appendLine("""
-                return executeWithoutOutput(httpClient: \(httpClientName),
-                                            wrappedInput: \(wrappedTypeDeclaration),
-                                            action: \(baseName)ModelOperations.\(function.name).rawValue,
-                                            reporting: self.invocationsReporting.\(function.name),
-                                            errorType: \(baseName)Error.self)
+                return \(callPrefix)executeWithoutOutput(
+                    httpClient: \(httpClientName),
+                    wrappedInput: \(wrappedTypeDeclaration),
+                    action: \(baseName)ModelOperations.\(function.name).rawValue,
+                    reporting: self.invocationsReporting.\(function.name),
+                    errorType: \(baseName)Error.self)
                 """)
         }
         

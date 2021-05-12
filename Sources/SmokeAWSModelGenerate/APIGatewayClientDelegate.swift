@@ -25,11 +25,11 @@ import ServiceModelEntities
  */
 public struct APIGatewayClientDelegate: ModelClientDelegate {
     public let clientType: ClientType
-    public let asyncResultType: AsyncResultType?
     public let baseName: String
     public let contentType: String
     public let signAllHeaders: Bool
     public let defaultInvocationTraceContext: InvocationTraceContextDeclaration
+    public let asyncAwaitGeneration: AsyncAwaitGeneration
     
     private struct APIGatewayClientFunction {
         let name: String
@@ -45,12 +45,12 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
         - asyncResultType: The name of the result type to use for async functions.
      */
     public init(baseName: String,
-                asyncResultType: AsyncResultType? = nil,
+                asyncAwaitGeneration: AsyncAwaitGeneration,
                 contentType: String,
                 signAllHeaders: Bool,
                 defaultInvocationTraceContext: InvocationTraceContextDeclaration = InvocationTraceContextDeclaration(name: "AWSClientInvocationTraceContext")) {
         self.baseName = baseName
-        self.asyncResultType = asyncResultType
+        self.asyncAwaitGeneration = asyncAwaitGeneration
         let genericParameters: [(String, String?)] = [("InvocationReportingType", "HTTPClientCoreInvocationReporting")]
         self.clientType = .struct(name: "APIGateway\(baseName)Client", genericParameters: genericParameters,
                                   conformingProtocolNames: ["\(baseName)ClientProtocol", "AWSClientProtocol"])

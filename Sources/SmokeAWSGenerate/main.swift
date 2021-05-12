@@ -126,6 +126,8 @@ func getPackageTargetEntriesPackageFile(name: String) -> String {
                         name: "\(name)Client", dependencies: [
                             .target(name: "\(name)Model"),
                             .target(name: "SmokeAWSHttp"),
+                            .target(name: "_SmokeAWSHttpConcurrency"),
+                            .product(name: "_NIOConcurrency", package: "swift-nio"),
                         ]),
                     .target(
                         name: "\(name)Model", dependencies: [
@@ -173,7 +175,7 @@ func generateLegacyPackageFile(baseNames: [String]) -> String {
                 .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
                 .package(url: "https://github.com/LiveUI/XMLCoding.git", from: "0.4.1"),
                 .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.5.1"),
-                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.4.0"),
+                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.7.0"),
                 .package(url: "https://github.com/IBM-Swift/BlueCryptor.git", from: "1.0.0"),
             ],
             targets: [\n
@@ -251,17 +253,20 @@ func generatePackageFile(baseNames: [String]) -> String {
                     name: "SmokeAWSHttp",
                     targets: ["SmokeAWSHttp"]),
                 .library(
+                    name: "_SmokeAWSHttpConcurrency",
+                    targets: ["_SmokeAWSHttpConcurrency"]),
+                .library(
                     name: "SmokeAWSMetrics",
                     targets: ["SmokeAWSMetrics"]),
             ],
             dependencies: [
-                .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
+                .package(url: "https://github.com/apple/swift-nio.git", from: "2.28.0"),
                 .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.0.0"),
                 .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
                 .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
                 .package(url: "https://github.com/LiveUI/XMLCoding.git", from: "0.4.1"),
                 .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.5.1"),
-                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.4.0"),
+                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.8.0"),
                 .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"),
             ],
             targets: [\n
@@ -291,6 +296,11 @@ func generatePackageFile(baseNames: [String]) -> String {
                         .product(name: "HTTPHeadersCoding", package: "smoke-http"),
                         .product(name: "Crypto", package: "swift-crypto"),
                         .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
+                    ]),
+                .target(
+                    name: "_SmokeAWSHttpConcurrency", dependencies: [
+                        .target(name: "SmokeAWSHttp"),
+                        .product(name: "_SmokeHTTPClientConcurrency", package: "smoke-http"),
                     ]),
                 .target(
                     name: "SmokeAWSMetrics", dependencies: [
@@ -363,6 +373,7 @@ private func generateSmokeAWS(tempDirURL: URL,
         let customizations = CodeGenerationCustomizations(
             validationErrorDeclaration: .internal,
             unrecognizedErrorDeclaration: unrecognizedErrorDeclaration,
+            asyncAwaitGeneration: .none,
             generateModelShapeConversions: false,
             optionalsInitializeEmpty: true,
             fileHeader: fileHeader,

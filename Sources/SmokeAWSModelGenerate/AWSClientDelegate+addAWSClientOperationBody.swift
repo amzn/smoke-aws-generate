@@ -41,21 +41,31 @@ internal extension AWSClientDelegate {
             requestInputDeclaration = "NoHTTPRequestInput()"
         }
         
+        let callPrefix: String
+        switch invokeType {
+        case .eventLoopFutureAsync:
+            callPrefix = ""
+        case .asyncFunction:
+            callPrefix = "try await "
+        }
+        
         if function.outputType != nil {
             fileBuilder.appendLine("""
-                return executeWithOutput(httpClient: \(httpClientName),
-                                         requestInput: \(requestInputDeclaration),
-                                         operation: \(baseName)ModelOperations.\(function.name).rawValue,
-                                         reporting: self.invocationsReporting.\(function.name),
-                                         errorType: \(baseName)Error.self)
+                return \(callPrefix)executeWithOutput(
+                    httpClient: \(httpClientName),
+                    requestInput: \(requestInputDeclaration),
+                    operation: \(baseName)ModelOperations.\(function.name).rawValue,
+                    reporting: self.invocationsReporting.\(function.name),
+                    errorType: \(baseName)Error.self)
                 """)
         } else {
             fileBuilder.appendLine("""
-                return executeWithoutOutput(httpClient: \(httpClientName),
-                                            requestInput: \(requestInputDeclaration),
-                                            operation: \(baseName)ModelOperations.\(function.name).rawValue,
-                                            reporting: self.invocationsReporting.\(function.name),
-                                            errorType: \(baseName)Error.self)
+                return \(callPrefix)executeWithoutOutput(
+                    httpClient: \(httpClientName),
+                    requestInput: \(requestInputDeclaration),
+                    operation: \(baseName)ModelOperations.\(function.name).rawValue,
+                    reporting: self.invocationsReporting.\(function.name),
+                    errorType: \(baseName)Error.self)
                 """)
         }
         
