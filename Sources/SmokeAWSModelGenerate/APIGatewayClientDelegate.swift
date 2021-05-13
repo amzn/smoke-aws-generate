@@ -140,14 +140,23 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
         let httpClientName = getHttpClientForOperation(name: operationName,
                                                        httpClientConfiguration: httpClientConfiguration)
         
+        let callPrefix: String
+        switch invokeType {
+        case .eventLoopFutureAsync:
+            callPrefix = ""
+        case .asyncFunction:
+            callPrefix = "try await "
+        }
+        
         if function.outputType != nil {
             fileBuilder.appendLine("""
-                return executeWithOutput(httpClient: \(httpClientName),
-                                         endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(function.name).operationPath,
-                                         httpMethod: .\(httpVerb),
-                                         requestInput: \(typeName)OperationHTTPRequestInput(encodable: \(input)),
-                                         operation: \(baseName)ModelOperations.\(function.name).rawValue,
-                                         reporting: self.invocationsReporting.\(function.name),
+                return \(callPrefix)executeWithOutput(
+                    httpClient: \(httpClientName),
+                    endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(function.name).operationPath,
+                    httpMethod: .\(httpVerb),
+                    requestInput: \(typeName)OperationHTTPRequestInput(encodable: \(input)),
+                    operation: \(baseName)ModelOperations.\(function.name).rawValue,
+                    reporting: self.invocationsReporting.\(function.name),
                 """)
             
             if signAllHeaders {
@@ -161,12 +170,13 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                 """)
         } else {
             fileBuilder.appendLine("""
-                return executeWithoutOutput(httpClient: \(httpClientName),
-                                            endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(function.name).operationPath,
-                                            httpMethod: .\(httpVerb),
-                                            requestInput: \(typeName)OperationHTTPRequestInput(encodable: \(input)),
-                                            operation: \(baseName)ModelOperations.\(function.name).rawValue,
-                                            reporting: self.invocationsReporting.\(function.name),
+                return \(callPrefix)executeWithoutOutput(
+                    httpClient: \(httpClientName),
+                    endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(function.name).operationPath,
+                    httpMethod: .\(httpVerb),
+                    requestInput: \(typeName)OperationHTTPRequestInput(encodable: \(input)),
+                    operation: \(baseName)ModelOperations.\(function.name).rawValue,
+                    reporting: self.invocationsReporting.\(function.name),
                 """)
             
             if signAllHeaders {
