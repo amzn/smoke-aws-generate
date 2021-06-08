@@ -49,7 +49,7 @@ extension ServiceModelCodeGenerator {
             let package = Package(
                 name: "\(baseName)",
                 platforms: [
-                    .macOS(.v10_15), .iOS(.v10)
+                    .macOS(.v10_15), .iOS(.v13), .tvOS(.v13)
                     ],
                 products: [
                     // Products define the executables and libraries produced by a package, and make them visible to other packages.
