@@ -7,6 +7,18 @@ matrix:
       services: docker
       env: DOCKER_IMAGE_TAG=swift:5.4.0-amazonlinux2 ONLY_RUN_SWIFT_LINT=no USE_APT_GET=no
 
+    - os: linux
+      dist: bionic
+      sudo: required
+      services: docker
+      env: DOCKER_IMAGE_TAG=swift:5.3.3-amazonlinux2 ONLY_RUN_SWIFT_LINT=no USE_APT_GET=no
+
+    - os: linux
+      dist: bionic
+      sudo: required
+      services: docker
+      env: DOCKER_IMAGE_TAG=swift:5.2.5-amazonlinux2 ONLY_RUN_SWIFT_LINT=no USE_APT_GET=no
+
 before_install:
   - docker pull $DOCKER_IMAGE_TAG
 
