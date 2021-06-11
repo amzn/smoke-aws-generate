@@ -37,7 +37,7 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.37.29"
+let goRepositoryTag = "v1.38.57"
 
 let fileHeader = """
     // Copyright 2018-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -109,17 +109,6 @@ func getPackageProductEntriesPackageFile(name: String) -> String {
             """
 }
 
-func getLegacyPackageTargetEntriesPackageFile(name: String) -> String {
-    return """
-                    .target(
-                        name: "\(name)Client",
-                        dependencies: ["\(name)Model", "SmokeAWSHttp"]),
-                    .target(
-                        name: "\(name)Model",
-                        dependencies: ["Logging"]),\n
-            """
-}
-
 func getPackageTargetEntriesPackageFile(name: String) -> String {
     return """
                     .target(
@@ -134,94 +123,6 @@ func getPackageTargetEntriesPackageFile(name: String) -> String {
                             .product(name: "Logging", package: "swift-log"),
                         ]),\n
             """
-}
-
-func generateLegacyPackageFile(baseNames: [String]) -> String {
-    
-    var packageFileContents = """
-        // swift-tools-version:5.0
-        //
-        \(fileHeader)
-        
-        import PackageDescription
-
-        let package = Package(
-            name: "SmokeAWS",
-            platforms: [
-                .macOS(.v10_12), .iOS(.v10)
-                ],
-            products: [\n
-        """
-    
-    baseNames.forEach { name in
-        packageFileContents += getPackageProductEntriesPackageFile(name: name)
-    }
-
-    packageFileContents += """
-                .library(
-                    name: "SmokeAWSCore",
-                    targets: ["SmokeAWSCore"]),
-                .library(
-                    name: "SmokeAWSHttp",
-                    targets: ["SmokeAWSHttp"]),
-                .library(
-                    name: "SmokeAWSMetrics",
-                    targets: ["SmokeAWSMetrics"]),
-            ],
-            dependencies: [
-                .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
-                .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.0.0"),
-                .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
-                .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
-                .package(url: "https://github.com/LiveUI/XMLCoding.git", from: "0.4.1"),
-                .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.5.1"),
-                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.7.0"),
-                .package(url: "https://github.com/IBM-Swift/BlueCryptor.git", from: "1.0.0"),
-            ],
-            targets: [\n
-        """
-    
-        baseNames.forEach { name in
-        packageFileContents += getLegacyPackageTargetEntriesPackageFile(name: name)
-    }
-    
-    packageFileContents += """
-                .target(
-                    name: "SmokeAWSCore",
-                    dependencies: ["Logging", "Metrics", "XMLCoding", "SmokeHTTPClient"]),
-                .target(
-                    name: "SmokeAWSHttp",
-                    dependencies: ["Logging", "NIO", "NIOHTTP1",
-                                   "SmokeAWSCore", "SmokeHTTPClient", "QueryCoding",
-                                   "HTTPPathCoding", "HTTPHeadersCoding", "Cryptor", "NIOTransportServices"]),
-                .target(
-                    name: "SmokeAWSMetrics",
-                    dependencies: ["Logging", "Metrics", "CloudWatchClient"]),
-                .testTarget(
-                    name: "S3ClientTests",
-                    dependencies: ["S3Client"]),
-                .testTarget(
-                    name: "SimpleQueueClientTests",
-                    dependencies: ["SimpleQueueClient"]),
-                .testTarget(
-                    name: "SecurityTokenClientTests",
-                    dependencies: ["SecurityTokenClient"]),
-                .testTarget(
-                    name: "SimpleNotificationClientTests",
-                    dependencies: ["SimpleNotificationClient"]),
-                .testTarget(
-                    name: "ElasticComputeCloudClientTests",
-                    dependencies: ["ElasticComputeCloudClient"]),
-                .testTarget(
-                    name: "RDSClientTests",
-                    dependencies: ["RDSClient"]),
-            ],
-            swiftLanguageVersions: [.v5]
-        )
-        
-        """
-    
-    return packageFileContents
 }
 
 func generatePackageFile(baseNames: [String]) -> String {
@@ -407,9 +308,7 @@ private func generateSmokeAWS(tempDirURL: URL,
     let baseNames = serviceModelDetails.map { (details) in details.baseName }
         .sorted(by: <)
     let packageFile = generatePackageFile(baseNames: baseNames)
-    let packageLegacyFile = generateLegacyPackageFile(baseNames: baseNames)
     try packageFile.write(toFile: baseFilePath + "/Package.swift", atomically: false, encoding: String.Encoding.utf8)
-    try packageLegacyFile.write(toFile: baseFilePath + "/Package@swift-5.1.swift", atomically: false, encoding: String.Encoding.utf8)
 }
 
 func createTempDirectory(errorMessage: inout String?) -> URL? {
