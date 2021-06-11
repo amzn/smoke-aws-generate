@@ -161,12 +161,12 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
             
             if signAllHeaders {
                 fileBuilder.appendLine("""
-                                            signAllHeaders: true,
+                        signAllHeaders: true,
                     """)
             }
             
             fileBuilder.appendLine("""
-                                         errorType: \(baseName)Error.self)
+                    errorType: \(baseName)Error.self)
                 """)
         } else {
             fileBuilder.appendLine("""
@@ -181,12 +181,12 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
             
             if signAllHeaders {
                 fileBuilder.appendLine("""
-                                                signAllHeaders: true,
+                        signAllHeaders: true,
                     """)
             }
             
             fileBuilder.appendLine("""
-                                            errorType: \(baseName)Error.self)
+                    errorType: \(baseName)Error.self)
                 """)
         }
         
