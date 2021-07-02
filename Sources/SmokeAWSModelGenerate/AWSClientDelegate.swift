@@ -64,11 +64,18 @@ public struct AWSClientDelegate: ModelClientDelegate {
         self.signAllHeaders = signAllHeaders
     }
     
-    public func getFileDescription(isGenerator: Bool) -> String {
+    public func addTypeDescription(codeGenerator: ServiceModelCodeGenerator,
+                                   delegate: ModelClientDelegate,
+                                   fileBuilder: FileBuilder,
+                                   isGenerator: Bool) {
         if isGenerator {
-            return "AWS Client Generator for the \(baseName) service."
+            fileBuilder.appendLine("""
+                AWS Client Client Generator for the \(self.baseName) service.
+                """)
         } else {
-            return "AWS Client for the \(baseName) service."
+            fileBuilder.appendLine("""
+                AWS Client Client for the \(baseName) service.
+                """)
         }
     }
     

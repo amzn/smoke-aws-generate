@@ -59,11 +59,18 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
         self.defaultInvocationTraceContext = defaultInvocationTraceContext
     }
     
-    public func getFileDescription(isGenerator: Bool) -> String {
+    public func addTypeDescription(codeGenerator: ServiceModelCodeGenerator,
+                                   delegate: ModelClientDelegate,
+                                   fileBuilder: FileBuilder,
+                                   isGenerator: Bool) {
         if isGenerator {
-            return "API Gateway Client Generator for the \(baseName) service."
+            fileBuilder.appendLine("""
+                API Gateway Client Generator for the \(self.baseName) service.
+                """)
         } else {
-            return "API Gateway Client for the \(baseName) service."
+            fileBuilder.appendLine("""
+                API Gateway Client for the \(baseName) service.
+                """)
         }
     }
     
