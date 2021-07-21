@@ -38,7 +38,7 @@ let package = Package(
             targets: ["CoralToJSONServiceModel"]),
     ],
     dependencies: [
-        .package(name: "ServiceModelSwiftCodeGenerate", url: "https://github.com/amzn/service-model-swift-code-generate.git", .branch("main")),
+        .package(name: "ServiceModelSwiftCodeGenerate", url: "https://github.com/amzn/service-model-swift-code-generate.git", .branch("working")),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "0.3.0"),
     ],
     targets: [
