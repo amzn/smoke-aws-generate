@@ -2,38 +2,20 @@
   "object": {
     "pins": [
       {
-        "package": "FineJSON",
-        "repositoryURL": "https://github.com/omochi/FineJSON.git",
-        "state": {
-          "branch": null,
-          "revision": "05101709243cb66d80c92e645210a3b80cf4e17f",
-          "version": "1.14.0"
-        }
-      },
-      {
         "package": "OpenAPIKit",
-        "repositoryURL": "https://github.com/mattpolzin/OpenAPIKit.git",
+        "repositoryURL": "https://github.com/mndzup/OpenAPIKit.git",
         "state": {
-          "branch": null,
-          "revision": "4986552e76c331a99770428bd2be77ad76068c08",
-          "version": "2.4.0"
-        }
-      },
-      {
-        "package": "RichJSONParser",
-        "repositoryURL": "https://github.com/omochi/RichJSONParser.git",
-        "state": {
-          "branch": null,
-          "revision": "263e2ecfe88d0500fa99e4cbc8c948529d335534",
-          "version": "3.0.0"
+          "branch": "working",
+          "revision": "84fc477c8e96a7013269a355f1f5734dd70e53f7",
+          "version": null
         }
       },
       {
         "package": "ServiceModelSwiftCodeGenerate",
         "repositoryURL": "https://github.com/amzn/service-model-swift-code-generate.git",
         "state": {
-          "branch": "working",
-          "revision": "92cc4c7c45a942c56353a30a7004cc9f79cf6594",
+          "branch": "mndzup",
+          "revision": "b1b7b3f6e0a16beb7fd1c26a614d803334da12f3",
           "version": null
         }
       },
