@@ -157,9 +157,11 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
         
         if function.outputType != nil {
             fileBuilder.appendLine("""
+                let stagePrefix: String
+                if let stage = stage { stagePrefix = "/\\(stage)"; } else { stagePrefix = ""; }
                 return \(callPrefix)executeWithOutput(
                     httpClient: \(httpClientName),
-                    endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(function.name).operationPath,
+                    endpointPath: stagePrefix + \(baseName)ModelOperations.\(function.name).operationPath,
                     httpMethod: .\(httpVerb),
                     requestInput: \(typeName)OperationHTTPRequestInput(encodable: \(input)),
                     operation: \(baseName)ModelOperations.\(function.name).rawValue,
@@ -177,9 +179,11 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                 """)
         } else {
             fileBuilder.appendLine("""
+                let stagePrefix: String
+                if let stage = stage { stagePrefix = "/\\(stage)"; } else { stagePrefix = ""; }
                 return \(callPrefix)executeWithoutOutput(
                     httpClient: \(httpClientName),
-                    endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(function.name).operationPath,
+                    endpointPath: stagePrefix + \(baseName)ModelOperations.\(function.name).operationPath,
                     httpMethod: .\(httpVerb),
                     requestInput: \(typeName)OperationHTTPRequestInput(encodable: \(input)),
                     operation: \(baseName)ModelOperations.\(function.name).rawValue,

@@ -471,7 +471,7 @@ extension ModelClientDelegate {
         // If this is an API Gateway client, store the stage
         if targetsAPIGateway {
             fileBuilder.appendLine("""
-                    let stage: String
+                    let stage: String?
                     """)
         }
     }
@@ -523,9 +523,15 @@ extension ModelClientDelegate {
         
         // If this is an API Gateway client, accept the stage in the constructor
         if targetsAPIGateway {
-            fileBuilder.appendLine("""
-                            stage: String,
-                """)
+            if !isCopyInitializer {
+                fileBuilder.appendLine("""
+                                stage: String? = nil,
+                    """)
+            } else {
+                fileBuilder.appendLine("""
+                                stage: String?,
+                    """)
+            }
         }
         
         if !isCopyInitializer {
