@@ -98,9 +98,17 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
     
     func errorTypeIdentityGenerator(fileBuilder: FileBuilder,
                                     codingErrorUnknownError: String) -> String {
+        let errorReasonRetrievalBody: String
+        switch awsClientAttributes.contentType.contentTypePayloadType {
+        case .xml:
+            errorReasonRetrievalBody = "try values.decode(String.self, forKey: .type)"
+        case .json:
+            errorReasonRetrievalBody = "try values.decodeIfPresent(String.self, forKey: .type) ?? \"Unspecified\""
+        }
+        
         fileBuilder.appendLine("""
             let values = try decoder.container(keyedBy: CodingKeys.self)
-            var errorReason = try values.decode(String.self, forKey: .type)
+            var errorReason = \(errorReasonRetrievalBody)
             let errorMessage = try values.decodeIfPresent(String.self, forKey: .message)
 
             if let index = errorReason.firstIndex(of: "#") {
