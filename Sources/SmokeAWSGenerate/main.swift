@@ -36,7 +36,7 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.38.57"
+let goRepositoryTag = "v1.41.0"
 
 let fileHeader = """
     // Copyright 2018-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -171,12 +171,12 @@ func generatePackageFile(baseNames: [String]) -> String {
                     targets: ["SmokeAWSMetrics"]),
             ],
             dependencies: [
-                .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
-                .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.0.0"),
+                .package(url: "https://github.com/apple/swift-nio.git", from: "2.33.0"),
+                .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.14.0"),
                 .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
                 .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
                 .package(url: "https://github.com/LiveUI/XMLCoding.git", from: "0.4.1"),
-                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.8.0"),
+                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.9.0"),
                 .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"),
             ],
             targets: [\n
@@ -209,7 +209,6 @@ func generatePackageFile(baseNames: [String]) -> String {
                 .target(
                     name: "_SmokeAWSHttpConcurrency", dependencies: [
                         .target(name: "SmokeAWSHttp"),
-                        .product(name: "_SmokeHTTPClientConcurrency", package: "smoke-http"),
                     ]),
                 .target(
                     name: "SmokeAWSMetrics", dependencies: [
@@ -352,7 +351,7 @@ func handleApplication() throws {
         RDSDataConfiguration.serviceModelDetails,
         // disabled; currently untested
         //CodeBuildConfiguration.serviceModelDetails,
-        //CodePipelineConfiguration.serviceModelDetails,
+        CodePipelineConfiguration.serviceModelDetails,
         ECRConfiguration.serviceModelDetails]
     
     var baseFilePath: String?
