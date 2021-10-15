@@ -65,7 +65,9 @@ extension ServiceModelCodeGenerator {
             baseName: applicationDescription.baseName,
             clientAttributes: awsClientAttributes,
             signAllHeaders: signAllHeaders)
-        let awsModelErrorsDelegate = AWSModelErrorsDelegate(awsClientAttributes: awsClientAttributes)
+        let awsModelErrorsDelegate = AWSModelErrorsDelegate(awsClientAttributes: awsClientAttributes,
+                                                            modelOverride: modelOverride,
+                                                            baseName: applicationDescription.baseName)
         
         generateClient(delegate: clientProtocolDelegate, isGenerator: false)
         generateClient(delegate: mockClientDelegate, isGenerator: false)
