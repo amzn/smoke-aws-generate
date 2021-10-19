@@ -25,6 +25,8 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
     let generateCustomStringConvertibleConformance: Bool = false
     let canExpectValidationError: Bool = false
     let awsClientAttributes: AWSClientAttributes
+    let modelOverride: ModelOverride?
+    let baseName: String
     
     func addAccessDeniedError(errorTypes: [ErrorType]) -> Bool {
         for error in errorTypes where error.normalizedName == "accessDenied" {
@@ -76,8 +78,8 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
     
     func errorTypeCodingKeysGenerator(fileBuilder: FileBuilder,
                                       errorTypes: [ErrorType]) {
-        let typeCodingKey: String
-        let messageCodingKey: String
+        var typeCodingKey: String
+        var messageCodingKey: String
         
         switch awsClientAttributes.contentType.contentTypePayloadType {
         case .xml:
@@ -86,6 +88,11 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
         case .json:
             typeCodingKey = "__type"
             messageCodingKey = "message"
+        }
+        
+        if let codingKeyOverrides = modelOverride?.codingKeyOverrides {
+            typeCodingKey = codingKeyOverrides["\(baseName)Error.type"] ?? typeCodingKey
+            messageCodingKey = codingKeyOverrides["\(baseName)Error.message"] ?? messageCodingKey
         }
     
         fileBuilder.appendLine("""

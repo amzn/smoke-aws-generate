@@ -240,6 +240,10 @@ func generatePackageFile(baseNames: [String]) -> String {
                     name: "RDSClientTests", dependencies: [
                         .target(name: "RDSClient"),
                     ]),
+                .testTarget(
+                    name: "AppConfigClientTests", dependencies: [
+                        .target(name: "AppConfigClient"),
+                    ]),
             ],
             swiftLanguageVersions: [.v5]
         )
@@ -352,7 +356,8 @@ func handleApplication() throws {
         // disabled; currently untested
         //CodeBuildConfiguration.serviceModelDetails,
         CodePipelineConfiguration.serviceModelDetails,
-        ECRConfiguration.serviceModelDetails]
+        ECRConfiguration.serviceModelDetails,
+        AppConfigConfiguration.serviceModelDetails]
     
     var baseFilePath: String?
     var missingOptions: Set<String> = [baseFilePathOption]
