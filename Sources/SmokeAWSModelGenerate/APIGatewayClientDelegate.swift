@@ -29,7 +29,7 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
     public let contentType: String
     public let signAllHeaders: Bool
     public let defaultInvocationTraceContext: InvocationTraceContextDeclaration
-    public let asyncAwaitGeneration: AsyncAwaitGeneration
+    public let asyncAwaitAPIs: CodeGenFeatureStatus
     
     private struct APIGatewayClientFunction {
         let name: String
@@ -45,12 +45,12 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
         - asyncResultType: The name of the result type to use for async functions.
      */
     public init(baseName: String,
-                asyncAwaitGeneration: AsyncAwaitGeneration,
+                asyncAwaitAPIs: CodeGenFeatureStatus,
                 contentType: String,
                 signAllHeaders: Bool,
                 defaultInvocationTraceContext: InvocationTraceContextDeclaration = InvocationTraceContextDeclaration(name: "AWSClientInvocationTraceContext")) {
         self.baseName = baseName
-        self.asyncAwaitGeneration = asyncAwaitGeneration
+        self.asyncAwaitAPIs = asyncAwaitAPIs
         let genericParameters: [(String, String?)] = [("InvocationReportingType", "HTTPClientCoreInvocationReporting")]
         self.clientType = .struct(name: "APIGateway\(baseName)Client", genericParameters: genericParameters,
                                   conformingProtocolNames: ["\(baseName)ClientProtocol", "AWSClientProtocol"])

@@ -32,7 +32,7 @@ public struct APIGatewayClientCodeGeneration {
             func generatorFunction(codeGenerator: ServiceModelCodeGenerator,
                                    serviceModel: ModelType) throws {
                 try codeGenerator.generateFromModel(serviceModel: serviceModel,
-                                                    asyncAwaitGeneration: customizations.asyncAwaitGeneration)
+                                                    asyncAwaitAPIs: customizations.asyncAwaitAPIs)
             }
         
             return try ServiceModelGenerate.generateFromModel(
@@ -47,21 +47,21 @@ public struct APIGatewayClientCodeGeneration {
 extension ServiceModelCodeGenerator {
     
     func generateFromModel<ModelType: ServiceModel>(serviceModel: ModelType,
-                                                    asyncAwaitGeneration: AsyncAwaitGeneration) throws {
+                                                    asyncAwaitAPIs: CodeGenFeatureStatus) throws {
         let clientProtocolDelegate = ClientProtocolDelegate(
             baseName: applicationDescription.baseName,
-            asyncAwaitGeneration: asyncAwaitGeneration)
+            asyncAwaitAPIs: asyncAwaitAPIs)
         let mockClientDelegate = MockClientDelegate(
             baseName: applicationDescription.baseName,
             isThrowingMock: false,
-            asyncAwaitGeneration: asyncAwaitGeneration)
+            asyncAwaitAPIs: asyncAwaitAPIs)
         let throwingClientDelegate = MockClientDelegate(
             baseName: applicationDescription.baseName,
             isThrowingMock: true,
-            asyncAwaitGeneration: asyncAwaitGeneration)
+            asyncAwaitAPIs: asyncAwaitAPIs)
         let awsClientDelegate = APIGatewayClientDelegate(
             baseName: applicationDescription.baseName,
-            asyncAwaitGeneration: asyncAwaitGeneration,
+            asyncAwaitAPIs: asyncAwaitAPIs,
             contentType: "application/json", signAllHeaders: false)
         let awsModelErrorsDelegate = APIGatewayClientModelErrorsDelegate()
         

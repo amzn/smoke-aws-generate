@@ -26,7 +26,7 @@ import ServiceModelEntities
 public struct AWSClientDelegate: ModelClientDelegate {
     public let clientType: ClientType
     public let clientAttributes: AWSClientAttributes
-    public let asyncAwaitGeneration: AsyncAwaitGeneration
+    public let asyncAwaitAPIs: CodeGenFeatureStatus
     public let baseName: String
     public let signAllHeaders: Bool
     
@@ -46,7 +46,7 @@ public struct AWSClientDelegate: ModelClientDelegate {
     public init(baseName: String,
                 clientAttributes: AWSClientAttributes,
                 signAllHeaders: Bool,
-                asyncAwaitGeneration: AsyncAwaitGeneration) {
+                asyncAwaitAPIs: CodeGenFeatureStatus) {
         let clientProtocol: String
         switch clientAttributes.contentType.contentTypeDefaultInputLocation {
         case .query:
@@ -57,7 +57,7 @@ public struct AWSClientDelegate: ModelClientDelegate {
         
         self.baseName = baseName
         self.clientAttributes = clientAttributes
-        self.asyncAwaitGeneration = asyncAwaitGeneration
+        self.asyncAwaitAPIs = asyncAwaitAPIs
         let genericParameters: [(String, String?)] = [("InvocationReportingType", "HTTPClientCoreInvocationReporting")]
         self.clientType = .struct(name: "AWS\(baseName)Client", genericParameters: genericParameters,
                                   conformingProtocolNames: ["\(baseName)ClientProtocol", clientProtocol])

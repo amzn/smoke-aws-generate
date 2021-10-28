@@ -274,7 +274,7 @@ private func generateSmokeAWS(tempDirURL: URL,
         let customizations = CodeGenerationCustomizations(
             validationErrorDeclaration: .internal,
             unrecognizedErrorDeclaration: unrecognizedErrorDeclaration,
-            asyncAwaitGeneration: .none,
+            asyncAwaitAPIs: .enabled,
             generateModelShapeConversions: false,
             optionalsInitializeEmpty: true,
             fileHeader: fileHeader,
