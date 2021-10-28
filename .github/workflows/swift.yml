@@ -2,9 +2,9 @@ name: build
 
 on:
   push:
-    branches: [ main, service-model-swift-code-generate-2.x, service-model-swift-code-generate-1.x ]
+    branches: [ main, smoke-aws-generate-2.x, smoke-aws-generate-1.x ]
   pull_request:
-    branches: [ main, service-model-swift-code-generate-2.x, service-model-swift-code-generate-1.x ]
+    branches: [ main, smoke-aws-generate-2.x, smoke-aws-generate-1.x ]
       
 jobs:
   Build:
