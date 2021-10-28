@@ -33,7 +33,7 @@ public struct SmokeAWSModelGenerate {
                                    serviceModel: CoralToJSONServiceModel) throws {
                 try codeGenerator.generateFromCoralToJSONServiceModel(
                     coralToJSONServiceModel: serviceModel,
-                    asyncAwaitGeneration: customizations.asyncAwaitGeneration,
+                    asyncAwaitAPIs: customizations.asyncAwaitAPIs,
                     signAllHeaders: signAllHeaders
                 )
             }
@@ -51,26 +51,26 @@ extension ServiceModelCodeGenerator {
     
     func generateFromCoralToJSONServiceModel(
             coralToJSONServiceModel: CoralToJSONServiceModel,
-            asyncAwaitGeneration: AsyncAwaitGeneration,
+            asyncAwaitAPIs: CodeGenFeatureStatus,
             signAllHeaders: Bool) throws {
         let awsClientAttributes = coralToJSONServiceModel.getAWSClientAttributes()
         
         let clientProtocolDelegate = ClientProtocolDelegate(
             baseName: applicationDescription.baseName,
-            asyncAwaitGeneration: asyncAwaitGeneration)
+            asyncAwaitAPIs: asyncAwaitAPIs)
         let mockClientDelegate = MockClientDelegate(
             baseName: applicationDescription.baseName,
             isThrowingMock: false,
-            asyncAwaitGeneration: asyncAwaitGeneration)
+            asyncAwaitAPIs: asyncAwaitAPIs)
         let throwingClientDelegate = MockClientDelegate(
             baseName: applicationDescription.baseName,
             isThrowingMock: true,
-            asyncAwaitGeneration: asyncAwaitGeneration)
+            asyncAwaitAPIs: asyncAwaitAPIs)
         let awsClientDelegate = AWSClientDelegate(
             baseName: applicationDescription.baseName,
             clientAttributes: awsClientAttributes,
             signAllHeaders: signAllHeaders,
-            asyncAwaitGeneration: asyncAwaitGeneration)
+            asyncAwaitAPIs: asyncAwaitAPIs)
         let awsModelErrorsDelegate = AWSModelErrorsDelegate(awsClientAttributes: awsClientAttributes)
         
         generateClient(delegate: clientProtocolDelegate, isGenerator: false)
