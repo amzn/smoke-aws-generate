@@ -36,7 +36,7 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.41.0"
+let goRepositoryTag = "v1.41.17"
 
 let fileHeader = """
     // Copyright 2018-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -176,7 +176,7 @@ func generatePackageFile(baseNames: [String]) -> String {
                 .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
                 .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
                 .package(url: "https://github.com/LiveUI/XMLCoding.git", from: "0.4.1"),
-                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.9.0"),
+                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.11.0"),
                 .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"),
             ],
             targets: [\n
