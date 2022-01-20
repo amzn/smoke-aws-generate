@@ -29,7 +29,7 @@ public extension ServiceModelCodeGenerator {
     }
     
     /**
-     Generate a async extensions for a client protocol from the Service Model.
+     Generate async extensions for a client protocol from the Service Model.
      */
     func generateProtocolAsyncExtensions() {
         let fileBuilder = FileBuilder()
