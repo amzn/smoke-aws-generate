@@ -74,6 +74,7 @@ extension ServiceModelCodeGenerator {
         generateClient(delegate: throwingClientDelegate, isGenerator: false)
         generateClient(delegate: awsClientDelegate, isGenerator: false)
         generateClient(delegate: awsClientDelegate, isGenerator: true)
+        generateProtocolAsyncExtensions()
         generateModelOperationsEnum()
         generateOperationsReporting()
         generateInvocationsReporting()
