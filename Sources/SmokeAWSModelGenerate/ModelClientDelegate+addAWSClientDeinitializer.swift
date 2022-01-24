@@ -14,7 +14,6 @@
 // ModelClientDelegate+addAWSClientDeinitializer.swift
 // SmokeAWSModelGenerate
 //
-
 import Foundation
 import ServiceModelCodeGeneration
 import ServiceModelEntities
@@ -28,15 +27,58 @@ extension ModelClientDelegate {
                                    targetsAPIGateway: Bool,
                                    contentType: String,
                                    isGenerator: Bool) {
-        let httpClientConfiguration = codeGenerator.customizations.httpClientConfiguration
-
         fileBuilder.appendEmptyLine()
         fileBuilder.appendLine("""
             /**
              Gracefully shuts down this client. This function is idempotent and
-             will handle being called multiple times.
+             will handle being called multiple times. Will block until shutdown is complete.
              */
-            public func close() throws {
+            """)
+        addShutdownMethod(methodName: "syncShutdown", isAsync: false, fileBuilder: fileBuilder,
+                          codeGenerator: codeGenerator, isGenerator: isGenerator)
+        
+        fileBuilder.appendEmptyLine()
+        fileBuilder.appendLine("""
+            // renamed `syncShutdown` to make it clearer this version of shutdown will block.
+            @available(*, deprecated, renamed: "syncShutdown")
+            """)
+        addShutdownMethod(methodName: "close", isAsync: false, fileBuilder: fileBuilder,
+                          codeGenerator: codeGenerator, isGenerator: isGenerator)
+        
+        fileBuilder.appendEmptyLine()
+        fileBuilder.appendLine("""
+            /**
+             Gracefully shuts down this client. This function is idempotent and
+             will handle being called multiple times. Will return when shutdown is complete.
+             */
+            #if (os(Linux) && compiler(>=5.5)) || (!os(Linux) && compiler(>=5.5.2)) && canImport(_Concurrency)
+            """)
+        addShutdownMethod(methodName: "shutdown", isAsync: true, fileBuilder: fileBuilder,
+                          codeGenerator: codeGenerator, isGenerator: isGenerator)
+        fileBuilder.appendLine("""
+            #endif
+            """)
+    }
+    
+    private func addShutdownMethod(methodName: String,
+                                   isAsync: Bool,
+                                   fileBuilder: FileBuilder,
+                                   codeGenerator: ServiceModelCodeGenerator,
+                                   isGenerator: Bool) {
+        let httpClientConfiguration = codeGenerator.customizations.httpClientConfiguration
+        
+        let asyncInfix: String
+        let awaitInfix: String
+        if isAsync {
+            asyncInfix = "async "
+            awaitInfix = " await"
+        } else {
+            asyncInfix = ""
+            awaitInfix = ""
+        }
+
+        fileBuilder.appendLine("""
+            public func \(methodName)() \(asyncInfix)throws {
             """)
         
         if !isGenerator {
@@ -47,13 +89,13 @@ extension ModelClientDelegate {
         }
         
         fileBuilder.appendLine("""
-            try httpClient.close()
+            try\(awaitInfix) self.httpClient.\(methodName)()
         """)
         
         fileBuilder.incIndent()
         httpClientConfiguration.additionalClients?.forEach { (key, _) in
             let clientName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
-            fileBuilder.appendLine("try \(clientName).close()")
+            fileBuilder.appendLine("try\(awaitInfix) self.\(clientName).\(methodName)()")
         }
         fileBuilder.decIndent()
         
