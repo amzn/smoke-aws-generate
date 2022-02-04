@@ -20,7 +20,7 @@ import ServiceModelCodeGeneration
 import ServiceModelEntities
 
 struct APIGatewayClientModelErrorsDelegate: ModelErrorsDelegate {
-    let optionSetGeneration: ErrorOptionSetGeneration = .noGeneration
+    let optionSetGeneration: ErrorOptionSetGeneration = .generateWithCustomStringConvertibleConformance
     let generateEncodableConformance: Bool = false
     let generateCustomStringConvertibleConformance: Bool = false
     let canExpectValidationError: Bool = false
