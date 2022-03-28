@@ -1,4 +1,4 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.4
 //
 // Copyright 2019-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 //
@@ -38,17 +38,18 @@ let package = Package(
             targets: ["CoralToJSONServiceModel"]),
     ],
     dependencies: [
-        .package(name: "ServiceModelSwiftCodeGenerate", url: "https://github.com/amzn/service-model-swift-code-generate.git", .branch("main")),
+        .package(name: "ServiceModelSwiftCodeGenerate",
+                 url: "https://github.com/amzn/service-model-swift-code-generate.git", from: "3.0.0-beta.1"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "0.3.0"),
     ],
     targets: [
-        .target(
+        .executableTarget(
             name: "SmokeAWSGenerate", dependencies: [
                 .target(name: "SmokeAWSModelGenerate"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
         ),
-        .target(
+        .executableTarget(
             name: "APIGatewayClientGenerate", dependencies: [
                 .target(name: "APIGatewayClientModelGenerate"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),

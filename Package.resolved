@@ -3,20 +3,20 @@
     "pins": [
       {
         "package": "OpenAPIKit",
-        "repositoryURL": "https://github.com/mndzup/OpenAPIKit.git",
+        "repositoryURL": "https://github.com/mattpolzin/OpenAPIKit.git",
         "state": {
-          "branch": "main",
-          "revision": "4f406328cb4543fe9d27325949f01914ca2c9863",
-          "version": null
+          "branch": null,
+          "revision": "0c668112f9803c1858ed070f9e8ce84922a0b41f",
+          "version": "3.0.0-alpha.4"
         }
       },
       {
         "package": "ServiceModelSwiftCodeGenerate",
         "repositoryURL": "https://github.com/amzn/service-model-swift-code-generate.git",
         "state": {
-          "branch": "main",
-          "revision": "6e4710b64c54cf91530b0438b6635f34877e56a5",
-          "version": null
+          "branch": null,
+          "revision": "286181816fccc2b6ec92049ba68426d08cbe0059",
+          "version": "3.0.0-beta.1"
         }
       },
       {
