@@ -44,7 +44,7 @@ struct APIGatewayClientModelErrorsDelegate: ModelErrorsDelegate {
                                                 errorTypes: [ErrorType]) {
         fileBuilder.appendLine("""
         case validationError(reason: String)
-        case unrecognizedError(String, String?)
+        case unrecognizedError(String?, String?)
         """)
     }
     
@@ -62,11 +62,19 @@ struct APIGatewayClientModelErrorsDelegate: ModelErrorsDelegate {
                                     codingErrorUnknownError: String) -> String {
         fileBuilder.appendLine("""
             let values = try decoder.container(keyedBy: CodingKeys.self)
-            var errorReason = try values.decode(String.self, forKey: .type)
+            let type = try values.decodeIfPresent(String.self, forKey: .type)
             let errorMessage = try values.decodeIfPresent(String.self, forKey: .message)
-
-            if let index = errorReason.firstIndex(of: "#") {
-                errorReason = String(errorReason[errorReason.index(index, offsetBy: 1)...])
+            
+            let errorReason: String
+            if let type = type {
+                if let index = type.firstIndex(of: "#") {
+                    errorReason = String(type[type.index(index, offsetBy: 1)...])
+                } else {
+                    errorReason = type
+                }
+            } else {
+                self = .unrecognizedError(nil, errorMessage)
+                return
             }
             """)
         
