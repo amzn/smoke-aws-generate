@@ -70,7 +70,8 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
         
         fileBuilder.appendLine("""
         case validationError(reason: String)
-        case unrecognizedError(String?, String?)
+        case unrecognizedError(String, String?)
+        case untypedError(String?)
         """)
     }
     
@@ -111,7 +112,7 @@ struct AWSModelErrorsDelegate: ModelErrorsDelegate {
                     errorReason = type
                 }
             } else {
-                self = .unrecognizedError(nil, errorMessage)
+                self = .untypedError(errorMessage)
                 return
             }
             """)

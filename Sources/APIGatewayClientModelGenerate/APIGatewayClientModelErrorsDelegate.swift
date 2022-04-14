@@ -44,7 +44,8 @@ struct APIGatewayClientModelErrorsDelegate: ModelErrorsDelegate {
                                                 errorTypes: [ErrorType]) {
         fileBuilder.appendLine("""
         case validationError(reason: String)
-        case unrecognizedError(String?, String?)
+        case unrecognizedError(String, String?)
+        case untypedError(String?)
         """)
     }
     
@@ -73,7 +74,7 @@ struct APIGatewayClientModelErrorsDelegate: ModelErrorsDelegate {
                     errorReason = type
                 }
             } else {
-                self = .unrecognizedError(nil, errorMessage)
+                self = .untypedError(errorMessage)
                 return
             }
             """)
