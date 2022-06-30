@@ -36,10 +36,10 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.42.44"
+let goRepositoryTag = "v1.44.46"
 
 let fileHeader = """
-    // Copyright 2018-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+    // Copyright 2018-2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
     //
     // Licensed under the Apache License, Version 2.0 (the "License").
     // You may not use this file except in compliance with the License.
