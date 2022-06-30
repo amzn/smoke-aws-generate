@@ -27,7 +27,7 @@ internal struct DynamoDBConfiguration {
         knownErrorsDefaultRetryBehavior: .fail,
         unretriableUnknownErrors: [],
         retriableUnknownErrors: ["ItemCollectionSizeLimitExceededException", "LimitExceededException",
-                                 "ProvisionedThroughputExceededException", "RequestLimitExceeded"])
+                                 "ProvisionedThroughputExceededException", "RequestLimitExceeded", "InternalServerError"])
     
     static let serviceModelDetails = ServiceModelDetails(
         serviceName: "dynamodb", serviceVersion: "2012-08-10",
