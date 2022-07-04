@@ -35,7 +35,7 @@ extension ServiceModelCodeGenerator {
         let baseFilePath = applicationDescription.baseFilePath
         
         fileBuilder.appendLine("""
-            // swift-tools-version:5.2
+            // swift-tools-version:5.3
             """)
         
         if let fileHeader = customizations.fileHeader {
