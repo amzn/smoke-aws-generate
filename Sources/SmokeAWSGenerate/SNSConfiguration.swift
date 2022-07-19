@@ -17,6 +17,7 @@
 
 import Foundation
 import ServiceModelEntities
+import SmokeAWSModelGenerate
 
 internal struct SNSConfiguration {
     static let modelOverride = ModelOverride(
@@ -44,11 +45,16 @@ internal struct SNSConfiguration {
         unretriableUnknownErrors: [],
         retriableUnknownErrors: ["FilterPolicyLimitExceededException", "KMSThrottlingException",
                                  "SubscriptionLimitExceededException", "ThrottledException",
-                                 "TopicLimitExceededException"])
+                                 "TopicLimitExceededException"],
+        clientDelegateNameOverride: "FormEncodedXMLAWSHttpClientDelegate")
     
     static let serviceModelDetails = ServiceModelDetails(
-        serviceName: "sns", serviceVersion: "2010-03-31",
-        baseName: "SimpleNotification", modelOverride: modelOverride,
+        serviceName: "sns",
+        serviceVersion: "2010-03-31",
+        baseName: "SimpleNotification",
+        modelOverride: modelOverride,
         httpClientConfiguration: httpClientConfiguration,
-        signAllHeaders: false)
+        signAllHeaders: false,
+        awsCodeGenerationCustomizations: AWSCodeGenerationCustomizations(
+            contentTypeHeaderOverride: "application/x-www-form-urlencoded; charset=utf-8"))
 }

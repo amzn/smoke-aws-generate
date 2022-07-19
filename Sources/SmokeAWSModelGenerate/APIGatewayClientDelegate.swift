@@ -93,7 +93,10 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                                     codeGenerator: codeGenerator,
                                     targetsAPIGateway: true,
                                     contentType: contentType,
-                                    sortedOperations: sortedOperations, isGenerator: isGenerator)
+                                    sortedOperations: sortedOperations,
+                                    isGenerator: isGenerator,
+                                    awsCustomization: AWSCodeGenerationCustomizations(
+                                        contentTypeHeaderOverride: nil))
     }
     
     public func addOperationBody(codeGenerator: ServiceModelCodeGenerator,

@@ -28,7 +28,8 @@ extension ModelClientDelegate {
                                            targetsAPIGateway: Bool,
                                            contentType: String,
                                            sortedOperations: [(String, OperationDescription)],
-                                           isGenerator: Bool) {
+                                           isGenerator: Bool,
+                                           awsCustomization: AWSCodeGenerationCustomizations) {
         let targetValue: String
         if let target = clientAttributes.target {
             targetValue = "\"\(target)\""
@@ -56,7 +57,7 @@ extension ModelClientDelegate {
         let targetOrVersionParameterCopyConstructor: String
         let targetAssignment: String
         let contentTypeAssignment: String
-        
+
         // Use a specific initializer for queries
         switch contentType.contentTypeDefaultInputLocation {
         case .query:
@@ -70,8 +71,12 @@ extension ModelClientDelegate {
             targetOrVersionParameterCopyConstructor = "apiVersion: String"
             targetAssignment = "self.target = nil"
             
-            // use 'application/octet-stream' as the content type
-            contentTypeAssignment = "contentType: String = \"application/octet-stream\""
+            // use 'application/octet-stream' as the content type unless specified otherwise
+            if let contentTypeHeaderOverride = awsCustomization.contentTypeHeaderOverride {
+                contentTypeAssignment = "contentType: String = \"\(contentTypeHeaderOverride)\""
+            } else {
+                contentTypeAssignment = "contentType: String = \"application/octet-stream\""
+            }
         case .body:
             addAWSClientBodyMembers(
                 fileBuilder: fileBuilder,
@@ -84,7 +89,11 @@ extension ModelClientDelegate {
             targetAssignment = "self.target = target"
             
             // use the content type from the client attributes as the default
-            contentTypeAssignment = "contentType: String = \"\(clientAttributes.contentType)\""
+            if let contentTypeHeaderOverride = awsCustomization.contentTypeHeaderOverride {
+                contentTypeAssignment = "contentType: String = \"\(contentTypeHeaderOverride)\""
+            } else {
+                contentTypeAssignment = "contentType: String = \"\(clientAttributes.contentType)\""
+            }
         }
         
         fileBuilder.appendEmptyLine()

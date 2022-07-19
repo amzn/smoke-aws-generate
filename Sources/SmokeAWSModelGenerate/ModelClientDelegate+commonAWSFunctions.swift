@@ -28,7 +28,8 @@ extension ModelClientDelegate {
                                      targetsAPIGateway: Bool,
                                      contentType: String,
                                      sortedOperations: [(String, OperationDescription)],
-                                     isGenerator: Bool) {
+                                     isGenerator: Bool,
+                                     awsCustomization: AWSCodeGenerationCustomizations) {
         addAWSClientInitializerAndMembers(fileBuilder: fileBuilder,
                                           baseName: baseName,
                                           clientAttributes: clientAttributes,
@@ -36,7 +37,8 @@ extension ModelClientDelegate {
                                           targetsAPIGateway: targetsAPIGateway,
                                           contentType: contentType,
                                           sortedOperations: sortedOperations,
-                                          isGenerator: isGenerator)
+                                          isGenerator: isGenerator,
+                                          awsCustomization: awsCustomization)
         
         addAWSClientDeinitializer(fileBuilder: fileBuilder,
                                   baseName: baseName,

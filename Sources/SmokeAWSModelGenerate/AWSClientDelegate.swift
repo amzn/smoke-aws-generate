@@ -29,6 +29,7 @@ public struct AWSClientDelegate: ModelClientDelegate {
     public let asyncResultType: AsyncResultType?
     public let baseName: String
     public let signAllHeaders: Bool
+    public let awsCustomizations: AWSCodeGenerationCustomizations
     
     struct AWSClientFunction {
         let name: String
@@ -46,7 +47,8 @@ public struct AWSClientDelegate: ModelClientDelegate {
     public init(baseName: String,
                 clientAttributes: AWSClientAttributes,
                 signAllHeaders: Bool,
-                asyncResultType: AsyncResultType? = nil) {
+                asyncResultType: AsyncResultType? = nil,
+                awsCustomizations: AWSCodeGenerationCustomizations) {
         self.baseName = baseName
         self.clientAttributes = clientAttributes
         self.asyncResultType = asyncResultType
@@ -54,6 +56,7 @@ public struct AWSClientDelegate: ModelClientDelegate {
         self.clientType = .struct(name: "AWS\(baseName)Client", genericParameters: genericParameters,
                                   conformingProtocolName: "\(baseName)ClientProtocol")
         self.signAllHeaders = signAllHeaders
+        self.awsCustomizations = awsCustomizations
     }
     
     public func getFileDescription(isGenerator: Bool) -> String {
@@ -82,7 +85,9 @@ public struct AWSClientDelegate: ModelClientDelegate {
                                     codeGenerator: codeGenerator,
                                     targetsAPIGateway: false,
                                     contentType: clientAttributes.contentType,
-                                    sortedOperations: sortedOperations, isGenerator: isGenerator)
+                                    sortedOperations: sortedOperations,
+                                    isGenerator: isGenerator,
+                                    awsCustomization: self.awsCustomizations)
     }
     
     public func addOperationBody(codeGenerator: ServiceModelCodeGenerator,
