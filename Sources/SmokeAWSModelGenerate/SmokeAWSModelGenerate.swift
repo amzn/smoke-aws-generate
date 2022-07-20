@@ -26,6 +26,7 @@ public struct SmokeAWSModelGenerate {
     public static func generateFromModel(
         modelFilePath: String,
         customizations: CodeGenerationCustomizations,
+        awsCustomizations: AWSCodeGenerationCustomizations,
         applicationDescription: ApplicationDescription,
         modelOverride: ModelOverride?,
         signAllHeaders: Bool) throws {
@@ -33,8 +34,8 @@ public struct SmokeAWSModelGenerate {
                                    serviceModel: CoralToJSONServiceModel) throws {
                 try codeGenerator.generateFromCoralToJSONServiceModel(
                     coralToJSONServiceModel: serviceModel,
-                    signAllHeaders: signAllHeaders
-                )
+                    signAllHeaders: signAllHeaders,
+                    awsCustomizations: awsCustomizations)
             }
         
             try ServiceModelGenerate.generateFromModel(
@@ -50,7 +51,8 @@ extension ServiceModelCodeGenerator {
     
     func generateFromCoralToJSONServiceModel(
             coralToJSONServiceModel: CoralToJSONServiceModel,
-            signAllHeaders: Bool) throws {
+            signAllHeaders: Bool,
+            awsCustomizations: AWSCodeGenerationCustomizations) throws {
         let awsClientAttributes = coralToJSONServiceModel.getAWSClientAttributes()
         
         let clientProtocolDelegate = ClientProtocolDelegate(
@@ -64,7 +66,8 @@ extension ServiceModelCodeGenerator {
         let awsClientDelegate = AWSClientDelegate(
             baseName: applicationDescription.baseName,
             clientAttributes: awsClientAttributes,
-            signAllHeaders: signAllHeaders)
+            signAllHeaders: signAllHeaders,
+            awsCustomizations: awsCustomizations)
         let awsModelErrorsDelegate = AWSModelErrorsDelegate(awsClientAttributes: awsClientAttributes,
                                                             modelOverride: modelOverride,
                                                             baseName: applicationDescription.baseName)

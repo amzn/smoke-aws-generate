@@ -260,6 +260,23 @@ struct ServiceModelDetails {
     let modelOverride: ModelOverride?
     let httpClientConfiguration: HttpClientConfiguration
     let signAllHeaders: Bool
+    let awsCodeGenerationCustomizations: AWSCodeGenerationCustomizations
+
+    init(serviceName: String,
+         serviceVersion: String,
+         baseName: String,
+         modelOverride: ModelOverride?,
+         httpClientConfiguration: HttpClientConfiguration,
+         signAllHeaders: Bool,
+         awsCodeGenerationCustomizations: AWSCodeGenerationCustomizations = AWSCodeGenerationCustomizations(contentTypeHeaderOverride: nil)) {
+        self.serviceName = serviceName
+        self.serviceVersion = serviceVersion
+        self.baseName = baseName
+        self.modelOverride = modelOverride
+        self.httpClientConfiguration = httpClientConfiguration
+        self.signAllHeaders = signAllHeaders
+        self.awsCodeGenerationCustomizations = awsCodeGenerationCustomizations
+    }
 }
 
 private func generateSmokeAWS(tempDirURL: URL,
@@ -306,6 +323,7 @@ private func generateSmokeAWS(tempDirURL: URL,
         try SmokeAWSModelGenerate.generateFromModel(
             modelFilePath: modelFilePath,
             customizations: customizations,
+            awsCustomizations: details.awsCodeGenerationCustomizations,
             applicationDescription: fullApplicationDescription,
             modelOverride: details.modelOverride,
             signAllHeaders: details.signAllHeaders)
