@@ -640,7 +640,7 @@ extension ModelClientDelegate {
         
         fileBuilder.appendLine("""
             
-            public func with<NewTraceContextType: InvocationTraceContext>(
+            public func with<NewTraceContextType: InvocationTraceContext & Sendable>(
                     logger: Logging.Logger,
                     internalRequestId: String = "none",
                     traceContext: NewTraceContextType) -> \(clientName)<StandardHTTPClientCoreInvocationReporting<NewTraceContextType>> {

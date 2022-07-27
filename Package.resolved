@@ -5,9 +5,9 @@
         "package": "ServiceModelSwiftCodeGenerate",
         "repositoryURL": "https://github.com/amzn/service-model-swift-code-generate.git",
         "state": {
-          "branch": null,
-          "revision": "2693c4d851d1359cd62e7d791546a86bf5bde583",
-          "version": "2.4.0"
+          "branch": "sendable_conformance-2.x",
+          "revision": "704060aac2d14d7fcac45c82633d35024dd6fda7",
+          "version": null
         }
       },
       {

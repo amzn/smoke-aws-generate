@@ -51,7 +51,7 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                 defaultInvocationTraceContext: InvocationTraceContextDeclaration = InvocationTraceContextDeclaration(name: "AWSClientInvocationTraceContext")) {
         self.baseName = baseName
         self.asyncResultType = asyncResultType
-        let genericParameters: [(String, String?)] = [("InvocationReportingType", "HTTPClientCoreInvocationReporting")]
+        let genericParameters: [(String, String?)] = [("InvocationReportingType", "HTTPClientCoreInvocationReporting & Sendable")]
         self.clientType = .struct(name: "APIGateway\(baseName)Client", genericParameters: genericParameters,
                                   conformingProtocolName: "\(baseName)ClientProtocol")
         self.contentType = contentType

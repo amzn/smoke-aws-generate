@@ -36,7 +36,7 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.44.46"
+let goRepositoryTag = "v1.44.60"
 
 let fileHeader = """
     // Copyright 2018-2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -127,11 +127,15 @@ func getPackageTargetEntriesPackageFile(name: String) -> String {
                         name: "\(name)Client", dependencies: [
                             .target(name: "\(name)Model"),
                             .target(name: "SmokeAWSHttp"),
-                        ]),
+                        ],
+                        swiftSettings: swiftSettings
+                    ),
                     .target(
                         name: "\(name)Model", dependencies: [
                             .product(name: "Logging", package: "swift-log"),
-                        ]),\n
+                        ],
+                        swiftSettings: swiftSettings
+                    ),\n
             """
 }
 
@@ -143,6 +147,13 @@ func generatePackageFile(baseNames: [String]) -> String {
         \(fileHeader)
         
         import PackageDescription
+        
+        let swiftSettings: [SwiftSetting]
+        #if compiler(<5.6)
+        swiftSettings = []
+        #else
+        swiftSettings = [.unsafeFlags(["-warn-concurrency"])]
+        #endif
 
         let package = Package(
             name: "smoke-aws",
@@ -169,6 +180,9 @@ func generatePackageFile(baseNames: [String]) -> String {
                 .library(
                     name: "SmokeAWSMetrics",
                     targets: ["SmokeAWSMetrics"]),
+                .library(
+                    name: "SmokeAWSMiddleware",
+                    targets: ["SmokeAWSMiddleware"]),
             ],
             dependencies: [
                 .package(url: "https://github.com/apple/swift-nio.git", from: "2.33.0"),
@@ -176,8 +190,10 @@ func generatePackageFile(baseNames: [String]) -> String {
                 .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
                 .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
                 .package(url: "https://github.com/LiveUI/XMLCoding.git", from: "0.4.1"),
-                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.12.0"),
+                .package(url: "https://github.com/amzn/smoke-http.git", .branch("middleware_poc")),
                 .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"),
+                .package(url: "https://github.com/tachyonics/swift-http-client-middleware", .branch("poc")),
+                .package(url: "https://github.com/tachyonics/async-http-middleware-client", .branch("poc")),
             ],
             targets: [\n
         """
@@ -193,7 +209,9 @@ func generatePackageFile(baseNames: [String]) -> String {
                         .product(name: "Metrics", package: "swift-metrics"),
                         .product(name: "XMLCoding", package: "XMLCoding"),
                         .product(name: "SmokeHTTPClient", package: "smoke-http"),
-                    ]),
+                    ],
+                    swiftSettings: swiftSettings
+                ),
                 .target(
                     name: "SmokeAWSHttp", dependencies: [
                         .product(name: "Logging", package: "swift-log"),
@@ -205,7 +223,19 @@ func generatePackageFile(baseNames: [String]) -> String {
                         .product(name: "HTTPPathCoding", package: "smoke-http"),
                         .product(name: "HTTPHeadersCoding", package: "smoke-http"),
                         .product(name: "Crypto", package: "swift-crypto"),
-                    ]),
+                    ],
+                    swiftSettings: swiftSettings
+                ),
+                .target(
+                    name: "SmokeAWSMiddleware", dependencies: [
+                        .product(name: "Logging", package: "swift-log"),
+                        .product(name: "HttpClientMiddleware", package: "swift-http-client-middleware"),
+                        .product(name: "AsyncHttpMiddlewareClient", package: "async-http-middleware-client"),
+                        .product(name: "SmokeHTTPClientMiddleware", package: "smoke-http"),
+                        .target(name: "SmokeAWSHttp"),
+                    ],
+                    swiftSettings: swiftSettings
+                ),
                 .target(
                     name: "_SmokeAWSHttpConcurrency", dependencies: [
                         .target(name: "SmokeAWSHttp"),
@@ -215,7 +245,9 @@ func generatePackageFile(baseNames: [String]) -> String {
                         .product(name: "Logging", package: "swift-log"),
                         .product(name: "Metrics", package: "swift-metrics"),
                         .target(name: "CloudWatchClient"),
-                    ]),
+                    ],
+                    swiftSettings: swiftSettings
+                ),
                 .testTarget(
                     name: "S3ClientTests", dependencies: [
                         .target(name: "S3Client"),
