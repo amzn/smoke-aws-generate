@@ -27,6 +27,8 @@ public struct AWSClientDelegate: ModelClientDelegate {
     public let clientType: ClientType
     public let clientAttributes: AWSClientAttributes
     public let asyncAwaitAPIs: CodeGenFeatureStatus
+    public let eventLoopFutureClientAPIs: CodeGenFeatureStatus
+    public let minimumCompilerSupport: MinimumCompilerSupport
     public let baseName: String
     public let signAllHeaders: Bool
     
@@ -46,7 +48,9 @@ public struct AWSClientDelegate: ModelClientDelegate {
     public init(baseName: String,
                 clientAttributes: AWSClientAttributes,
                 signAllHeaders: Bool,
-                asyncAwaitAPIs: CodeGenFeatureStatus) {
+                asyncAwaitAPIs: CodeGenFeatureStatus,
+                eventLoopFutureClientAPIs: CodeGenFeatureStatus = .enabled,
+                minimumCompilerSupport: MinimumCompilerSupport = .unknown) {
         let clientProtocol: String
         switch clientAttributes.contentType.contentTypeDefaultInputLocation {
         case .query:
@@ -58,6 +62,8 @@ public struct AWSClientDelegate: ModelClientDelegate {
         self.baseName = baseName
         self.clientAttributes = clientAttributes
         self.asyncAwaitAPIs = asyncAwaitAPIs
+        self.eventLoopFutureClientAPIs = eventLoopFutureClientAPIs
+        self.minimumCompilerSupport = minimumCompilerSupport
         let genericParameters: [(String, String?)] = [("InvocationReportingType", "HTTPClientCoreInvocationReporting")]
         self.clientType = .struct(name: "AWS\(baseName)Client", genericParameters: genericParameters,
                                   conformingProtocolNames: ["\(baseName)ClientProtocol", clientProtocol])
@@ -67,8 +73,8 @@ public struct AWSClientDelegate: ModelClientDelegate {
     public func addTypeDescription(codeGenerator: ServiceModelCodeGenerator,
                                    delegate: ModelClientDelegate,
                                    fileBuilder: FileBuilder,
-                                   isGenerator: Bool) {
-        if isGenerator {
+                                   entityType: ClientEntityType) {
+        if entityType.isGenerator {
             fileBuilder.appendLine("""
                 AWS Client Client Generator for the \(self.baseName) service.
                 """)
@@ -82,8 +88,8 @@ public struct AWSClientDelegate: ModelClientDelegate {
     public func addCustomFileHeader(codeGenerator: ServiceModelCodeGenerator,
                                     delegate: ModelClientDelegate,
                                     fileBuilder: FileBuilder,
-                                    isGenerator: Bool) {
-        addAWSClientFileHeader(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName, isGenerator: isGenerator,
+                                    fileType: ClientFileType) {
+        addAWSClientFileHeader(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName, fileType: fileType,
                                defaultInvocationTraceContext: self.clientAttributes.defaultInvocationTraceContext)
     }
     
@@ -91,13 +97,15 @@ public struct AWSClientDelegate: ModelClientDelegate {
                                    delegate: ModelClientDelegate,
                                    fileBuilder: FileBuilder,
                                    sortedOperations: [(String, OperationDescription)],
-                                   isGenerator: Bool) {
+                                   entityType: ClientEntityType) {
         addAWSClientCommonFunctions(fileBuilder: fileBuilder, baseName: baseName,
                                     clientAttributes: clientAttributes,
                                     codeGenerator: codeGenerator,
                                     targetsAPIGateway: false,
                                     contentType: clientAttributes.contentType,
-                                    sortedOperations: sortedOperations, isGenerator: isGenerator)
+                                    sortedOperations: sortedOperations,
+                                    defaultInvocationTraceContext: self.clientAttributes.defaultInvocationTraceContext,
+                                    entityType: entityType)
     }
     
     public func addOperationBody(codeGenerator: ServiceModelCodeGenerator,
@@ -108,7 +116,7 @@ public struct AWSClientDelegate: ModelClientDelegate {
                                  operationDescription: OperationDescription,
                                  functionInputType: String?,
                                  functionOutputType: String?,
-                                 isGenerator: Bool) {
+                                 entityType: ClientEntityType) {
         guard let httpVerb = operationDescription.httpVerb,
             let httpUrl = operationDescription.httpUrl else {
             fatalError("Unable to create an AWSClient operation that doesn't have a HTTP verb or path")

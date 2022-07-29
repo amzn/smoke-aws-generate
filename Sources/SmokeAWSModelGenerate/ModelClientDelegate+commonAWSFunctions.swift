@@ -28,7 +28,8 @@ extension ModelClientDelegate {
                                      targetsAPIGateway: Bool,
                                      contentType: String,
                                      sortedOperations: [(String, OperationDescription)],
-                                     isGenerator: Bool) {
+                                     defaultInvocationTraceContext: InvocationTraceContextDeclaration,
+                                     entityType: ClientEntityType) {
         addAWSClientInitializerAndMembers(fileBuilder: fileBuilder,
                                           baseName: baseName,
                                           clientAttributes: clientAttributes,
@@ -36,7 +37,8 @@ extension ModelClientDelegate {
                                           targetsAPIGateway: targetsAPIGateway,
                                           contentType: contentType,
                                           sortedOperations: sortedOperations,
-                                          isGenerator: isGenerator)
+                                          defaultInvocationTraceContext: defaultInvocationTraceContext,
+                                          entityType: entityType)
         
         addAWSClientDeinitializer(fileBuilder: fileBuilder,
                                   baseName: baseName,
@@ -44,9 +46,9 @@ extension ModelClientDelegate {
                                   codeGenerator: codeGenerator,
                                   targetsAPIGateway: targetsAPIGateway,
                                   contentType: contentType,
-                                  isGenerator: isGenerator)
+                                  entityType: entityType)
         
-        if isGenerator {
+        if entityType.isGenerator {
             addAWSClientGeneratorWithReporting(
                 fileBuilder: fileBuilder, baseName: baseName,
                 codeGenerator: codeGenerator, targetsAPIGateway: targetsAPIGateway,
@@ -61,6 +63,22 @@ extension ModelClientDelegate {
                 fileBuilder: fileBuilder, baseName: baseName,
                 codeGenerator: codeGenerator, targetsAPIGateway: targetsAPIGateway,
                 invocationTraceContext: clientAttributes.defaultInvocationTraceContext, contentType: contentType)
+        }
+        
+        if case .configurationObject = entityType {
+            fileBuilder.appendLine("""
+                
+                internal func createHTTPOperationsClient(eventLoopOverride: EventLoop? = nil) -> HTTPOperationsClient {
+                    return HTTPOperationsClient(
+                        endpointHostName: self.endpointHostName,
+                        endpointPort: self.endpointPort,
+                        contentType: self.contentType,
+                        clientDelegate: self.clientDelegate,
+                        timeoutConfiguration: self.timeoutConfiguration,
+                        eventLoopProvider: .shared(eventLoopOverride ?? self.eventLoopGroup),
+                        connectionPoolConfiguration: self.connectionPoolConfiguration)
+                }
+                """)
         }
     }
 }

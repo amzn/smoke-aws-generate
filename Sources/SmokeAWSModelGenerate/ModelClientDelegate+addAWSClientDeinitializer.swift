@@ -26,7 +26,12 @@ extension ModelClientDelegate {
                                    codeGenerator: ServiceModelCodeGenerator,
                                    targetsAPIGateway: Bool,
                                    contentType: String,
-                                   isGenerator: Bool) {
+                                   entityType: ClientEntityType) {
+        if case .configurationObject = entityType {
+            // nothing to do
+            return
+        }
+        
         fileBuilder.appendEmptyLine()
         fileBuilder.appendLine("""
             /**
@@ -35,36 +40,45 @@ extension ModelClientDelegate {
              */
             """)
         addShutdownMethod(methodName: "syncShutdown", isAsync: false, fileBuilder: fileBuilder,
-                          codeGenerator: codeGenerator, isGenerator: isGenerator)
+                          codeGenerator: codeGenerator, entityType: entityType)
         
         fileBuilder.appendEmptyLine()
-        fileBuilder.appendLine("""
-            // renamed `syncShutdown` to make it clearer this version of shutdown will block.
-            @available(*, deprecated, renamed: "syncShutdown")
-            """)
-        addShutdownMethod(methodName: "close", isAsync: false, fileBuilder: fileBuilder,
-                          codeGenerator: codeGenerator, isGenerator: isGenerator)
+        if case .unknown = self.minimumCompilerSupport {
+            fileBuilder.appendLine("""
+                // renamed `syncShutdown` to make it clearer this version of shutdown will block.
+                @available(*, deprecated, renamed: "syncShutdown")
+                """)
+            addShutdownMethod(methodName: "close", isAsync: false, fileBuilder: fileBuilder,
+                              codeGenerator: codeGenerator, entityType: entityType)
+            
+            fileBuilder.appendEmptyLine()
+        }
         
-        fileBuilder.appendEmptyLine()
         fileBuilder.appendLine("""
             /**
              Gracefully shuts down this client. This function is idempotent and
              will handle being called multiple times. Will return when shutdown is complete.
              */
-            #if (os(Linux) && compiler(>=5.5)) || (!os(Linux) && compiler(>=5.5.2)) && canImport(_Concurrency)
             """)
+        if case .unknown = self.minimumCompilerSupport {
+            fileBuilder.appendLine("""
+                #if (os(Linux) && compiler(>=5.5)) || (!os(Linux) && compiler(>=5.5.2)) && canImport(_Concurrency)
+                """)
+        }
         addShutdownMethod(methodName: "shutdown", isAsync: true, fileBuilder: fileBuilder,
-                          codeGenerator: codeGenerator, isGenerator: isGenerator)
-        fileBuilder.appendLine("""
-            #endif
-            """)
+                          codeGenerator: codeGenerator, entityType: entityType)
+        if case .unknown = self.minimumCompilerSupport {
+            fileBuilder.appendLine("""
+                #endif
+                """)
+        }
     }
     
     private func addShutdownMethod(methodName: String,
                                    isAsync: Bool,
                                    fileBuilder: FileBuilder,
                                    codeGenerator: ServiceModelCodeGenerator,
-                                   isGenerator: Bool) {
+                                   entityType: ClientEntityType) {
         let httpClientConfiguration = codeGenerator.customizations.httpClientConfiguration
         
         let asyncInfix: String
@@ -81,7 +95,7 @@ extension ModelClientDelegate {
             public func \(methodName)() \(asyncInfix)throws {
             """)
         
-        if !isGenerator {
+        if case .clientImplementation = entityType {
             fileBuilder.appendLine("""
                 if self.ownsHttpClients {
             """)
@@ -99,7 +113,7 @@ extension ModelClientDelegate {
         }
         fileBuilder.decIndent()
         
-        if !isGenerator {
+        if case .clientImplementation = entityType {
             fileBuilder.decIndent()
             fileBuilder.appendLine("""
                 }

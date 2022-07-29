@@ -21,6 +21,57 @@ import ServiceModelEntities
 import ServiceModelGenerate
 import CoralToJSONServiceModel
 
+private enum DelegateStatementType {
+    case localVariable
+    case fromConfig
+    case instanceVariableDeclaration
+    case instanceVariableAssignment
+}
+
+private enum InitializerType {
+    case standard
+    case fromConfig(configurationObjectName: String)
+    case fromOperationsClient(operationsClientName: String)
+    case forGenerator
+    case isCopyInitializer
+    case genericTraceContextType
+    case usesDefaultReportingType(defaultInvocationTraceContext: InvocationTraceContextDeclaration)
+    case traceContextTypeFromConfig(configurationObjectName: String)
+    case traceContextTypeFromOperationsClient(operationsClientName: String)
+    
+    var isCopyInitializer: Bool {
+        if case .isCopyInitializer = self {
+            return true
+        }
+        
+        return false
+    }
+
+    var isGenerator: Bool {
+        if case .forGenerator = self {
+            return true
+        }
+        
+        return false
+    }
+    
+    var isDefaultReportingType: Bool {
+        if case .usesDefaultReportingType = self {
+            return true
+        }
+        
+        return false
+    }
+    
+    var isStandard: Bool {
+        if case .standard = self {
+            return true
+        }
+        
+        return false
+    }
+}
+
 extension ModelClientDelegate {
     func addAWSClientInitializerAndMembers(fileBuilder: FileBuilder, baseName: String,
                                            clientAttributes: AWSClientAttributes,
@@ -28,7 +79,8 @@ extension ModelClientDelegate {
                                            targetsAPIGateway: Bool,
                                            contentType: String,
                                            sortedOperations: [(String, OperationDescription)],
-                                           isGenerator: Bool) {
+                                           defaultInvocationTraceContext: InvocationTraceContextDeclaration,
+                                           entityType: ClientEntityType) {
         let targetValue: String
         if let target = clientAttributes.target {
             targetValue = "\"\(target)\""
@@ -55,41 +107,57 @@ extension ModelClientDelegate {
         let targetOrVersionParameterNormalConstructor: String
         let targetOrVersionParameterCopyConstructor: String
         let targetAssignment: String
+        let targetAssignmentFromConfig: String
+        let targetAssignmentFromOperationsClient: String
         let contentTypeAssignment: String
         
         // Use a specific initializer for queries
         switch contentType.contentTypeDefaultInputLocation {
         case .query:
             addAWSClientQueryMembers(
-                fileBuilder: fileBuilder,
+                fileBuilder: fileBuilder, contentType: contentType, baseName: baseName,
                 httpClientConfiguration: httpClientConfiguration,
-                codeGenerator: codeGenerator, isGenerator: isGenerator)
+                codeGenerator: codeGenerator, entityType: entityType)
             
             // accept the api version rather than the target
             targetOrVersionParameterNormalConstructor = "apiVersion: String = \"\(clientAttributes.apiVersion)\""
             targetOrVersionParameterCopyConstructor = "apiVersion: String"
             targetAssignment = "self.target = nil"
+            targetAssignmentFromConfig = "self.target = nil"
+            targetAssignmentFromOperationsClient = "self.target = nil"
             
             // use 'application/octet-stream' as the content type
             contentTypeAssignment = "contentType: String = \"application/octet-stream\""
         case .body:
             addAWSClientBodyMembers(
-                fileBuilder: fileBuilder,
+                fileBuilder: fileBuilder, contentType: contentType, baseName: baseName,
                 httpClientConfiguration: httpClientConfiguration,
-                codeGenerator: codeGenerator, targetsAPIGateway: targetsAPIGateway, isGenerator: isGenerator)
+                codeGenerator: codeGenerator, targetsAPIGateway: targetsAPIGateway, entityType: entityType)
             
             // accept the target and pass it to the AWS client
             targetOrVersionParameterNormalConstructor = "target: String? = \(targetValue)"
             targetOrVersionParameterCopyConstructor = "target: String?"
             targetAssignment = "self.target = target"
+            targetAssignmentFromConfig = "self.target = config.target"
+            targetAssignmentFromOperationsClient = "self.target = operationsClient.config.target"
             
             // use the content type from the client attributes as the default
             contentTypeAssignment = "contentType: String = \"\(clientAttributes.contentType)\""
         }
         
-        fileBuilder.appendEmptyLine()
+        let initializerType: InitializerType
+        switch entityType {
+        case .clientImplementation:
+            initializerType = .standard
+        case .configurationObject, .operationsClient:
+            initializerType = .genericTraceContextType
+        case .clientGenerator:
+            initializerType = .forGenerator
+        }
+        
         addAWSClientOperationMetricsParameters(fileBuilder: fileBuilder, baseName: baseName,
-                                               codeGenerator: codeGenerator, sortedOperations: sortedOperations, isGenerator: isGenerator)
+                                               codeGenerator: codeGenerator, sortedOperations: sortedOperations,
+                                               entityType: entityType)
         
         addAWSClientInitializer(fileBuilder: fileBuilder, baseName: baseName, clientAttributes: clientAttributes,
                                 codeGenerator: codeGenerator, endpointDefault: endpointDefault, regionDefault: regionDefault,
@@ -97,17 +165,82 @@ extension ModelClientDelegate {
                                 contentType: contentType, contentTypeAssignment: contentTypeAssignment,
                                 targetAssignment: targetAssignment, httpClientConfiguration: httpClientConfiguration,
                                 targetOrVersionParameter: targetOrVersionParameterNormalConstructor, sortedOperations: sortedOperations,
-                                isCopyInitializer: false, isGenerator: isGenerator)
+                                entityType: entityType, initializerType: initializerType)
         
-        if !isGenerator {
-            // add the internal copy initializer
+        if !entityType.isGenerator {
             addAWSClientInitializer(fileBuilder: fileBuilder, baseName: baseName, clientAttributes: clientAttributes,
                                     codeGenerator: codeGenerator, endpointDefault: endpointDefault, regionDefault: regionDefault,
                                     regionAssignmentPostfix: regionAssignmentPostfix, targetsAPIGateway: targetsAPIGateway,
                                     contentType: contentType, contentTypeAssignment: contentTypeAssignment,
                                     targetAssignment: targetAssignment, httpClientConfiguration: httpClientConfiguration,
-                                    targetOrVersionParameter: targetOrVersionParameterCopyConstructor, sortedOperations: sortedOperations,
-                                    isCopyInitializer: true, isGenerator: isGenerator)
+                                    targetOrVersionParameter: targetOrVersionParameterNormalConstructor, sortedOperations: sortedOperations,
+                                    entityType: entityType, initializerType: .usesDefaultReportingType(defaultInvocationTraceContext: defaultInvocationTraceContext))
+            
+            if case .clientImplementation = entityType {
+                // add the internal copy initializer
+                addAWSClientInitializer(fileBuilder: fileBuilder, baseName: baseName, clientAttributes: clientAttributes,
+                                        codeGenerator: codeGenerator, endpointDefault: endpointDefault, regionDefault: regionDefault,
+                                        regionAssignmentPostfix: regionAssignmentPostfix, targetsAPIGateway: targetsAPIGateway,
+                                        contentType: contentType, contentTypeAssignment: contentTypeAssignment,
+                                        targetAssignment: targetAssignment, httpClientConfiguration: httpClientConfiguration,
+                                        targetOrVersionParameter: targetOrVersionParameterCopyConstructor, sortedOperations: sortedOperations,
+                                        entityType: entityType, initializerType: .isCopyInitializer)
+            }
+        }
+        
+        addOperationsClientConfigInitializer(fileBuilder: fileBuilder, entityType: entityType)
+        
+        if case .clientImplementation(initializationStructs: let initializationStructsOptional) = entityType,
+                let initializationStructs = initializationStructsOptional {
+            addAWSClientInitializer(fileBuilder: fileBuilder, baseName: baseName, clientAttributes: clientAttributes,
+                                    codeGenerator: codeGenerator, endpointDefault: endpointDefault, regionDefault: regionDefault,
+                                    regionAssignmentPostfix: regionAssignmentPostfix, targetsAPIGateway: targetsAPIGateway,
+                                    contentType: contentType, contentTypeAssignment: contentTypeAssignment,
+                                    targetAssignment: targetAssignmentFromConfig, httpClientConfiguration: httpClientConfiguration,
+                                    targetOrVersionParameter: targetOrVersionParameterNormalConstructor, sortedOperations: sortedOperations,
+                                    entityType: entityType,
+                                    initializerType: .fromConfig(configurationObjectName: initializationStructs.configurationObjectName))
+            
+            addAWSClientInitializer(fileBuilder: fileBuilder, baseName: baseName, clientAttributes: clientAttributes,
+                                    codeGenerator: codeGenerator, endpointDefault: endpointDefault, regionDefault: regionDefault,
+                                    regionAssignmentPostfix: regionAssignmentPostfix, targetsAPIGateway: targetsAPIGateway,
+                                    contentType: contentType, contentTypeAssignment: contentTypeAssignment,
+                                    targetAssignment: targetAssignmentFromConfig, httpClientConfiguration: httpClientConfiguration,
+                                    targetOrVersionParameter: targetOrVersionParameterNormalConstructor, sortedOperations: sortedOperations,
+                                    entityType: entityType,
+                                    initializerType: .traceContextTypeFromConfig(configurationObjectName: initializationStructs.configurationObjectName))
+            
+            addAWSClientInitializer(fileBuilder: fileBuilder, baseName: baseName, clientAttributes: clientAttributes,
+                                    codeGenerator: codeGenerator, endpointDefault: endpointDefault, regionDefault: regionDefault,
+                                    regionAssignmentPostfix: regionAssignmentPostfix, targetsAPIGateway: targetsAPIGateway,
+                                    contentType: contentType, contentTypeAssignment: contentTypeAssignment,
+                                    targetAssignment: targetAssignmentFromOperationsClient, httpClientConfiguration: httpClientConfiguration,
+                                    targetOrVersionParameter: targetOrVersionParameterNormalConstructor, sortedOperations: sortedOperations,
+                                    entityType: entityType,
+                                    initializerType: .fromOperationsClient(operationsClientName: initializationStructs.operationsClientName))
+            
+            addAWSClientInitializer(fileBuilder: fileBuilder, baseName: baseName, clientAttributes: clientAttributes,
+                                    codeGenerator: codeGenerator, endpointDefault: endpointDefault, regionDefault: regionDefault,
+                                    regionAssignmentPostfix: regionAssignmentPostfix, targetsAPIGateway: targetsAPIGateway,
+                                    contentType: contentType, contentTypeAssignment: contentTypeAssignment,
+                                    targetAssignment: targetAssignmentFromOperationsClient, httpClientConfiguration: httpClientConfiguration,
+                                    targetOrVersionParameter: targetOrVersionParameterNormalConstructor, sortedOperations: sortedOperations,
+                                    entityType: entityType,
+                                    initializerType: .traceContextTypeFromOperationsClient(operationsClientName: initializationStructs.operationsClientName))
+        }
+    }
+    
+    private func addOperationsClientConfigInitializer(fileBuilder: FileBuilder,
+                                                      entityType: ClientEntityType) {
+        if case .operationsClient(let configurationObjectName) = entityType {
+            fileBuilder.appendLine("""
+                
+                public init(config: \(configurationObjectName)<InvocationReportingType>,
+                            httpClient: HTTPOperationsClient? = nil) {
+                    self.config = config
+                    self.httpClient = httpClient ?? self.config.createHTTPOperationsClient()
+                }
+                """)
         }
     }
     
@@ -120,33 +253,40 @@ extension ModelClientDelegate {
                                          httpClientConfiguration: HttpClientConfiguration,
                                          targetOrVersionParameter: String,
                                          sortedOperations: [(String, OperationDescription)],
-                                         isCopyInitializer: Bool, isGenerator: Bool) {
+                                         entityType: ClientEntityType,
+                                         initializerType: InitializerType) {
         addAWSClientInitializerSignature(
             fileBuilder: fileBuilder, baseName: baseName, httpClientConfiguration: httpClientConfiguration,
             codeGenerator: codeGenerator, regionDefault: regionDefault,
             endpointDefault: endpointDefault, targetsAPIGateway: targetsAPIGateway,
             clientAttributes: clientAttributes,
             contentTypeAssignment: contentTypeAssignment,
-            targetOrVersionParameter: targetOrVersionParameter, isCopyInitializer: isCopyInitializer, isGenerator: isGenerator)
+            targetOrVersionParameter: targetOrVersionParameter, entityType: entityType, initializerType: initializerType)
         
         addAWSClientInitializerBody(
             fileBuilder: fileBuilder, contentType: contentType,
             httpClientConfiguration: httpClientConfiguration, baseName: baseName,
             codeGenerator: codeGenerator, regionAssignmentPostfix: regionAssignmentPostfix,
             targetAssignment: targetAssignment, targetsAPIGateway: targetsAPIGateway, sortedOperations: sortedOperations,
-            isCopyInitializer: isCopyInitializer, isGenerator: isGenerator)
+            entityType: entityType, initializerType: initializerType)
         fileBuilder.appendLine("}")
     }
     
     private func addAWSClientOperationMetricsParameters(fileBuilder: FileBuilder, baseName: String,
-                                              codeGenerator: ServiceModelCodeGenerator,
-                                              sortedOperations: [(String, OperationDescription)],
-                                              isGenerator: Bool) {
+                                                        codeGenerator: ServiceModelCodeGenerator,
+                                                        sortedOperations: [(String, OperationDescription)],
+                                                        entityType: ClientEntityType) {
+        guard entityType.isGenerator || entityType.isClientImplementation else {
+            // nothing to do
+            return
+        }
+        
+        fileBuilder.appendEmptyLine()
         fileBuilder.appendLine("""
             let operationsReporting: \(baseName)OperationsReporting
             """)
         
-        if !isGenerator {
+        if !entityType.isGenerator {
             fileBuilder.appendLine("""
                 let invocationsReporting: \(baseName)InvocationsReporting<InvocationReportingType>
                 """)
@@ -154,16 +294,22 @@ extension ModelClientDelegate {
     }
     
     private func addAWSClientOperationMetricsInitializerBody(fileBuilder: FileBuilder, baseName: String,
-                                              codeGenerator: ServiceModelCodeGenerator,
-                                              sortedOperations: [(String, OperationDescription)],
-                                              isCopyInitializer: Bool, isGenerator: Bool) {
+                                                             codeGenerator: ServiceModelCodeGenerator,
+                                                             sortedOperations: [(String, OperationDescription)],
+                                                             entityType: ClientEntityType, initializerType: InitializerType,
+                                                             inputPrefix: String) {
+        guard entityType.isGenerator || entityType.isClientImplementation else {
+            // nothing to do
+            return
+        }
+        
         guard case .struct(let clientName, _, _) = clientType else {
             fatalError()
         }
         
-        if !isCopyInitializer {
+        if !initializerType.isCopyInitializer {
             fileBuilder.appendLine("""
-                self.operationsReporting = \(baseName)OperationsReporting(clientName: "\(clientName)", reportingConfiguration: reportingConfiguration)
+                self.operationsReporting = \(baseName)OperationsReporting(clientName: "\(clientName)", reportingConfiguration: \(inputPrefix)reportingConfiguration)
                 """)
         } else {
             fileBuilder.appendLine("""
@@ -171,11 +317,54 @@ extension ModelClientDelegate {
                 """)
         }
         
-        if !isGenerator {
+        if !initializerType.isGenerator {
             fileBuilder.appendLine("""
                 self.invocationsReporting = \(baseName)InvocationsReporting(reporting: reporting, operationsReporting: self.operationsReporting)
                 """)
         }
+    }
+    
+    private func addDefaultReportingTypeConfigurationObjectBody(fileBuilder: FileBuilder,
+                                                                defaultReportingType: InvocationTraceContextDeclaration) {
+        fileBuilder.appendLine("""
+            self.init(credentialsProvider: credentialsProvider,
+                      awsRegion: awsRegion,
+                      endpointHostName: endpointHostName,
+                      endpointPort: endpointPort,
+                      requiresTLS: requiresTLS,
+                      service: service,
+                      contentType: contentType,
+                      target: target,
+                      traceContext: \(defaultReportingType.name)(),
+                      timeoutConfiguration: timeoutConfiguration,
+                      connectionPoolConfiguration: connectionPoolConfiguration,
+                      retryConfiguration: retryConfiguration,
+                      eventLoopProvider: eventLoopProvider,
+                      reportingConfiguration: reportingConfiguration)
+            """)
+    }
+    
+    private func addOperationClientInitializerBody(fileBuilder: FileBuilder,
+                                                   configurationObjectName: String,
+                                                   traceContextValue: String) {
+        fileBuilder.appendLine("""
+            self.config = \(configurationObjectName)(
+                credentialsProvider: credentialsProvider,
+                awsRegion: awsRegion,
+                endpointHostName: endpointHostName,
+                endpointPort: endpointPort,
+                requiresTLS: requiresTLS,
+                service: service,
+                contentType: contentType,
+                target: target,
+                traceContext: \(traceContextValue),
+                timeoutConfiguration: timeoutConfiguration,
+                connectionPoolConfiguration: connectionPoolConfiguration,
+                retryConfiguration: retryConfiguration,
+                eventLoopProvider: eventLoopProvider,
+                reportingConfiguration: reportingConfiguration)
+            self.httpClient = self.config.createHTTPOperationsClient()
+            """)
     }
     
     private func addAWSClientInitializerBody(
@@ -188,35 +377,108 @@ extension ModelClientDelegate {
             targetAssignment: String,
             targetsAPIGateway: Bool,
             sortedOperations: [(String, OperationDescription)],
-            isCopyInitializer: Bool, isGenerator: Bool) {
+            entityType: ClientEntityType,
+            initializerType: InitializerType) {
         fileBuilder.incIndent()
+                
+        if case .usesDefaultReportingType(let defaultReportingType) = initializerType, case .configurationObject = entityType {
+            addDefaultReportingTypeConfigurationObjectBody(fileBuilder: fileBuilder,
+                                                           defaultReportingType: defaultReportingType)
+            fileBuilder.decIndent()
+            return
+        } else if case .operationsClient(let configurationObjectName) = entityType {
+            let traceContextValue: String
+            if case .usesDefaultReportingType(let defaultReportingType) = initializerType {
+                traceContextValue = defaultReportingType.name + "()"
+            } else {
+                traceContextValue = "traceContext"
+            }
+            
+            addOperationClientInitializerBody(fileBuilder: fileBuilder,
+                                              configurationObjectName: configurationObjectName,
+                                              traceContextValue: traceContextValue)
+            fileBuilder.decIndent()
+            return
+        }
+                
+        let connectionTimeoutEqualityLine: String
+        if case .standard = initializerType {
+            connectionTimeoutEqualityLine = "connectionTimeoutSeconds: connectionTimeoutSeconds"
+        } else {
+            connectionTimeoutEqualityLine = "timeoutConfiguration: timeoutConfiguration"
+        }
         
-        if !isCopyInitializer {
-            fileBuilder.appendLine("""
-                self.eventLoopGroup = AWSClientHelper.getEventLoop(eventLoopGroupProvider: eventLoopProvider)
-                let useTLS = requiresTLS ?? AWSHTTPClientDelegate.requiresTLS(forEndpointPort: endpointPort)
-                """)
+        if !initializerType.isCopyInitializer {
+            switch initializerType {
+            case .standard, .forGenerator, .isCopyInitializer, .genericTraceContextType, .usesDefaultReportingType:
+                fileBuilder.appendLine("""
+                    self.eventLoopGroup = AWSClientHelper.getEventLoop(eventLoopGroupProvider: eventLoopProvider)
+                    let useTLS = requiresTLS ?? AWSHTTPClientDelegate.requiresTLS(forEndpointPort: endpointPort)
+                    """)
+            case .fromConfig, .traceContextTypeFromConfig:
+                fileBuilder.appendLine("""
+                    self.eventLoopGroup = eventLoop ?? config.eventLoopGroup
+                    """)
+            case .fromOperationsClient, .traceContextTypeFromOperationsClient:
+                fileBuilder.appendLine("""
+                    self.eventLoopGroup = eventLoop ?? operationsClient.config.eventLoopGroup
+                    """)
+            }
+            
+            let statementType: DelegateStatementType
+            switch initializerType {
+            case .standard, .forGenerator, .isCopyInitializer, .usesDefaultReportingType:
+                statementType = .localVariable
+            case .genericTraceContextType:
+                statementType = .instanceVariableAssignment
+            case .fromConfig, .traceContextTypeFromConfig, .fromOperationsClient, .traceContextTypeFromOperationsClient:
+                statementType = .fromConfig
+            }
             
             switch contentType.contentTypePayloadType {
             case .xml:
                 addXmlDelegate(fileBuilder: fileBuilder,
                                httpClientConfiguration: httpClientConfiguration,
-                               baseName: baseName)
+                               baseName: baseName, statementType: statementType)
             case .json:
                 addJsonDelegate(fileBuilder: fileBuilder,
                                 httpClientConfiguration: httpClientConfiguration,
-                                baseName: baseName)
+                                baseName: baseName, statementType: statementType)
             }
             
-            fileBuilder.appendLine("""
-                self.httpClient = HTTPOperationsClient(
-                    endpointHostName: endpointHostName,
-                    endpointPort: endpointPort,
-                    contentType: contentType,
-                    clientDelegate: clientDelegate,
-                    connectionTimeoutSeconds: connectionTimeoutSeconds,
-                    eventLoopProvider: .shared(self.eventLoopGroup))
-                """)
+            if case .usesDefaultReportingType(let defaultInvocationTraceContext) = initializerType {
+                fileBuilder.appendLine("""
+                    let reporting = StandardHTTPClientCoreInvocationReporting(
+                        logger: logger,
+                        internalRequestId: internalRequestId,
+                        traceContext: \(defaultInvocationTraceContext.name)(),
+                        eventLoop: self.eventLoopGroup.next())
+                    """)
+            }
+            
+            if entityType.isGenerator || entityType.isClientImplementation {
+                switch initializerType {
+                case .standard, .forGenerator, .isCopyInitializer, .genericTraceContextType, .usesDefaultReportingType:
+                    fileBuilder.appendLine("""
+                        self.httpClient = HTTPOperationsClient(
+                            endpointHostName: endpointHostName,
+                            endpointPort: endpointPort,
+                            contentType: contentType,
+                            clientDelegate: clientDelegate,
+                            \(connectionTimeoutEqualityLine),
+                            eventLoopProvider: .shared(self.eventLoopGroup),
+                            connectionPoolConfiguration: connectionPoolConfiguration)
+                        """)
+                case .fromConfig, .traceContextTypeFromConfig:
+                    fileBuilder.appendLine("""
+                        self.httpClient = httpClient ?? config.createHTTPOperationsClient(eventLoopOverride: eventLoop)
+                        """)
+                case .fromOperationsClient, .traceContextTypeFromOperationsClient:
+                    fileBuilder.appendLine("""
+                        self.httpClient = operationsClient.httpClient
+                        """)
+                }
+            }
         } else {
             fileBuilder.appendLine("""
                 self.eventLoopGroup = eventLoopGroup
@@ -224,57 +486,130 @@ extension ModelClientDelegate {
                 """)
         }
         
-        addAdditionalHttpClients(
-            httpClientConfiguration: httpClientConfiguration,
-            codeGenerator: codeGenerator, fileBuilder: fileBuilder, isCopyInitializer: isCopyInitializer)
-        
-        if !isGenerator {
+        if entityType.isGenerator || entityType.isClientImplementation {
+            addAdditionalHttpClients(
+                httpClientConfiguration: httpClientConfiguration,
+                codeGenerator: codeGenerator, fileBuilder: fileBuilder, initializerType: initializerType,
+                connectionTimeoutEqualityLine: connectionTimeoutEqualityLine)
+            
+            switch initializerType {
+            case .standard, .isCopyInitializer, .genericTraceContextType, .usesDefaultReportingType:
+                fileBuilder.appendLine("""
+                    self.ownsHttpClients = \(String(describing: !initializerType.isCopyInitializer))
+                    """)
+            case .fromConfig, .traceContextTypeFromConfig:
+                fileBuilder.appendLine("""
+                    if httpClient != nil {
+                        self.ownsHttpClients = false
+                    } else {
+                        self.ownsHttpClients = true
+                    }
+                    """)
+            case .fromOperationsClient, .traceContextTypeFromOperationsClient:
+                fileBuilder.appendLine("""
+                    self.ownsHttpClients = false
+                    """)
+            case .forGenerator:
+                break
+                //nothing to do
+            }
+        }
+                
+        if case .genericTraceContextType = initializerType {
             fileBuilder.appendLine("""
-                self.ownsHttpClients = \(String(describing: !isCopyInitializer))
+                self.endpointHostName = endpointHostName
+                self.endpointPort = endpointPort
+                self.contentType = contentType
+                self.traceContext = traceContext
+                self.timeoutConfiguration = timeoutConfiguration
+                self.connectionPoolConfiguration = connectionPoolConfiguration
                 """)
+        }
+                
+        let inputPrefix: String
+        switch initializerType {
+        case .standard, .forGenerator, .isCopyInitializer, .genericTraceContextType, .usesDefaultReportingType:
+            inputPrefix = ""
+        case .fromConfig, .traceContextTypeFromConfig:
+            inputPrefix = "config."
+        case .fromOperationsClient, .traceContextTypeFromOperationsClient:
+            inputPrefix = "operationsClient.config."
         }
         
         fileBuilder.appendLine("""
-            self.awsRegion = awsRegion\(regionAssignmentPostfix)
-            self.service = service
+            self.awsRegion = \(inputPrefix)awsRegion\(regionAssignmentPostfix)
+            self.service = \(inputPrefix)service
             \(targetAssignment)
-            self.credentialsProvider = credentialsProvider
-            self.retryConfiguration = retryConfiguration
+            self.credentialsProvider = \(inputPrefix)credentialsProvider
+            self.retryConfiguration = \(inputPrefix)retryConfiguration
             """)
         
-        if !isGenerator {
+        if case .traceContextTypeFromConfig = initializerType {
+            fileBuilder.appendLine("""
+                self.reporting = StandardHTTPClientCoreInvocationReporting(
+                    logger: logger,
+                    internalRequestId: internalRequestId,
+                    traceContext: config.traceContext,
+                    eventLoop: eventLoop)
+                """)
+        } else if case .traceContextTypeFromOperationsClient = initializerType {
+            fileBuilder.appendLine("""
+                self.reporting = StandardHTTPClientCoreInvocationReporting(
+                    logger: logger,
+                    internalRequestId: internalRequestId,
+                    traceContext: operationsClient.config.traceContext,
+                    eventLoop: eventLoop)
+                """)
+        } else if entityType.isClientImplementation {
             fileBuilder.appendLine("""
                 self.reporting = reporting
                 """)
         }
         
-        if !isCopyInitializer {
-            fileBuilder.appendLine("""
-                self.retryOnErrorProvider = { error in error.isRetriable() }
-                """)
-        } else {
-            fileBuilder.appendLine("""
-                self.retryOnErrorProvider = retryOnErrorProvider
-                """)
+        if entityType.isClientImplementation || entityType.isGenerator {
+            if !initializerType.isCopyInitializer {
+                fileBuilder.appendLine("""
+                    self.retryOnErrorProvider = { error in error.isRetriable() }
+                    """)
+            } else {
+                fileBuilder.appendLine("""
+                    self.retryOnErrorProvider = retryOnErrorProvider
+                    """)
+            }
         }
         
         // If this is a query, set the apiVersion
         if case .query = contentType.contentTypeDefaultInputLocation {
             fileBuilder.appendLine("""
-                self.apiVersion = apiVersion
+                self.apiVersion = \(inputPrefix)apiVersion
                 """)
         }
         
         // If this is an API Gateway client, store the stage
         if targetsAPIGateway {
             fileBuilder.appendLine("""
-                self.stage = stage
+                self.stage = \(inputPrefix)stage
+                """)
+        }
+                
+        if case .genericTraceContextType = initializerType {
+            fileBuilder.appendLine("""
+                self.reportingConfiguration = reportingConfiguration
+                                
+                self.reportingProvider = { (logger, internalRequestId, eventLoop) in
+                    return StandardHTTPClientCoreInvocationReporting(
+                        logger: logger,
+                        internalRequestId: internalRequestId,
+                        traceContext: traceContext,
+                        eventLoop: eventLoop)
+                }
                 """)
         }
         
         addAWSClientOperationMetricsInitializerBody(fileBuilder: fileBuilder, baseName: baseName,
                                                     codeGenerator: codeGenerator, sortedOperations: sortedOperations,
-                                                    isCopyInitializer: isCopyInitializer, isGenerator: isGenerator)
+                                                    entityType: entityType,
+                                                    initializerType: initializerType, inputPrefix: inputPrefix)
         
         fileBuilder.decIndent()
     }
@@ -282,11 +617,12 @@ extension ModelClientDelegate {
     private func addAdditionalHttpClients(
             httpClientConfiguration: HttpClientConfiguration,
             codeGenerator: ServiceModelCodeGenerator,
-            fileBuilder: FileBuilder, isCopyInitializer: Bool) {
+            fileBuilder: FileBuilder, initializerType: InitializerType,
+            connectionTimeoutEqualityLine: String) {
         httpClientConfiguration.additionalClients?.forEach { (key, _) in
             let variableName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
             
-            if !isCopyInitializer {
+            if !initializerType.isCopyInitializer {
                 let postfix = key.startingWithUppercase
                 fileBuilder.appendLine("""
                     self.\(variableName) = HTTPOperationsClient(
@@ -305,13 +641,27 @@ extension ModelClientDelegate {
         }
     }
     
-    private func createDelegate(name: String, fileBuilder: FileBuilder, delegateName: String, errorType: String, parameters: [String]?) {
+    private func createDelegate(name: String, fileBuilder: FileBuilder, delegateName: String, errorType: String, parameters: [String]?,
+                                statementType: DelegateStatementType) {
+        let statementPrefix: String
+        switch statementType {
+        case .localVariable:
+            statementPrefix = "let "
+        case .instanceVariableDeclaration:
+            fileBuilder.appendLine("internal let \(name): \(delegateName)<\(errorType)>")
+            return
+        case .instanceVariableAssignment:
+            statementPrefix = "self."
+        case .fromConfig:
+            return
+        }
+
         guard let concreteParameters = parameters, !concreteParameters.isEmpty else {
-            fileBuilder.appendLine("let \(name) = \(delegateName)<\(errorType)>(requiresTLS: useTLS)")
+            fileBuilder.appendLine("\(statementPrefix)\(name) = \(delegateName)<\(errorType)>(requiresTLS: useTLS)")
             return
         }
         
-        fileBuilder.appendLine("let \(name) = \(delegateName)<\(errorType)>(requiresTLS: useTLS,")
+        fileBuilder.appendLine("\(statementPrefix)\(name) = \(delegateName)<\(errorType)>(requiresTLS: useTLS,")
         
         fileBuilder.incIndent()
         concreteParameters.enumerated().forEach { (index, parameter) in
@@ -327,12 +677,13 @@ extension ModelClientDelegate {
     private func addXmlDelegate(
             fileBuilder: FileBuilder,
             httpClientConfiguration: HttpClientConfiguration,
-            baseName: String) {
+            baseName: String,
+            statementType: DelegateStatementType) {
         let delegateName = httpClientConfiguration.clientDelegateNameOverride
             ?? "XMLAWSHttpClientDelegate"
         // pass a QueryXMLAWSHttpClientDelegate to the AWS client
         createDelegate(name: "clientDelegate", fileBuilder: fileBuilder, delegateName: delegateName, errorType: "\(baseName)Error",
-            parameters: httpClientConfiguration.clientDelegateParameters)
+                       parameters: httpClientConfiguration.clientDelegateParameters, statementType: statementType)
         fileBuilder.appendEmptyLine()
     
         httpClientConfiguration.additionalClients?.forEach { (key, value) in
@@ -341,7 +692,7 @@ extension ModelClientDelegate {
                 ?? "XMLAWSHttpClientDelegate"
             
             createDelegate(name: "clientDelegateFor\(postfix)", fileBuilder: fileBuilder, delegateName: additionalDelegateName,
-                           errorType: "\(baseName)Error", parameters: value.clientDelegateParameters)
+                           errorType: "\(baseName)Error", parameters: value.clientDelegateParameters, statementType: statementType)
             fileBuilder.appendEmptyLine()
         }
     }
@@ -349,12 +700,13 @@ extension ModelClientDelegate {
     private func addJsonDelegate(
             fileBuilder: FileBuilder,
             httpClientConfiguration: HttpClientConfiguration,
-            baseName: String) {
+            baseName: String,
+            statementType: DelegateStatementType) {
         let delegateName = httpClientConfiguration.clientDelegateNameOverride
                 ?? "JSONAWSHttpClientDelegate"
         // pass a JSONAWSHttpClientDelegate to the AWS client
         createDelegate(name: "clientDelegate", fileBuilder: fileBuilder, delegateName: delegateName, errorType: "\(baseName)Error",
-            parameters: httpClientConfiguration.clientDelegateParameters)
+                       parameters: httpClientConfiguration.clientDelegateParameters, statementType: statementType)
         fileBuilder.appendEmptyLine()
     
         httpClientConfiguration.additionalClients?.forEach { (key, value) in
@@ -363,28 +715,33 @@ extension ModelClientDelegate {
                 ?? "JSONAWSHttpClientDelegate"
             
             createDelegate(name: "clientDelegateFor\(postfix)", fileBuilder: fileBuilder, delegateName: additionalDelegateName,
-                           errorType: "\(baseName)Error", parameters: value.clientDelegateParameters)
+                           errorType: "\(baseName)Error", parameters: value.clientDelegateParameters, statementType: statementType)
             fileBuilder.appendEmptyLine()
         }
     }
     
     private func addAWSClientQueryMembers(
             fileBuilder: FileBuilder,
+            contentType: String,
+            baseName: String,
             httpClientConfiguration: HttpClientConfiguration,
             codeGenerator: ServiceModelCodeGenerator,
-            isGenerator: Bool) {
-        fileBuilder.appendLine("""
-                let httpClient: HTTPOperationsClient
-                """)
-        
-        httpClientConfiguration.additionalClients?.forEach { (key, _) in
-            let variableName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
+            entityType: ClientEntityType) {
+        if entityType.isClientImplementation || entityType.isGenerator {
             fileBuilder.appendLine("""
-                let \(variableName): HTTPOperationsClient
-                """)
+                    let httpClient: HTTPOperationsClient
+                    """)
+            
+            httpClientConfiguration.additionalClients?.forEach { (key, _) in
+                let variableName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
+                fileBuilder.appendLine("""
+                    let \(variableName): HTTPOperationsClient
+                    """)
+            }
         }
-        
-        if !isGenerator {
+                
+        switch entityType {
+        case .clientImplementation:
             fileBuilder.appendLine("""
                 let ownsHttpClients: Bool
                 public let awsRegion: AWSRegion
@@ -395,7 +752,22 @@ extension ModelClientDelegate {
                 public let retryOnErrorProvider: (SmokeHTTPClient.HTTPClientError) -> Bool
                 public let credentialsProvider: CredentialsProvider
                 """)
-        } else {
+        case .configurationObject:
+            fileBuilder.appendLine("""
+                public let endpointHostName: String
+                public let endpointPort: Int
+                public let contentType: String
+                public let timeoutConfiguration: HTTPClient.Configuration.Timeout
+                public let connectionPoolConfiguration: HTTPClient.Configuration.ConnectionPool?
+                public let awsRegion: AWSRegion
+                public let service: String
+                public let apiVersion: String
+                public let target: String?
+                public let retryConfiguration: HTTPClientRetryConfiguration
+                public let traceContext: InvocationReportingType.TraceContextType
+                public let reportingConfiguration: SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>
+                """)
+        case .clientGenerator:
             fileBuilder.appendLine("""
                 let awsRegion: AWSRegion
                 let service: String
@@ -405,6 +777,13 @@ extension ModelClientDelegate {
                 let retryOnErrorProvider: (SmokeHTTPClient.HTTPClientError) -> Bool
                 let credentialsProvider: CredentialsProvider
                 """)
+        case .operationsClient(let configurationObjectName):
+            fileBuilder.appendLine("""
+                public let config: \(configurationObjectName)<InvocationReportingType>
+                public let httpClient: HTTPOperationsClient
+                """)
+            
+            return
         }
         
         fileBuilder.appendLine("""
@@ -412,31 +791,55 @@ extension ModelClientDelegate {
             public let eventLoopGroup: EventLoopGroup
             """)
         
-        if !isGenerator {
+        if case .clientImplementation = entityType {
             fileBuilder.appendLine("""
                 public let reporting: InvocationReportingType
+                """)
+        }
+                
+        if case .configurationObject = entityType {
+            fileBuilder.appendEmptyLine()
+            switch contentType.contentTypePayloadType {
+            case .xml:
+                addXmlDelegate(fileBuilder: fileBuilder,
+                               httpClientConfiguration: httpClientConfiguration,
+                               baseName: baseName, statementType: .instanceVariableDeclaration)
+            case .json:
+                addJsonDelegate(fileBuilder: fileBuilder,
+                                httpClientConfiguration: httpClientConfiguration,
+                                baseName: baseName, statementType: .instanceVariableDeclaration)
+            }
+            
+            fileBuilder.appendLine("""
+                internal let reportingProvider: (Logger, String, EventLoop?) -> InvocationReportingType
+                internal let credentialsProvider: CredentialsProvider
                 """)
         }
     }
     
     private func addAWSClientBodyMembers(
             fileBuilder: FileBuilder,
+            contentType: String,
+            baseName: String,
             httpClientConfiguration: HttpClientConfiguration,
             codeGenerator: ServiceModelCodeGenerator,
             targetsAPIGateway: Bool,
-            isGenerator: Bool) {
-        fileBuilder.appendLine("""
-                let httpClient: HTTPOperationsClient
-                """)
-        
-        httpClientConfiguration.additionalClients?.forEach { (key, _) in
-            let variableName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
+            entityType: ClientEntityType) {
+        if entityType.isClientImplementation || entityType.isGenerator {
             fileBuilder.appendLine("""
-                let \(variableName): HTTPOperationsClient
-                """)
+                    let httpClient: HTTPOperationsClient
+                    """)
+            
+            httpClientConfiguration.additionalClients?.forEach { (key, _) in
+                let variableName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
+                fileBuilder.appendLine("""
+                    let \(variableName): HTTPOperationsClient
+                    """)
+            }
         }
-        
-        if !isGenerator {
+                
+        switch entityType {
+        case .clientImplementation:
             fileBuilder.appendLine("""
                 let ownsHttpClients: Bool
                 public let awsRegion: AWSRegion
@@ -446,7 +849,21 @@ extension ModelClientDelegate {
                 public let retryOnErrorProvider: (SmokeHTTPClient.HTTPClientError) -> Bool
                 public let credentialsProvider: CredentialsProvider
                 """)
-        } else {
+        case .configurationObject:
+            fileBuilder.appendLine("""
+                public let endpointHostName: String
+                public let endpointPort: Int
+                public let contentType: String
+                public let timeoutConfiguration: HTTPClient.Configuration.Timeout
+                public let connectionPoolConfiguration: HTTPClient.Configuration.ConnectionPool?
+                public let awsRegion: AWSRegion
+                public let service: String
+                public let target: String?
+                public let retryConfiguration: HTTPClientRetryConfiguration
+                public let traceContext: InvocationReportingType.TraceContextType
+                public let reportingConfiguration: SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>
+                """)
+        case .clientGenerator:
             fileBuilder.appendLine("""
                 let awsRegion: AWSRegion
                 let service: String
@@ -455,6 +872,13 @@ extension ModelClientDelegate {
                 let retryOnErrorProvider: (SmokeHTTPClient.HTTPClientError) -> Bool
                 let credentialsProvider: CredentialsProvider
                 """)
+        case .operationsClient(let configurationObjectName):
+            fileBuilder.appendLine("""
+                public let config: \(configurationObjectName)<InvocationReportingType>
+                public let httpClient: HTTPOperationsClient
+                """)
+            
+            return
         }
         
         fileBuilder.appendLine("""
@@ -462,7 +886,7 @@ extension ModelClientDelegate {
             public let eventLoopGroup: EventLoopGroup
             """)
     
-        if !isGenerator {
+        if case .clientImplementation = entityType {
             fileBuilder.appendLine("""
                 public let reporting: InvocationReportingType
                 """)
@@ -471,8 +895,27 @@ extension ModelClientDelegate {
         // If this is an API Gateway client, store the stage
         if targetsAPIGateway {
             fileBuilder.appendLine("""
-                    let stage: String?
+                    public let stage: String?
                     """)
+        }
+                
+        if case .configurationObject = entityType {
+            fileBuilder.appendEmptyLine()
+            switch contentType.contentTypePayloadType {
+            case .xml:
+                addXmlDelegate(fileBuilder: fileBuilder,
+                               httpClientConfiguration: httpClientConfiguration,
+                               baseName: baseName, statementType: .instanceVariableDeclaration)
+            case .json:
+                addJsonDelegate(fileBuilder: fileBuilder,
+                                httpClientConfiguration: httpClientConfiguration,
+                                baseName: baseName, statementType: .instanceVariableDeclaration)
+            }
+            
+            fileBuilder.appendLine("""
+                internal let reportingProvider: (Logger, String, EventLoop?) -> InvocationReportingType
+                internal let credentialsProvider: CredentialsProvider
+                """)
         }
     }
     
@@ -487,20 +930,80 @@ extension ModelClientDelegate {
             clientAttributes: AWSClientAttributes,
             contentTypeAssignment: String,
             targetOrVersionParameter: String,
-            isCopyInitializer: Bool, isGenerator: Bool) {
-        let accessModifier = isCopyInitializer ? "internal" : "public"
+            entityType: ClientEntityType,
+            initializerType: InitializerType) {
+        let accessModifier = initializerType.isCopyInitializer ? "internal" : "public"
+                
+        if case .fromConfig(let configurationObjectName) = initializerType {
+            fileBuilder.appendLine("""
+                
+                \(accessModifier) init(config: \(configurationObjectName)<InvocationReportingType>,
+                            reporting: InvocationReportingType,
+                            eventLoop: EventLoop? = nil,
+                            httpClient: HTTPOperationsClient? = nil) {
+                """)
+            return
+        } else if case .traceContextTypeFromConfig(let configurationObjectName) = initializerType {
+            fileBuilder.appendLine("""
+                
+                \(accessModifier) init<TraceContextType: InvocationTraceContext>(
+                    config: \(configurationObjectName)<StandardHTTPClientCoreInvocationReporting<TraceContextType>>,
+                    logger: Logging.Logger = Logger(label: "\(baseName)Client"),
+                    internalRequestId: String = "none",
+                    eventLoop: EventLoop? = nil,
+                    httpClient: HTTPOperationsClient? = nil)
+                where InvocationReportingType == StandardHTTPClientCoreInvocationReporting<TraceContextType> {
+                """)
+            return
+        } else if case .fromOperationsClient(let operationsClientName) = initializerType {
+            fileBuilder.appendLine("""
+                
+                \(accessModifier) init<OperationsClientInvocationReportingType: HTTPClientCoreInvocationReporting>(
+                            operationsClient: \(operationsClientName)<OperationsClientInvocationReportingType>,
+                            reporting: InvocationReportingType,
+                            eventLoop: EventLoop? = nil,
+                            httpClient: HTTPOperationsClient? = nil) {
+                """)
+            return
+        } else if case .traceContextTypeFromOperationsClient(let operationsClientName) = initializerType {
+            fileBuilder.appendLine("""
+                
+                \(accessModifier) init<OperationsClientInvocationReportingType: HTTPClientCoreInvocationReporting>(
+                            operationsClient: \(operationsClientName)<OperationsClientInvocationReportingType>,
+                            logger: Logging.Logger = Logger(label: "\(baseName)Client"),
+                            internalRequestId: String = "none",
+                            eventLoop: EventLoop? = nil)
+                where InvocationReportingType == StandardHTTPClientCoreInvocationReporting<OperationsClientInvocationReportingType.TraceContextType> {
+                """)
+            return
+        }
+                
+        let genericParameters: String
+        if case .genericTraceContextType = initializerType {
+            genericParameters = "<TraceContextType: InvocationTraceContext>"
+        } else {
+            genericParameters = ""
+        }
+                
         fileBuilder.appendLine("""
             
-            \(accessModifier) init(credentialsProvider: CredentialsProvider, awsRegion: AWSRegion\(regionDefault),
+            \(accessModifier) init\(genericParameters)(credentialsProvider: CredentialsProvider, awsRegion: AWSRegion\(regionDefault),
             """)
         
-        if !isGenerator {
+        if case .clientImplementation = entityType, !initializerType.isDefaultReportingType {
             fileBuilder.appendLine("""
                             reporting: InvocationReportingType,
                 """)
         }
+                
+        if initializerType.isDefaultReportingType && entityType.isClientImplementation {
+            fileBuilder.appendLine("""
+                            logger: Logging.Logger,
+                            internalRequestId: String = "none",
+                """)
+        }
         
-        if !isCopyInitializer {
+        if !initializerType.isCopyInitializer {
             fileBuilder.appendLine("""
                             endpointHostName: String\(endpointDefault),
                 """)
@@ -523,7 +1026,7 @@ extension ModelClientDelegate {
         
         // If this is an API Gateway client, accept the stage in the constructor
         if targetsAPIGateway {
-            if !isCopyInitializer {
+            if !initializerType.isCopyInitializer {
                 fileBuilder.appendLine("""
                                 stage: String? = nil,
                     """)
@@ -534,19 +1037,65 @@ extension ModelClientDelegate {
             }
         }
         
-        if !isCopyInitializer {
+        if !initializerType.isCopyInitializer {
             fileBuilder.appendLine("""
                             endpointPort: Int = 443,
                             requiresTLS: Bool? = nil,
                             service: String = "\(clientAttributes.service)",
                             \(contentTypeAssignment),
                             \(targetOrVersionParameter),
-                            connectionTimeoutSeconds: Int64 = 10,
+                """)
+            
+            if !entityType.isClientImplementation && !entityType.isGenerator {
+                if case .genericTraceContextType = initializerType {
+                    fileBuilder.appendLine("""
+                                    traceContext: TraceContextType,
+                        """)
+                }
+                
+                fileBuilder.appendLine("""
+                                timeoutConfiguration: HTTPClient.Configuration.Timeout = .init(),
+                    """)
+            } else {
+                if case .standard = initializerType {
+                    fileBuilder.appendLine("""
+                                    connectionTimeoutSeconds: Int64 = 10,
+                        """)
+                } else {
+                    fileBuilder.appendLine("""
+                                    timeoutConfiguration: HTTPClient.Configuration.Timeout = .init(),
+                        """)
+                }
+            }
+            
+            fileBuilder.appendLine("""
+                            connectionPoolConfiguration: HTTPClient.Configuration.ConnectionPool? = nil,
                             retryConfiguration: HTTPClientRetryConfiguration = .default,
                             eventLoopProvider: HTTPClient.EventLoopGroupProvider = .createNew,
                             reportingConfiguration: SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>
-                                = SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>() ) {
                 """)
+            
+            switch initializerType {
+            case .standard, .fromConfig, .forGenerator, .isCopyInitializer:
+                fileBuilder.appendLine("""
+                                    = SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>() ) {
+                    """)
+            case .genericTraceContextType, .traceContextTypeFromConfig, .fromOperationsClient:
+                fileBuilder.appendLine("""
+                                    = SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>() )
+                    where InvocationReportingType == StandardHTTPClientCoreInvocationReporting<TraceContextType> {
+                    """)
+            case .usesDefaultReportingType(let defaultInvocationTraceContext):
+                fileBuilder.appendLine("""
+                                    = SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>() )
+                    where InvocationReportingType == StandardHTTPClientCoreInvocationReporting<\(defaultInvocationTraceContext.name)> {
+                    """)
+            case .traceContextTypeFromOperationsClient:
+                fileBuilder.appendLine("""
+                                    = SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>() )
+                    where InvocationReportingType == StandardHTTPClientCoreInvocationReporting<OperationsClientInvocationReportingType.TraceContextType> {
+                    """)
+            }
         } else {
             fileBuilder.appendLine("""
                         service: String,

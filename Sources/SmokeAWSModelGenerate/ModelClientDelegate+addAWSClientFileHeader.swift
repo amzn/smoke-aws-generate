@@ -26,7 +26,7 @@ public typealias SpecificErrorBehaviour = (retriableErrors: [String], unretriabl
 extension ModelClientDelegate {
     func addAWSClientFileHeader(codeGenerator: ServiceModelCodeGenerator,
                                 fileBuilder: FileBuilder, baseName: String,
-                                isGenerator: Bool, defaultInvocationTraceContext: InvocationTraceContextDeclaration) {
+                                fileType: ClientFileType, defaultInvocationTraceContext: InvocationTraceContextDeclaration) {
         fileBuilder.appendLine("""
             import SmokeAWSHttp
             import NIO
@@ -37,13 +37,13 @@ extension ModelClientDelegate {
         
         let specificErrorBehaviour = getSpecificErrors(codeGenerator: codeGenerator, baseName: baseName)
         
-        if isGenerator {
-            if let importPackage = defaultInvocationTraceContext.importPackage {
-                fileBuilder.appendLine("""
-                    import \(importPackage)
-                    """)
-            }
-        } else {
+        if let importPackage = defaultInvocationTraceContext.importPackage {
+            fileBuilder.appendLine("""
+                import \(importPackage)
+                """)
+        }
+        
+        if case .clientImplementation = fileType {
             fileBuilder.appendLine("""
                 
                 public enum \(baseName)ClientError: Swift.Error {
