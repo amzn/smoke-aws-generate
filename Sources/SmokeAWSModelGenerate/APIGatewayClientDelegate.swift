@@ -32,7 +32,6 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
     public let asyncAwaitAPIs: CodeGenFeatureStatus
     public let eventLoopFutureClientAPIs: CodeGenFeatureStatus
     public let minimumCompilerSupport: MinimumCompilerSupport
-    public let requiresPreConcurrencyImports = true
     
     private struct APIGatewayClientFunction {
         let name: String

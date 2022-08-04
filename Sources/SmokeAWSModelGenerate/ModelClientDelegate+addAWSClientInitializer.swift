@@ -190,6 +190,8 @@ extension ModelClientDelegate {
         
         addOperationsClientConfigInitializer(fileBuilder: fileBuilder, entityType: entityType)
         
+        // if this is the client implementation where the configuration object and operations client are also
+        // being generated. Add initializers create a client implementation from these types.
         if case .clientImplementation(initializationStructs: let initializationStructsOptional) = entityType,
                 let initializationStructs = initializationStructsOptional {
             addAWSClientInitializer(fileBuilder: fileBuilder, baseName: baseName, clientAttributes: clientAttributes,
