@@ -39,7 +39,7 @@ let package = Package(
     ],
     dependencies: [
         .package(name: "ServiceModelSwiftCodeGenerate",
-                 url: "https://github.com/amzn/service-model-swift-code-generate.git", .branch("configuration_object")),
+                 url: "https://github.com/amzn/service-model-swift-code-generate.git", .branch("main")),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "0.3.0"),
     ],
     targets: [
