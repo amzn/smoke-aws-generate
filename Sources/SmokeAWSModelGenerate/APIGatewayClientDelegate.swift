@@ -30,6 +30,8 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
     public let signAllHeaders: Bool
     public let defaultInvocationTraceContext: InvocationTraceContextDeclaration
     public let asyncAwaitAPIs: CodeGenFeatureStatus
+    public let eventLoopFutureClientAPIs: CodeGenFeatureStatus
+    public let minimumCompilerSupport: MinimumCompilerSupport
     
     private struct APIGatewayClientFunction {
         let name: String
@@ -46,12 +48,24 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
      */
     public init(baseName: String,
                 asyncAwaitAPIs: CodeGenFeatureStatus,
+                addSendableConformance: CodeGenFeatureStatus = .disabled,
+                eventLoopFutureClientAPIs: CodeGenFeatureStatus = .enabled,
+                minimumCompilerSupport: MinimumCompilerSupport = .unknown,
                 contentType: String,
                 signAllHeaders: Bool,
                 defaultInvocationTraceContext: InvocationTraceContextDeclaration = InvocationTraceContextDeclaration(name: "AWSClientInvocationTraceContext")) {
         self.baseName = baseName
         self.asyncAwaitAPIs = asyncAwaitAPIs
-        let genericParameters: [(String, String?)] = [("InvocationReportingType", "HTTPClientCoreInvocationReporting")]
+        self.eventLoopFutureClientAPIs = eventLoopFutureClientAPIs
+        self.minimumCompilerSupport = minimumCompilerSupport
+        
+        var reportingTypeConformance = ["HTTPClientCoreInvocationReporting"]
+        if case .enabled = addSendableConformance {
+            reportingTypeConformance.append("Sendable")
+        }
+        
+        let reportingTypeConformanceString = reportingTypeConformance.joined(separator: " & ")
+        let genericParameters: [(String, String?)] = [("InvocationReportingType", reportingTypeConformanceString)]
         self.clientType = .struct(name: "APIGateway\(baseName)Client", genericParameters: genericParameters,
                                   conformingProtocolNames: ["\(baseName)ClientProtocol", "AWSClientProtocol"])
         self.contentType = contentType
@@ -62,14 +76,23 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
     public func addTypeDescription(codeGenerator: ServiceModelCodeGenerator,
                                    delegate: ModelClientDelegate,
                                    fileBuilder: FileBuilder,
-                                   isGenerator: Bool) {
-        if isGenerator {
-            fileBuilder.appendLine("""
-                API Gateway Client Generator for the \(self.baseName) service.
-                """)
-        } else {
+                                   entityType: ClientEntityType) {
+        switch entityType {
+        case .clientImplementation:
             fileBuilder.appendLine("""
                 API Gateway Client for the \(baseName) service.
+                """)
+        case .configurationObject:
+            fileBuilder.appendLine("""
+                Configuration Object for the \(baseName) client.
+                """)
+        case .operationsClient:
+            fileBuilder.appendLine("""
+                Shared Operations Client for the \(baseName) client.
+                """)
+        case .clientGenerator:
+            fileBuilder.appendLine("""
+                API Gateway Client Generator for the \(self.baseName) service.
                 """)
         }
     }
@@ -77,8 +100,8 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
     public func addCustomFileHeader(codeGenerator: ServiceModelCodeGenerator,
                                     delegate: ModelClientDelegate,
                                     fileBuilder: FileBuilder,
-                                    isGenerator: Bool) {
-        addAWSClientFileHeader(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName, isGenerator: isGenerator,
+                                    fileType: ClientFileType) {
+        addAWSClientFileHeader(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName, fileType: fileType,
                                defaultInvocationTraceContext: self.defaultInvocationTraceContext)
     }
     
@@ -86,7 +109,7 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                                    delegate: ModelClientDelegate,
                                    fileBuilder: FileBuilder,
                                    sortedOperations: [(String, OperationDescription)],
-                                   isGenerator: Bool) {
+                                   entityType: ClientEntityType) {
         // An API Gateway client is essentially an AWS service client calling execute-api
         let clientAttributes = AWSClientAttributes(apiVersion: "2017-07-25",
                                                    service: "execute-api",
@@ -100,7 +123,9 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                                     codeGenerator: codeGenerator,
                                     targetsAPIGateway: true,
                                     contentType: contentType,
-                                    sortedOperations: sortedOperations, isGenerator: isGenerator)
+                                    sortedOperations: sortedOperations,
+                                    defaultInvocationTraceContext: self.defaultInvocationTraceContext,
+                                    entityType: entityType)
     }
     
     public func addOperationBody(codeGenerator: ServiceModelCodeGenerator,
@@ -110,7 +135,7 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                                  operationDescription: OperationDescription,
                                  functionInputType: String?,
                                  functionOutputType: String?,
-                                 isGenerator: Bool) {
+                                 entityType: ClientEntityType) {
         guard let httpVerb = operationDescription.httpVerb else {
             fatalError("Unable to create an APIGateway operation that doesn't have a HTTP verb")
         }
