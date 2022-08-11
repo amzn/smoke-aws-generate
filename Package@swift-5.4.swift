@@ -1,4 +1,4 @@
-// swift-tools-version:5.6
+// swift-tools-version:5.4
 //
 // Copyright 2019-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 //
@@ -36,28 +36,13 @@ let package = Package(
         .library(
             name: "CoralToJSONServiceModel",
             targets: ["CoralToJSONServiceModel"]),
-        .plugin(
-            name: "APIGatewaySwiftGenerateModel",
-            targets: ["APIGatewaySwiftGenerateModel"]),
-        .plugin(
-            name: "APIGatewaySwiftGenerateClient",
-            targets: ["APIGatewaySwiftGenerateClient"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/amzn/service-model-swift-code-generate.git", from: "3.0.0-beta.5"),
+        .package(name: "ServiceModelSwiftCodeGenerate",
+                 url: "https://github.com/amzn/service-model-swift-code-generate.git", from: "3.0.0-beta.5"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "0.3.0"),
     ],
     targets: [
-        .plugin(
-            name: "APIGatewaySwiftGenerateModel",
-            capability: .buildTool(),
-            dependencies: ["APIGatewayClientGenerate"]
-        ),
-        .plugin(
-            name: "APIGatewaySwiftGenerateClient",
-            capability: .buildTool(),
-            dependencies: ["APIGatewayClientGenerate"]
-        ),
         .executableTarget(
             name: "SmokeAWSGenerate", dependencies: [
                 .target(name: "SmokeAWSModelGenerate"),
@@ -68,19 +53,19 @@ let package = Package(
             name: "APIGatewayClientGenerate", dependencies: [
                 .target(name: "APIGatewayClientModelGenerate"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "OpenAPIServiceModel", package: "service-model-swift-code-generate"),
+                .product(name: "OpenAPIServiceModel", package: "ServiceModelSwiftCodeGenerate"),
             ]
         ),
         .target(
             name: "CoralToJSONServiceModel", dependencies: [
-                .product(name: "ServiceModelEntities", package: "service-model-swift-code-generate"),
+                .product(name: "ServiceModelEntities", package: "ServiceModelSwiftCodeGenerate"),
             ]
         ),
         .target(
             name: "SmokeAWSModelGenerate", dependencies: [
-                .product(name: "ServiceModelEntities", package: "service-model-swift-code-generate"),
-                .product(name: "ServiceModelCodeGeneration", package: "service-model-swift-code-generate"),
-                .product(name: "ServiceModelGenerate", package: "service-model-swift-code-generate"),
+                .product(name: "ServiceModelEntities", package: "ServiceModelSwiftCodeGenerate"),
+                .product(name: "ServiceModelCodeGeneration", package: "ServiceModelSwiftCodeGenerate"),
+                .product(name: "ServiceModelGenerate", package: "ServiceModelSwiftCodeGenerate"),
                 .target(name: "CoralToJSONServiceModel"),
             ]
         ),

@@ -28,7 +28,7 @@ private enum DelegateStatementType {
     case instanceVariableAssignment
 }
 
-private enum InitializerType {
+public enum InitializerType {
     case standard
     case fromConfig(configurationObjectName: String)
     case fromOperationsClient(operationsClientName: String)
@@ -232,8 +232,8 @@ extension ModelClientDelegate {
         }
     }
     
-    private func addOperationsClientConfigInitializer(fileBuilder: FileBuilder,
-                                                      entityType: ClientEntityType) {
+    public func addOperationsClientConfigInitializer(fileBuilder: FileBuilder,
+                                                     entityType: ClientEntityType) {
         if case .operationsClient(let configurationObjectName) = entityType {
             fileBuilder.appendLine("""
                 
@@ -274,7 +274,7 @@ extension ModelClientDelegate {
         fileBuilder.appendLine("}")
     }
     
-    private func addAWSClientOperationMetricsParameters(fileBuilder: FileBuilder, baseName: String,
+    public func addAWSClientOperationMetricsParameters(fileBuilder: FileBuilder, baseName: String,
                                                         codeGenerator: ServiceModelCodeGenerator,
                                                         sortedOperations: [(String, OperationDescription)],
                                                         entityType: ClientEntityType) {
