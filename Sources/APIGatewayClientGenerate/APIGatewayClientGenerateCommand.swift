@@ -92,7 +92,6 @@ struct APIGatewayClientGenerateCommand: ParsableCommand {
                     modelFilePath: modelFilePath,
                     modelType: OpenAPIServiceModel.self,
                     generationType: generationType,
-                    modelLocation: getModelLocation(config: config),
                     customizations: customizations,
                     applicationDescription: fullApplicationDescription,
                     modelOverride: config.modelOverride)
@@ -101,7 +100,6 @@ struct APIGatewayClientGenerateCommand: ParsableCommand {
                     modelFilePath: modelFilePath,
                     modelType: SwaggerServiceModel.self,
                     generationType: generationType,
-                    modelLocation: getModelLocation(config: config),
                     customizations: customizations,
                     applicationDescription: fullApplicationDescription,
                     modelOverride: config.modelOverride)
@@ -120,16 +118,15 @@ struct APIGatewayClientGenerateCommand: ParsableCommand {
     
     private func getModelLocation(config: APIGatewayClientSwiftCodeGen) -> ModelLocation? {
         // find the model for the current target
-        let filteredModelLocations = config.modelLocations?.targetMap.compactMap { (targetName, modelLocation) -> ModelLocation? in
-            if targetName == target {
-                return modelLocation
-            }
-            
-            return nil
+        let modelLocationOptional: ModelLocation?
+        if let target = target {
+            modelLocationOptional = config.modelLocations?.targetMap[target]
+        } else {
+            modelLocationOptional = nil
         }
         
         let modelLocation: ModelLocation
-        if let theModelLocation = filteredModelLocations?.first {
+        if let theModelLocation = modelLocationOptional {
             modelLocation = theModelLocation
         } else if let theModelLocation = config.modelLocations?.default {
             modelLocation = theModelLocation

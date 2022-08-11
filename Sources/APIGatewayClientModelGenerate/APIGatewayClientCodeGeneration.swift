@@ -36,7 +36,6 @@ public struct APIGatewayClientCodeGeneration {
         modelFilePath: String,
         modelType: ModelType.Type,
         generationType: GenerationType,
-        modelLocation: ModelLocation?,
         customizations: CodeGenerationCustomizations,
         applicationDescription: ApplicationDescription,
         modelOverride: ModelOverride?) throws -> ModelType {
@@ -44,7 +43,6 @@ public struct APIGatewayClientCodeGeneration {
                                    serviceModel: ModelType) throws {
                 try codeGenerator.generateFromModel(serviceModel: serviceModel,
                                                     generationType: generationType,
-                                                    modelLocation: modelLocation,
                                                     asyncAwaitAPIs: customizations.asyncAwaitAPIs,
                                                     eventLoopFutureClientAPIs: customizations.eventLoopFutureClientAPIs,
                                                     minimumCompilerSupport: customizations.minimumCompilerSupport,
@@ -84,7 +82,6 @@ extension ServiceModelCodeGenerator {
     
     func generateFromModel<ModelType: ServiceModel>(serviceModel: ModelType,
                                                     generationType: GenerationType,
-                                                    modelLocation: ModelLocation?,
                                                     asyncAwaitAPIs: CodeGenFeatureStatus,
                                                     eventLoopFutureClientAPIs: CodeGenFeatureStatus,
                                                     minimumCompilerSupport: MinimumCompilerSupport,
