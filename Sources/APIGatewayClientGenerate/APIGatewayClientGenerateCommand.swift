@@ -74,7 +74,7 @@ struct APIGatewayClientGenerateCommand: ParsableCommand {
             minimumCompilerSupport: config.minimumCompilerSupport ?? .v5_6,
             clientConfigurationType: config.clientConfigurationType ?? .configurationObject,
             generateModelShapeConversions: config.shapeProtocols?.boolean ?? false,
-            optionalsInitializeEmpty: false,
+            optionalsInitializeEmpty: true,
             fileHeader: nil,
             httpClientConfiguration: httpClientConfiguration)
                         
