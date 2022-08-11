@@ -14,9 +14,9 @@
         "package": "ServiceModelSwiftCodeGenerate",
         "repositoryURL": "https://github.com/amzn/service-model-swift-code-generate.git",
         "state": {
-          "branch": "main",
-          "revision": "ed2c9497e0e596b9b1ef40b12a219436c88a2ea6",
-          "version": null
+          "branch": null,
+          "revision": "4c0ccda7df61c87538df34fc47982435c4a52206",
+          "version": "3.0.0-beta.5"
         }
       },
       {
@@ -33,8 +33,8 @@
         "repositoryURL": "https://github.com/apple/swift-argument-parser",
         "state": {
           "branch": null,
-          "revision": "6b2aa2748a7881eebb9f84fb10c01293e15b52ca",
-          "version": "0.5.0"
+          "revision": "df9ee6676cd5b3bf5b330ec7568a5644f547201b",
+          "version": "1.1.3"
         }
       },
       {
