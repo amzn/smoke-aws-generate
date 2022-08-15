@@ -26,9 +26,9 @@ public enum VersionRequirementType: String, Codable, ExpressibleByArgument {
 }
 
 public struct ModelPackageDependency {
-    let versionRequirementType: VersionRequirementType
-    let versionRequirement: String?
-    let packageLocation: String
+    public let versionRequirementType: VersionRequirementType
+    public let versionRequirement: String?
+    public let packageLocation: String
     
     public init (versionRequirementType: VersionRequirementType,
                  versionRequirement: String?,
@@ -40,9 +40,9 @@ public struct ModelPackageDependency {
 }
 
 public struct ModelLocation: Codable {
-    let modelProductDependency: String?
-    let modelTargetDependency: String?
-    let modelFilePath: String
+    public let modelProductDependency: String?
+    public let modelTargetDependency: String?
+    public let modelFilePath: String
     
     public init (modelFilePath: String,
                  modelProductDependency: String?,
