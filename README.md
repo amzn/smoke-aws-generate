@@ -13,7 +13,7 @@
 
 # SwiftAWSGenerate
 
-SwiftAWSGenerate primary provides a code generator that will generate a Swift client package 
+SwiftAWSGenerate primarily provides a code generator that will generate a Swift client package 
 using a Open API/Swagger model for endpoints hosted by AWS API Gateway.
 
 By default, the generator will create two targets in the Swift client package, a Model target and a Client target.
@@ -25,7 +25,7 @@ By default, the generator will create two targets in the Swift client package, a
      By default returns a default instance of each APIs return type.
   4. a Throwing Mock implementation that conforms to the protocol with optional overrides for each API.
      By default throws a specified error.
-  5. a Configuration type that used to share client configuration between clients.
+  5. a Configuration type that can used to share client configuration between clients.
   6. an Operations client that can be used to share the underlying http client between clients.
 
 ## Step 1: Prepare the location for the new Swift Client
@@ -46,7 +46,7 @@ Typically this model will be in the root directory of the Client package.
 
 ### Step 1B: Model in the separate Swift Package
 
-If the model is hosted in a separate Swift Package, the model file will need to be specified as a resource.
+If the model is hosted in a separate Swift Package, the model file will need to be specified as a resource
 of that package. The following shows the minimal Swift Package manifest that is required for a model package.
 
 ```
@@ -82,7 +82,7 @@ the [Open API spec](https://swagger.io/specification/) or [Swagger spec](https:/
 
 ## Step 2: Generate the Client package
 
-Clone this repository and from its base directory, run the following command, replacing values as appropriate.
+Clone this repository (smoke-aws-generate) and from its base directory, run the following command, replacing values as appropriate.
 
 This command will generate the package manifest and other scaffolding required to build the client package. 
 
@@ -112,6 +112,9 @@ swift run APIGatewayClientInitialize -c release --base-file-path <path-to-the-cl
 
 **Note:** You can optionally specify a `--model-target-dependency` parameter if the target where the
 model file is hosted is not the same as the product name.
+
+**Note:** You can also manually generate a Swift package manifest and the configuration file (see next step). 
+The `APIGatewayClientInitialize` executable is simply a convenience and not required to build the client package.
 
 ## Step 3: Update the codegen configuration
 
