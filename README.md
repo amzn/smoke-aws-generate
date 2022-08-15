@@ -14,7 +14,7 @@
 # SmokeAWSGenerate
 
 SmokeAWSGenerate primarily provides a code generator that will generate a Swift client package 
-using a Open API/Swagger model for endpoints hosted by AWS API Gateway.
+using an Open API/Swagger model for endpoints hosted by AWS API Gateway.
 
 By default, the generator will create two targets in the Swift client package, a Model target and a Client target.
 * The model target will create Swift types and enumerations for the objects specified in the model
