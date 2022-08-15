@@ -11,9 +11,9 @@
 <img src="https://img.shields.io/badge/license-Apache2-blue.svg?style=flat" alt="Apache 2">
 </p>
 
-# SwiftAWSGenerate
+# SmokeAWSGenerate
 
-SwiftAWSGenerate primarily provides a code generator that will generate a Swift client package 
+SmokeAWSGenerate primarily provides a code generator that will generate a Swift client package 
 using a Open API/Swagger model for endpoints hosted by AWS API Gateway.
 
 By default, the generator will create two targets in the Swift client package, a Model target and a Client target.
@@ -225,7 +225,7 @@ func testCodeThatUsesGetCustomerDetails() {
 
 # Generate the SmokeAWS library
 
-The `SwiftAWSGenerate` executable is a code generator for the [SmokeAWS](https://github.com/amzn/smoke-aws) library.
+The `SmokeAWSGenerate` executable is a code generator for the [SmokeAWS](https://github.com/amzn/smoke-aws) library.
 
 ## Step 1: Check out the SmokeAWS repository
 
@@ -242,19 +242,6 @@ From within your checked out copy of this repository, run this command-
 ```bash
 swift run -c release SmokeAWSGenerate \
   --base-file-path <path_to_the_smoke_aws_repository>
-```
-
-# Generate a standalone API Gateway client package from a Swagger 2.0 specification file
-
-You can also use this package to generate a stand-alone API Gateway client package from a Swagger 2.0 specification file. To do this
-you can run the following command-
-
-```bash
-swift run -c release APIGatewayClientGenerate \
-  --base-file-path <output_file_path> \
-  --base-name <base_client_name> \
-  --model-path <file_path_to_model> \
- [--model-override-path <file_path_to_model_override>]
 ```
 
 ## License
