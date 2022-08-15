@@ -19,16 +19,18 @@ using a Open API/Swagger model for endpoints hosted by AWS API Gateway.
 By default, the generator will create two targets in the Swift client package, a Model target and a Client target.
 * The model target will create Swift types and enumerations for the objects specified in the model
 * The client target will create 
-  1. a Swift protocol based on the model operations
-  2. an API Gateway client implementation that conforms to the protocol
-  3. a Mock implementation that conforms to the protocol with optional overrides for each API
-  4. a Throwing Mock implementation that conforms to the protocol with optional overrides for each API
-  5. a Configuration type that used to share client configuration between clients
+  1. a Swift protocol based on the model operations.
+  2. an API Gateway client implementation that conforms to the protocol.
+  3. a Mock implementation that conforms to the protocol with optional overrides for each API.
+     By default returns a default instance of each APIs return type.
+  4. a Throwing Mock implementation that conforms to the protocol with optional overrides for each API.
+     By default throws a specified error.
+  5. a Configuration type that used to share client configuration between clients.
   6. an Operations client that can be used to share the underlying http client between clients.
 
 ## Step 1: Prepare the location for the new Swift Client
 
-This might be a Github repository or some other repository. Check out this repository
+This might be a Github repository or some other repository. Check out this location
 so you can add files to it.
 
 ## Step 2: Prepare your OpenAPI 3.0 or Swagger model
@@ -45,7 +47,7 @@ Typically this model will be in the root directory of the Client package.
 ### Step 1B: Model in the separate Swift Package
 
 If the model is hosted in a separate Swift Package, the model file will need to be specified as a resource.
-The following shows the minimal Swift Package manifest that is required for a model package.
+of that package. The following shows the minimal Swift Package manifest that is required for a model package.
 
 ```
 // swift-tools-version: 5.6
@@ -129,9 +131,8 @@ options for the build-time code generation.
   }
 }
 ```
-You can add the following additional options to this configuration file
+You can add the following additional options to this configuration file-
 
-This JSON file can contain the following fields-
 * **modelFormat**: The expected format of the model file. Optional; defaulting to `OPENAPI3_0`. `SWAGGER` can also be specified.
 * **modelOverride**: A set of overrides to apply to the model. Optional.
 * **httpClientConfiguration**: Configuration for the generated http service clients. Optional.
@@ -174,8 +175,13 @@ let client = APIGatewayPersistenceExampleClient(credentialsProvider: credentials
 try await client.shutdown()
 ```
 
+Credential Providers need to conform to the 
+[CredentialsProvider protocol from SmokeAWSCore](https://github.com/amzn/smoke-aws/blob/main/Sources/SmokeAWSCore/CredentialsProvider.swift). 
+[Smoke AWS Credentials](https://github.com/amzn/smoke-aws-credentials) provides implementations for obtaining or 
+assuming short-lived rotating AWS IAM credentials.
+
 The client initializer can also optionally accept `logger`, `timeoutConfiguration`, `connectionPoolConfiguration`,
-`retryConfiguration`, `eventLoopProvider` and `reportingConfiguration`
+`retryConfiguration`, `eventLoopProvider` and `reportingConfiguration`.
 
 For use cases where you want to reuse the underlying HTTP client between instances, you can use the operations client type
 (or similarly the configuration object type to share client configuration but not the underlying HTTP client).
