@@ -113,7 +113,7 @@ swift run APIGatewayClientInitialize -c release --base-file-path <path-to-the-cl
 **Note:** You can optionally specify a `--model-target-dependency` parameter if the target where the
 model file is hosted is not the same as the product name.
 
-**Note:** You can also manually generate a Swift package manifest and the configuration file (see next step). 
+**Note:** You can also manually generate a Swift package manifest and structure along with the configuration file (see next step). 
 The `APIGatewayClientInitialize` executable is simply a convenience and not required to build the client package.
 
 ## Step 3: Update the codegen configuration
