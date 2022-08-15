@@ -1000,7 +1000,7 @@ extension ModelClientDelegate {
                 
         if initializerType.isDefaultReportingType && entityType.isClientImplementation {
             fileBuilder.appendLine("""
-                            logger: Logging.Logger,
+                            logger: Logging.Logger = Logger(label: "\(baseName)Client"),
                             internalRequestId: String = "none",
                 """)
         }

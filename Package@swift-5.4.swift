@@ -56,6 +56,12 @@ let package = Package(
                 .product(name: "OpenAPIServiceModel", package: "ServiceModelSwiftCodeGenerate"),
             ]
         ),
+        .executableTarget(
+            name: "APIGatewayClientInitialize", dependencies: [
+                .target(name: "APIGatewayClientModelGenerate"),
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ]
+        ),
         .target(
             name: "CoralToJSONServiceModel", dependencies: [
                 .product(name: "ServiceModelEntities", package: "ServiceModelSwiftCodeGenerate"),

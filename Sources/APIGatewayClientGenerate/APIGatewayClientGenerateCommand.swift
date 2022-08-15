@@ -28,19 +28,16 @@ struct APIGatewayClientGenerateCommand: ParsableCommand {
     }
     
     @Option(name: .customLong("model-path"), help: "The file path for the model definition.")
-    var modelFilePath: String?
+    var modelFilePath: String
     
     @Option(name: .customLong("base-file-path"), help: "The file path to the root of the input Swift package.")
     var baseFilePath: String
     
     @Option(name: .customLong("base-output-file-path"), help: "The file path to place the root of the generated Swift package.")
-    var baseOutputFilePath: String?
+    var baseOutputFilePath: String
     
     @Option(name: .customLong("generation-type"), help: "The code generation mode. Can only be specified with --model-path.")
-    var generationType: GenerationType?
-    
-    @Option(name: .customLong("target"), help: "The name of the current target.")
-    var target: String?
+    var generationType: GenerationType
 
     mutating func run() throws {
         let configFilePath = "\(baseFilePath)/\(configFileName)"
@@ -79,62 +76,30 @@ struct APIGatewayClientGenerateCommand: ParsableCommand {
             httpClientConfiguration: httpClientConfiguration)
                         
         let fullApplicationDescription = ApplicationDescription(baseName: baseName,
-                                                                baseFilePath: baseOutputFilePath ?? baseFilePath,
+                                                                baseFilePath: baseOutputFilePath,
                                                                 applicationDescription: "The \(baseName) Swift client.",
                                                                 applicationSuffix: "")
         
-        if let modelFilePath = modelFilePath, let generationType = generationType {
-            let modelFormat = config.modelFormat ?? .openAPI30
-            
-            switch modelFormat {
-            case .openAPI30:
-                _ = try APIGatewayClientCodeGeneration.generateFromModel(
-                    modelFilePath: modelFilePath,
-                    modelType: OpenAPIServiceModel.self,
-                    generationType: generationType,
-                    customizations: customizations,
-                    applicationDescription: fullApplicationDescription,
-                    modelOverride: config.modelOverride)
-            case .swagger:
-                _ = try APIGatewayClientCodeGeneration.generateFromModel(
-                    modelFilePath: modelFilePath,
-                    modelType: SwaggerServiceModel.self,
-                    generationType: generationType,
-                    customizations: customizations,
-                    applicationDescription: fullApplicationDescription,
-                    modelOverride: config.modelOverride)
-            }
-        } else if modelFilePath == nil {
-            APIGatewayClientCodeGeneration.generateWithNoModel(
-                modelLocation: getModelLocation(config: config),
+        let modelFormat = config.modelFormat ?? .openAPI30
+        
+        switch modelFormat {
+        case .openAPI30:
+            _ = try APIGatewayClientCodeGeneration.generateFromModel(
+                modelFilePath: modelFilePath,
+                modelType: OpenAPIServiceModel.self,
+                generationType: generationType,
                 customizations: customizations,
                 applicationDescription: fullApplicationDescription,
                 modelOverride: config.modelOverride)
-        } else {
-            throw APIGatewayClientGenerateCommandError.invalidParameterConbination(
-                reason: "--generation-type and --model-type must be both specified (from a plugin) or neither (from the command line).")
+        case .swagger:
+            _ = try APIGatewayClientCodeGeneration.generateFromModel(
+                modelFilePath: modelFilePath,
+                modelType: SwaggerServiceModel.self,
+                generationType: generationType,
+                customizations: customizations,
+                applicationDescription: fullApplicationDescription,
+                modelOverride: config.modelOverride)
         }
-    }
-    
-    private func getModelLocation(config: APIGatewayClientSwiftCodeGen) -> ModelLocation? {
-        // find the model for the current target
-        let modelLocationOptional: ModelLocation?
-        if let target = target {
-            modelLocationOptional = config.modelLocations?.targetMap[target]
-        } else {
-            modelLocationOptional = nil
-        }
-        
-        let modelLocation: ModelLocation
-        if let theModelLocation = modelLocationOptional {
-            modelLocation = theModelLocation
-        } else if let theModelLocation = config.modelLocations?.default {
-            modelLocation = theModelLocation
-        } else {
-            return nil
-        }
-        
-        return modelLocation
     }
 }
 

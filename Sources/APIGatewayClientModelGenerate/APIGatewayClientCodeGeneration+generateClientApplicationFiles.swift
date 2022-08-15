@@ -17,30 +17,55 @@
 
 import Foundation
 import ServiceModelCodeGeneration
+import ArgumentParser
 
-public enum VersionRequirementType: String, Decodable {
+public enum VersionRequirementType: String, Codable, ExpressibleByArgument {
     case from
     case branch
     case path
 }
 
-public struct ModelLocation: Decodable {
-    let packagePath: String
+public struct ModelPackageDependency {
+    let versionRequirementType: VersionRequirementType
     let versionRequirement: String?
-    let versionRequirementType: VersionRequirementType?
-    let modelProductDependency: String
+    let packageLocation: String
+    
+    public init (versionRequirementType: VersionRequirementType,
+                 versionRequirement: String?,
+                 packageLocation: String) {
+        self.versionRequirementType = versionRequirementType
+        self.versionRequirement = versionRequirement
+        self.packageLocation = packageLocation
+    }
 }
 
-extension ServiceModelCodeGenerator {
+public struct ModelLocation: Codable {
+    let modelProductDependency: String?
+    let modelTargetDependency: String?
+    let modelFilePath: String
+    
+    public init (modelFilePath: String,
+                 modelProductDependency: String?,
+                 modelTargetDependency: String?) {
+        self.modelFilePath = modelFilePath
+        self.modelProductDependency = modelProductDependency
+        self.modelTargetDependency = modelTargetDependency
+    }
+}
+
+extension APIGatewayClientCodeGeneration {
     /**
      Generate the main Swift file for the generated application as a Container Server.
      */
-    func generateClientApplicationFiles(modelLocation: ModelLocation?) {
-        generatePackageFile(fileName: "Package.swift", modelLocation: modelLocation)
+    func generateClientApplicationFiles(modelLocation: ModelLocation,
+                                        modelPackageDependency: ModelPackageDependency?) {
+        generatePackageFile(fileName: "Package.swift", modelLocation: modelLocation,
+                            modelPackageDependency: modelPackageDependency)
         generateGitIgnoreFile()
     }
     
-    private func generatePackageFile(fileName: String, modelLocation: ModelLocation?) {
+    private func generatePackageFile(fileName: String, modelLocation: ModelLocation,
+                                     modelPackageDependency: ModelPackageDependency?) {
         
         let fileBuilder = FileBuilder()
         let baseName = applicationDescription.baseName
@@ -50,7 +75,7 @@ extension ServiceModelCodeGenerator {
             // swift-tools-version:5.6
             """)
         
-        if let fileHeader = customizations.fileHeader {
+        if let fileHeader = self.fileHeader {
             fileBuilder.appendLine(fileHeader)
         }
 
@@ -76,33 +101,34 @@ extension ServiceModelCodeGenerator {
             """)
         
         let modelProduct: (name: String, package: String)?
-        if let modelLocation = modelLocation {
-            let versionRequirementType = modelLocation.versionRequirementType ?? .from
+        if let modelProductDependency = modelLocation.modelProductDependency, let modelPackageDependency = modelPackageDependency {
+            let versionRequirementType = modelPackageDependency.versionRequirementType
+            let packageLocation = modelPackageDependency.packageLocation
             
             let packageName: String
-            if let lastPackageComponent = modelLocation.packagePath.split(separator: "/").last {
+            if let lastPackageComponent = packageLocation.split(separator: "/").last {
                 if lastPackageComponent.hasSuffix(".git") {
                     packageName = String(lastPackageComponent.dropLast(".git".count))
                 } else {
                     packageName = String(lastPackageComponent)
                 }
             } else {
-                packageName = modelLocation.packagePath
+                packageName = packageLocation
             }
             
             if case .path = versionRequirementType {
                 fileBuilder.appendLine("""
-                            .package(path: "\(modelLocation.packagePath)"),
+                            .package(path: "\(packageLocation)"),
                     """)
-            } else if let versionRequirement = modelLocation.versionRequirement {
+            } else if let versionRequirement = modelPackageDependency.versionRequirement {
                 fileBuilder.appendLine("""
-                            .package(url: "\(modelLocation.packagePath)", \(versionRequirementType): "\(versionRequirement)"),
+                            .package(url: "\(packageLocation)", \(versionRequirementType): "\(versionRequirement)"),
                     """)
             } else {
                 fatalError("Version requirement needed for type: \(versionRequirementType)")
             }
             
-            modelProduct = (modelLocation.modelProductDependency, packageName)
+            modelProduct = (modelProductDependency, packageName)
         } else {
             modelProduct = nil
         }
@@ -110,7 +136,7 @@ extension ServiceModelCodeGenerator {
         fileBuilder.appendLine("""
                     .package(url: "https://github.com/amzn/smoke-aws.git", from: "2.35.31"),
                     .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
-                    .package(url: "https://github.com/amzn/smoke-aws-generate.git", from: "3.0.0-beta-4"),
+                    .package(url: "https://github.com/amzn/smoke-aws-generate.git", from: "3.0.0-beta.4"),
                     ],
                 targets: [
                     // Targets are the basic building blocks of a package. A target can define a module or a test suite.
