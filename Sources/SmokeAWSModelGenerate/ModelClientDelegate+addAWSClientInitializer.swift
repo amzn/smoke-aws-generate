@@ -21,7 +21,7 @@ import ServiceModelEntities
 import ServiceModelGenerate
 import CoralToJSONServiceModel
 
-private enum DelegateStatementType {
+public enum DelegateStatementType {
     case localVariable
     case fromConfig
     case instanceVariableDeclaration
@@ -676,7 +676,7 @@ extension ModelClientDelegate {
         fileBuilder.decIndent()
     }
     
-    private func addXmlDelegate(
+    public func addXmlDelegate(
             fileBuilder: FileBuilder,
             httpClientConfiguration: HttpClientConfiguration,
             baseName: String,
@@ -699,7 +699,7 @@ extension ModelClientDelegate {
         }
     }
     
-    private func addJsonDelegate(
+    public func addJsonDelegate(
             fileBuilder: FileBuilder,
             httpClientConfiguration: HttpClientConfiguration,
             baseName: String,
