@@ -33,14 +33,14 @@ public enum InitializerType {
     case fromConfig(configurationObjectName: String)
     case fromOperationsClient(operationsClientName: String)
     case forGenerator
-    case isCopyInitializer
+    case copyInitializer
     case genericTraceContextType
     case usesDefaultReportingType(defaultInvocationTraceContext: InvocationTraceContextDeclaration)
     case traceContextTypeFromConfig(configurationObjectName: String)
     case traceContextTypeFromOperationsClient(operationsClientName: String)
     
     var isCopyInitializer: Bool {
-        if case .isCopyInitializer = self {
+        if case .copyInitializer = self {
             return true
         }
         
@@ -184,7 +184,7 @@ extension ModelClientDelegate {
                                         contentType: contentType, contentTypeAssignment: contentTypeAssignment,
                                         targetAssignment: targetAssignment, httpClientConfiguration: httpClientConfiguration,
                                         targetOrVersionParameter: targetOrVersionParameterCopyConstructor, sortedOperations: sortedOperations,
-                                        entityType: entityType, initializerType: .isCopyInitializer)
+                                        entityType: entityType, initializerType: .copyInitializer)
             }
         }
         
@@ -412,7 +412,7 @@ extension ModelClientDelegate {
         
         if !initializerType.isCopyInitializer {
             switch initializerType {
-            case .standard, .forGenerator, .isCopyInitializer, .genericTraceContextType, .usesDefaultReportingType:
+            case .standard, .forGenerator, .copyInitializer, .genericTraceContextType, .usesDefaultReportingType:
                 fileBuilder.appendLine("""
                     self.eventLoopGroup = AWSClientHelper.getEventLoop(eventLoopGroupProvider: eventLoopProvider)
                     let useTLS = requiresTLS ?? AWSHTTPClientDelegate.requiresTLS(forEndpointPort: endpointPort)
@@ -429,7 +429,7 @@ extension ModelClientDelegate {
             
             let statementType: DelegateStatementType
             switch initializerType {
-            case .standard, .forGenerator, .isCopyInitializer, .usesDefaultReportingType:
+            case .standard, .forGenerator, .copyInitializer, .usesDefaultReportingType:
                 statementType = .localVariable
             case .genericTraceContextType:
                 statementType = .instanceVariableAssignment
@@ -460,7 +460,7 @@ extension ModelClientDelegate {
             
             if entityType.isGenerator || entityType.isClientImplementation {
                 switch initializerType {
-                case .standard, .forGenerator, .isCopyInitializer, .genericTraceContextType, .usesDefaultReportingType:
+                case .standard, .forGenerator, .copyInitializer, .genericTraceContextType, .usesDefaultReportingType:
                     fileBuilder.appendLine("""
                         self.httpClient = HTTPOperationsClient(
                             endpointHostName: endpointHostName,
@@ -495,7 +495,7 @@ extension ModelClientDelegate {
                 connectionTimeoutEqualityLine: connectionTimeoutEqualityLine)
             
             switch initializerType {
-            case .standard, .isCopyInitializer, .genericTraceContextType, .usesDefaultReportingType:
+            case .standard, .copyInitializer, .genericTraceContextType, .usesDefaultReportingType:
                 fileBuilder.appendLine("""
                     self.ownsHttpClients = \(String(describing: !initializerType.isCopyInitializer))
                     """)
@@ -530,7 +530,7 @@ extension ModelClientDelegate {
                 
         let inputPrefix: String
         switch initializerType {
-        case .standard, .forGenerator, .isCopyInitializer, .genericTraceContextType, .usesDefaultReportingType:
+        case .standard, .forGenerator, .copyInitializer, .genericTraceContextType, .usesDefaultReportingType:
             inputPrefix = ""
         case .fromConfig, .traceContextTypeFromConfig:
             inputPrefix = "config."
@@ -1078,7 +1078,7 @@ extension ModelClientDelegate {
                 """)
             
             switch initializerType {
-            case .standard, .fromConfig, .forGenerator, .isCopyInitializer:
+            case .standard, .fromConfig, .forGenerator, .copyInitializer:
                 fileBuilder.appendLine("""
                                     = SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>() ) {
                     """)
