@@ -39,7 +39,7 @@ public enum InitializerType {
     case traceContextTypeFromConfig(configurationObjectName: String)
     case traceContextTypeFromOperationsClient(operationsClientName: String)
     
-    var isCopyInitializer: Bool {
+    public var isCopyInitializer: Bool {
         if case .copyInitializer = self {
             return true
         }
@@ -47,7 +47,7 @@ public enum InitializerType {
         return false
     }
 
-    var isGenerator: Bool {
+    public var isGenerator: Bool {
         if case .forGenerator = self {
             return true
         }
@@ -55,7 +55,7 @@ public enum InitializerType {
         return false
     }
     
-    var isDefaultReportingType: Bool {
+    public var isDefaultReportingType: Bool {
         if case .usesDefaultReportingType = self {
             return true
         }
@@ -63,7 +63,7 @@ public enum InitializerType {
         return false
     }
     
-    var isStandard: Bool {
+    public var isStandard: Bool {
         if case .standard = self {
             return true
         }
