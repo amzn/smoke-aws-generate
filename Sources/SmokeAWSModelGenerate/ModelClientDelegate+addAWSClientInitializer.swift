@@ -295,11 +295,11 @@ extension ModelClientDelegate {
         }
     }
     
-    private func addAWSClientOperationMetricsInitializerBody(fileBuilder: FileBuilder, baseName: String,
-                                                             codeGenerator: ServiceModelCodeGenerator,
-                                                             sortedOperations: [(String, OperationDescription)],
-                                                             entityType: ClientEntityType, initializerType: InitializerType,
-                                                             inputPrefix: String) {
+    public func addAWSClientOperationMetricsInitializerBody(fileBuilder: FileBuilder, baseName: String,
+                                                            codeGenerator: ServiceModelCodeGenerator,
+                                                            sortedOperations: [(String, OperationDescription)],
+                                                            entityType: ClientEntityType, initializerType: InitializerType,
+                                                            inputPrefix: String) {
         guard entityType.isGenerator || entityType.isClientImplementation else {
             // nothing to do
             return
