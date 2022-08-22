@@ -1137,8 +1137,8 @@ extension ModelClientDelegate {
         fileBuilder.appendLine("""
             
             public func with<NewInvocationReportingType: HTTPClientCoreInvocationReporting>(
-                    reporting: NewInvocationReportingType) -> \(clientName)<NewInvocationReportingType> {
-                return \(clientName)<NewInvocationReportingType>(
+                    reporting: NewInvocationReportingType) -> Generic\(clientName)<NewInvocationReportingType> {
+                return Generic\(clientName)<NewInvocationReportingType>(
                     credentialsProvider: self.credentialsProvider,
                     awsRegion: self.awsRegion,
                     reporting: reporting,
@@ -1214,7 +1214,7 @@ extension ModelClientDelegate {
                     logger: Logging.Logger,
                     internalRequestId: String = "none",
                     traceContext: NewTraceContextType,
-                    eventLoop: EventLoop? = nil) -> \(clientName)<StandardHTTPClientCoreInvocationReporting<NewTraceContextType>> {
+                    eventLoop: EventLoop? = nil) -> Generic\(clientName)<StandardHTTPClientCoreInvocationReporting<NewTraceContextType>> {
                 let reporting = StandardHTTPClientCoreInvocationReporting(
                     logger: logger,
                     internalRequestId: internalRequestId,
@@ -1257,7 +1257,7 @@ extension ModelClientDelegate {
             public func with(
                     logger: Logging.Logger,
                     internalRequestId: String = "none",
-                    eventLoop: EventLoop? = nil) -> \(clientName)<StandardHTTPClientCoreInvocationReporting<\(invocationTraceContext.name)>> {
+                    eventLoop: EventLoop? = nil) -> Generic\(clientName)<StandardHTTPClientCoreInvocationReporting<\(invocationTraceContext.name)>> {
                 let reporting = StandardHTTPClientCoreInvocationReporting(
                     logger: logger,
                     internalRequestId: internalRequestId,
