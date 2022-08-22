@@ -47,7 +47,7 @@ let package = Package(
             targets: ["APIGatewaySwiftGenerateClient"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/amzn/service-model-swift-code-generate.git", from: "3.0.0-beta.5"),
+        .package(url: "https://github.com/amzn/service-model-swift-code-generate.git", from: "3.0.0-beta.7"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "0.3.0"),
     ],
     targets: [
