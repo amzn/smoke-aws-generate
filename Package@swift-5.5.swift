@@ -27,6 +27,9 @@ let package = Package(
         .executable(
             name: "APIGatewayClientGenerate",
             targets: ["APIGatewayClientGenerate"]),
+        .executable(
+            name: "APIGatewayClientInitialize",
+            targets: ["APIGatewayClientInitialize"]),
         .library(
             name: "SmokeAWSModelGenerate",
             targets: ["SmokeAWSModelGenerate"]),
@@ -54,6 +57,12 @@ let package = Package(
                 .target(name: "APIGatewayClientModelGenerate"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "OpenAPIServiceModel", package: "ServiceModelSwiftCodeGenerate"),
+            ]
+        ),
+        .executableTarget(
+            name: "APIGatewayClientInitialize", dependencies: [
+                .target(name: "APIGatewayClientModelGenerate"),
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
         ),
         .target(

@@ -100,8 +100,7 @@ struct APIGatewaySwiftGenerateClientPlugin: BuildToolPlugin {
             "--base-file-path", context.package.directory.description,
             "--base-output-file-path", context.pluginWorkDirectory.description,
             "--generation-type", "codeGenClient",
-            "--model-path", modelFilePathOverride,
-            "--target", target.name
+            "--model-path", modelFilePathOverride
         ]
 
         // Append a command containing the information we generated.

@@ -21,7 +21,7 @@ import ServiceModelEntities
 import ServiceModelGenerate
 import CoralToJSONServiceModel
 
-private enum DelegateStatementType {
+public enum DelegateStatementType {
     case localVariable
     case fromConfig
     case instanceVariableDeclaration
@@ -33,21 +33,21 @@ public enum InitializerType {
     case fromConfig(configurationObjectName: String)
     case fromOperationsClient(operationsClientName: String)
     case forGenerator
-    case isCopyInitializer
+    case copyInitializer
     case genericTraceContextType
     case usesDefaultReportingType(defaultInvocationTraceContext: InvocationTraceContextDeclaration)
     case traceContextTypeFromConfig(configurationObjectName: String)
     case traceContextTypeFromOperationsClient(operationsClientName: String)
     
-    var isCopyInitializer: Bool {
-        if case .isCopyInitializer = self {
+    public var isCopyInitializer: Bool {
+        if case .copyInitializer = self {
             return true
         }
         
         return false
     }
 
-    var isGenerator: Bool {
+    public var isGenerator: Bool {
         if case .forGenerator = self {
             return true
         }
@@ -55,7 +55,7 @@ public enum InitializerType {
         return false
     }
     
-    var isDefaultReportingType: Bool {
+    public var isDefaultReportingType: Bool {
         if case .usesDefaultReportingType = self {
             return true
         }
@@ -63,7 +63,7 @@ public enum InitializerType {
         return false
     }
     
-    var isStandard: Bool {
+    public var isStandard: Bool {
         if case .standard = self {
             return true
         }
@@ -184,7 +184,7 @@ extension ModelClientDelegate {
                                         contentType: contentType, contentTypeAssignment: contentTypeAssignment,
                                         targetAssignment: targetAssignment, httpClientConfiguration: httpClientConfiguration,
                                         targetOrVersionParameter: targetOrVersionParameterCopyConstructor, sortedOperations: sortedOperations,
-                                        entityType: entityType, initializerType: .isCopyInitializer)
+                                        entityType: entityType, initializerType: .copyInitializer)
             }
         }
         
@@ -295,11 +295,11 @@ extension ModelClientDelegate {
         }
     }
     
-    private func addAWSClientOperationMetricsInitializerBody(fileBuilder: FileBuilder, baseName: String,
-                                                             codeGenerator: ServiceModelCodeGenerator,
-                                                             sortedOperations: [(String, OperationDescription)],
-                                                             entityType: ClientEntityType, initializerType: InitializerType,
-                                                             inputPrefix: String) {
+    public func addAWSClientOperationMetricsInitializerBody(fileBuilder: FileBuilder, baseName: String,
+                                                            codeGenerator: ServiceModelCodeGenerator,
+                                                            sortedOperations: [(String, OperationDescription)],
+                                                            entityType: ClientEntityType, initializerType: InitializerType,
+                                                            inputPrefix: String) {
         guard entityType.isGenerator || entityType.isClientImplementation else {
             // nothing to do
             return
@@ -412,7 +412,7 @@ extension ModelClientDelegate {
         
         if !initializerType.isCopyInitializer {
             switch initializerType {
-            case .standard, .forGenerator, .isCopyInitializer, .genericTraceContextType, .usesDefaultReportingType:
+            case .standard, .forGenerator, .copyInitializer, .genericTraceContextType, .usesDefaultReportingType:
                 fileBuilder.appendLine("""
                     self.eventLoopGroup = AWSClientHelper.getEventLoop(eventLoopGroupProvider: eventLoopProvider)
                     let useTLS = requiresTLS ?? AWSHTTPClientDelegate.requiresTLS(forEndpointPort: endpointPort)
@@ -429,7 +429,7 @@ extension ModelClientDelegate {
             
             let statementType: DelegateStatementType
             switch initializerType {
-            case .standard, .forGenerator, .isCopyInitializer, .usesDefaultReportingType:
+            case .standard, .forGenerator, .copyInitializer, .usesDefaultReportingType:
                 statementType = .localVariable
             case .genericTraceContextType:
                 statementType = .instanceVariableAssignment
@@ -460,7 +460,7 @@ extension ModelClientDelegate {
             
             if entityType.isGenerator || entityType.isClientImplementation {
                 switch initializerType {
-                case .standard, .forGenerator, .isCopyInitializer, .genericTraceContextType, .usesDefaultReportingType:
+                case .standard, .forGenerator, .copyInitializer, .genericTraceContextType, .usesDefaultReportingType:
                     fileBuilder.appendLine("""
                         self.httpClient = HTTPOperationsClient(
                             endpointHostName: endpointHostName,
@@ -495,7 +495,7 @@ extension ModelClientDelegate {
                 connectionTimeoutEqualityLine: connectionTimeoutEqualityLine)
             
             switch initializerType {
-            case .standard, .isCopyInitializer, .genericTraceContextType, .usesDefaultReportingType:
+            case .standard, .copyInitializer, .genericTraceContextType, .usesDefaultReportingType:
                 fileBuilder.appendLine("""
                     self.ownsHttpClients = \(String(describing: !initializerType.isCopyInitializer))
                     """)
@@ -530,7 +530,7 @@ extension ModelClientDelegate {
                 
         let inputPrefix: String
         switch initializerType {
-        case .standard, .forGenerator, .isCopyInitializer, .genericTraceContextType, .usesDefaultReportingType:
+        case .standard, .forGenerator, .copyInitializer, .genericTraceContextType, .usesDefaultReportingType:
             inputPrefix = ""
         case .fromConfig, .traceContextTypeFromConfig:
             inputPrefix = "config."
@@ -676,7 +676,7 @@ extension ModelClientDelegate {
         fileBuilder.decIndent()
     }
     
-    private func addXmlDelegate(
+    public func addXmlDelegate(
             fileBuilder: FileBuilder,
             httpClientConfiguration: HttpClientConfiguration,
             baseName: String,
@@ -699,7 +699,7 @@ extension ModelClientDelegate {
         }
     }
     
-    private func addJsonDelegate(
+    public func addJsonDelegate(
             fileBuilder: FileBuilder,
             httpClientConfiguration: HttpClientConfiguration,
             baseName: String,
@@ -1000,7 +1000,7 @@ extension ModelClientDelegate {
                 
         if initializerType.isDefaultReportingType && entityType.isClientImplementation {
             fileBuilder.appendLine("""
-                            logger: Logging.Logger,
+                            logger: Logging.Logger = Logger(label: "\(baseName)Client"),
                             internalRequestId: String = "none",
                 """)
         }
@@ -1078,7 +1078,7 @@ extension ModelClientDelegate {
                 """)
             
             switch initializerType {
-            case .standard, .fromConfig, .forGenerator, .isCopyInitializer:
+            case .standard, .fromConfig, .forGenerator, .copyInitializer:
                 fileBuilder.appendLine("""
                                     = SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>() ) {
                     """)
