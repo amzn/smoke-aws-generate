@@ -187,7 +187,7 @@ assuming short-lived rotating AWS IAM credentials.
 The client initializer can also optionally accept `logger`, `timeoutConfiguration`, `connectionPoolConfiguration`,
 `retryConfiguration`, `eventLoopProvider` and `reportingConfiguration`.
 
-### Using Configuration or the underlying HTTP client
+### Reusing Configuration or the underlying HTTP client
 
 For use cases where you want to reuse the underlying HTTP client between instances, you can use the operations client type
 (or similarly the configuration object type to share client configuration but not the underlying HTTP client).
@@ -210,7 +210,7 @@ let client = APIGatewayPersistenceExampleClient(operationsClient: operationsClie
 try await operationsClient.shutdown()
 ```
 
-### Reusing Mock client implementations for testing
+### Using Mock client implementations for testing
 
 You can use the Mock and Throwing Mock client implementations for unit testing. These implementations 
 conform to the generated client protocol. Using this protocol within application code will allow you to test
