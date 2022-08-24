@@ -202,15 +202,17 @@ let operationsClient = APIGatewayPersistenceExampleOperationsClient(credentialsP
 let client = APIGatewayPersistenceExampleClient(operationsClient: operationsClient,
                                                 logger: logger)
 // Use the client within the request
-// This client doesn't need to be explicitly shutdown as it doesn't own the underlying http client
+// This client doesn't need to be explicitly shutdown 
+// as it doesn't own the underlying http client
+// client.shutdown() would be a no-op
 
 // End of application
 try await operationsClient.shutdown()
 ```
 
-### Using Mock client implementations for testing
+### Reusing Mock client implementations for testing
 
-Finally you can use the Mock and Throwing Mock client implementations for unit testing. These implementations 
+You can use the Mock and Throwing Mock client implementations for unit testing. These implementations 
 conform to the generated client protocol. Using this protocol within application code will allow you to test
 using a mock client and use the API Gateway client for actual usage.
 
