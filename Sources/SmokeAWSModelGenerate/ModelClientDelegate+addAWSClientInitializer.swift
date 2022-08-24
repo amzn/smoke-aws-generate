@@ -218,8 +218,8 @@ extension ModelClientDelegate {
         }
     }
     
-    private func addAWSClientInitializerFromConfigWithInvocationAttributes(fileBuilder: FileBuilder,
-                                                                           configurationObjectName: String) {
+    public func addAWSClientInitializerFromConfigWithInvocationAttributes(fileBuilder: FileBuilder,
+                                                                          configurationObjectName: String) {
         fileBuilder.appendLine("""
             
             public init<TraceContextType: InvocationTraceContext, InvocationAttributesType: HTTPClientInvocationAttributes>(
@@ -237,8 +237,8 @@ extension ModelClientDelegate {
             """)
     }
     
-    private func addAWSClientInitializerFromOperationsWithInvocationAttributes(fileBuilder: FileBuilder,
-                                                                               operationsClientName: String) {
+    public func addAWSClientInitializerFromOperationsWithInvocationAttributes(fileBuilder: FileBuilder,
+                                                                              operationsClientName: String) {
         fileBuilder.appendLine("""
             
             public init<TraceContextType: InvocationTraceContext, InvocationAttributesType: HTTPClientInvocationAttributes>(
