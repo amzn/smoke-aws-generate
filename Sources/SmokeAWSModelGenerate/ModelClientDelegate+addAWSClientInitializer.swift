@@ -381,6 +381,7 @@ extension ModelClientDelegate {
                 service: service,
                 contentType: contentType,
                 target: target,
+                ignoreInvocationEventLoop: ignoreInvocationEventLoop,
                 traceContext: \(traceContextValue),
                 timeoutConfiguration: timeoutConfiguration,
                 connectionPoolConfiguration: connectionPoolConfiguration,
@@ -1058,6 +1059,16 @@ extension ModelClientDelegate {
                             \(targetOrVersionParameter),
                 """)
             
+            switch entityType {
+            case .clientImplementation, .clientGenerator:
+                // nothing to do
+                break
+            case .configurationObject, .operationsClient:
+                fileBuilder.appendLine("""
+                        ignoreInvocationEventLoop: Bool = false,
+                """)
+            }
+            
             if !entityType.isClientImplementation && !entityType.isGenerator {
                 if case .genericTraceContextType = initializerType {
                     fileBuilder.appendLine("""
@@ -1078,12 +1089,6 @@ extension ModelClientDelegate {
                                     timeoutConfiguration: HTTPClient.Configuration.Timeout = .init(),
                         """)
                 }
-            }
-            
-            if case .configurationObject = entityType {
-                fileBuilder.appendLine("""
-                                ignoreInvocationEventLoop: Bool = false,
-                    """)
             }
             
             fileBuilder.appendLine("""

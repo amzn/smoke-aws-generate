@@ -163,6 +163,7 @@ let model2Location = model1.asModel2Location()
 
 You can now use the client package from other Swift packages by depending on the Client target.
 
+### Basic Usage
 
 The easiest way to use the client is to initialize it directly and then at some later point shut it down.
 
@@ -186,6 +187,8 @@ assuming short-lived rotating AWS IAM credentials.
 The client initializer can also optionally accept `logger`, `timeoutConfiguration`, `connectionPoolConfiguration`,
 `retryConfiguration`, `eventLoopProvider` and `reportingConfiguration`.
 
+### Using Configuration or the underlying HTTP client
+
 For use cases where you want to reuse the underlying HTTP client between instances, you can use the operations client type
 (or similarly the configuration object type to share client configuration but not the underlying HTTP client).
 
@@ -205,6 +208,8 @@ let client = APIGatewayPersistenceExampleClient(operationsClient: operationsClie
 try await operationsClient.shutdown()
 ```
 
+### Using Mock client implementations for testing
+
 Finally you can use the Mock and Throwing Mock client implementations for unit testing. These implementations 
 conform to the generated client protocol. Using this protocol within application code will allow you to test
 using a mock client and use the API Gateway client for actual usage.
@@ -222,6 +227,31 @@ func testCodeThatUsesGetCustomerDetails() {
 
     // run a test using the mock client
 ```
+
+### Convenience initializers for web and service frameworks
+
+Each client also provides a set of convenience initializers using the `HTTPClientInvocationAttributes` protocol to pass
+the `Logger`, `EventLoop`, `InternalRequestId` and a metrics aggregator associated with the current request/invocation.
+
+For example, when using the `smoke-framework`, you can directly pass the provided `SmokeServerInvocationReporting` instance
+into the initializer of the client.
+
+```
+    public func getInvocationContext(
+            invocationReporting: SmokeServerInvocationReporting<SmokeInvocationTraceContext>) -> TheServiceContext {
+        let theClient = APIGatewayAnotherServiceClient(operationsClient: self.theOperationsClient, invocationAttributes: invocationReporting)
+        
+        ...
+        
+        return TheServiceContext(...
+                                 theClient: theClient,
+                                 ...)
+    }
+```
+
+If you want the client to ignore the `EventLoop` provided by the `HTTPClientInvocationAttributes` instance, you can 
+set `ignoreInvocationEventLoop` on the configuration object or operations client to `true`. Otherwise, the client will
+attempt to execute the client http requests on the same event loop as the provided invocation.
 
 # Generate the SmokeAWS library
 
