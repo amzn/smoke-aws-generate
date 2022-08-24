@@ -225,13 +225,12 @@ extension ModelClientDelegate {
             public init<TraceContextType: InvocationTraceContext, InvocationAttributesType: HTTPClientInvocationAttributes>(
                 config: \(configurationObjectName)<StandardHTTPClientCoreInvocationReporting<TraceContextType>>,
                 invocationAttributes: InvocationAttributesType,
-                ignoreInvocationEventLoop: Bool = false,
                 httpClient: HTTPOperationsClient? = nil)
             where InvocationReportingType == StandardHTTPClientCoreInvocationReporting<TraceContextType> {
                 self.init(config: config,
                           logger: invocationAttributes.logger,
                           internalRequestId: invocationAttributes.internalRequestId,
-                          eventLoop: !ignoreInvocationEventLoop ? invocationAttributes.eventLoop : nil,
+                          eventLoop: !config.ignoreInvocationEventLoop ? invocationAttributes.eventLoop : nil,
                           httpClient: httpClient,
                           outwardsRequestAggregator: invocationAttributes.outwardsRequestAggregator)
             }
@@ -244,13 +243,12 @@ extension ModelClientDelegate {
             
             public init<TraceContextType: InvocationTraceContext, InvocationAttributesType: HTTPClientInvocationAttributes>(
                 operationsClient: \(operationsClientName)<StandardHTTPClientCoreInvocationReporting<TraceContextType>>,
-                invocationAttributes: InvocationAttributesType,
-                ignoreInvocationEventLoop: Bool = false)
+                invocationAttributes: InvocationAttributesType)
             where InvocationReportingType == StandardHTTPClientCoreInvocationReporting<TraceContextType> {
                 self.init(operationsClient: operationsClient,
                           logger: invocationAttributes.logger,
                           internalRequestId: invocationAttributes.internalRequestId,
-                          eventLoop: !ignoreInvocationEventLoop ? invocationAttributes.eventLoop : nil,
+                          eventLoop: !operationsClient.config.ignoreInvocationEventLoop ? invocationAttributes.eventLoop : nil,
                           outwardsRequestAggregator: invocationAttributes.outwardsRequestAggregator)
             }
             """)
@@ -623,6 +621,7 @@ extension ModelClientDelegate {
         if case .genericTraceContextType = initializerType {
             fileBuilder.appendLine("""
                 self.reportingConfiguration = reportingConfiguration
+                self.ignoreInvocationEventLoop = ignoreInvocationEventLoop
                                 
                 self.reportingProvider = { (logger, internalRequestId, eventLoop) in
                     return StandardHTTPClientCoreInvocationReporting(
@@ -794,6 +793,7 @@ extension ModelClientDelegate {
                 public let retryConfiguration: HTTPClientRetryConfiguration
                 public let traceContext: InvocationReportingType.TraceContextType
                 public let reportingConfiguration: SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>
+                public let ignoreInvocationEventLoop: Bool
                 """)
         case .clientGenerator:
             fileBuilder.appendLine("""
@@ -890,6 +890,7 @@ extension ModelClientDelegate {
                 public let retryConfiguration: HTTPClientRetryConfiguration
                 public let traceContext: InvocationReportingType.TraceContextType
                 public let reportingConfiguration: SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>
+                public let ignoreInvocationEventLoop: Bool
                 """)
         case .clientGenerator:
             fileBuilder.appendLine("""
@@ -1077,6 +1078,12 @@ extension ModelClientDelegate {
                                     timeoutConfiguration: HTTPClient.Configuration.Timeout = .init(),
                         """)
                 }
+            }
+            
+            if case .configurationObject = entityType {
+                fileBuilder.appendLine("""
+                                ignoreInvocationEventLoop: Bool = false,
+                    """)
             }
             
             fileBuilder.appendLine("""
