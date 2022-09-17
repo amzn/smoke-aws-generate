@@ -106,7 +106,14 @@ extension ModelClientDelegate {
     }
     
     public func getSpecificErrors(codeGenerator: ServiceModelCodeGenerator, baseName: String) -> SpecificErrorBehaviour {
-        let sortedErrors = codeGenerator.getSortedErrors(allErrorTypes: codeGenerator.model.errorTypes)
+        let allErrorTypes: Set<String>
+        if let additionalErrors = codeGenerator.modelOverride?.additionalErrors {
+            allErrorTypes = codeGenerator.model.errorTypes.union(additionalErrors)
+        } else {
+            allErrorTypes = codeGenerator.model.errorTypes
+        }
+
+        let sortedErrors = codeGenerator.getSortedErrors(allErrorTypes: allErrorTypes)
         
         var retriableErrors: [String] = []
         var unretriableErrors: [String] = []
