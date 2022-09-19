@@ -19,15 +19,18 @@ import Foundation
 import ServiceModelEntities
 
 internal struct DynamoDBConfiguration {
-    static let modelOverride = ModelOverride(matchCase: ["AttributeValue"],
-                                             fieldRawTypeOverride: ["Long": CommonConfiguration.intOverride])
+    static let modelOverride = ModelOverride(
+        matchCase: ["AttributeValue"],
+        fieldRawTypeOverride: ["Long": CommonConfiguration.intOverride],
+        additionalErrors: ["ThrottlingException"])
     
     static let httpClientConfiguration = HttpClientConfiguration(
         retryOnUnknownError: true,
         knownErrorsDefaultRetryBehavior: .fail,
         unretriableUnknownErrors: [],
         retriableUnknownErrors: ["ItemCollectionSizeLimitExceededException", "LimitExceededException",
-                                 "ProvisionedThroughputExceededException", "RequestLimitExceeded", "InternalServerError"])
+                                 "ProvisionedThroughputExceededException", "RequestLimitExceeded", "InternalServerError",
+                                 "ThrottlingException"])
     
     static let serviceModelDetails = ServiceModelDetails(
         serviceName: "dynamodb", serviceVersion: "2012-08-10",

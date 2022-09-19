@@ -132,7 +132,6 @@ public extension ServiceModelCodeGenerator {
                                   operationDescription: OperationDescription,
                                   operationSignature: OperationSignature) {
         let functionName = name.upperToLowerCamelCase
-        let baseName = applicationDescription.baseName
         fileBuilder.appendLine(" */")
         
         let input = operationSignature.input
