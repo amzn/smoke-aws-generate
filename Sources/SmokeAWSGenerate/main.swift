@@ -296,10 +296,10 @@ private func generateSmokeAWS(tempDirURL: URL,
     _ = call(arguments: ["git", "clone", "--branch", goRepositoryTag, "--filter=tree:0", "https://github.com/aws/\(repositoryName).git",
                          modelBaseFilePath])
 
-    print ("Cloned \(repositoryName) model to \(modelBaseFilePath)")
+    print("Cloned \(repositoryName) model to \(modelBaseFilePath)")
 
     try serviceModelDetails.forEach { (details) in
-        print ("Generating model for \(details.baseName)")
+        print("Generating model for \(details.baseName)")
 
         let applicationDescription = "The \(details.baseName)Service."
         
