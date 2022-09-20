@@ -36,7 +36,7 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.44.46"
+let goRepositoryTag = "v1.44.60"
 
 let fileHeader = """
     // Copyright 2018-2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -290,10 +290,17 @@ private func generateSmokeAWS(tempDirURL: URL,
     if FileManager.default.fileExists(atPath: modelBaseFilePath, isDirectory: &isDirectory) {
         try FileManager.default.removeItem(at: modelBase)
     }
-    
-    _ = call(arguments: ["git", "clone", "--branch", goRepositoryTag, "https://github.com/aws/\(repositoryName).git", modelBaseFilePath])
-    
+
+    print("Cloning \(repositoryName) model @ \(goRepositoryTag)")
+
+    _ = call(arguments: ["git", "clone", "--branch", goRepositoryTag, "--filter=tree:0", "https://github.com/aws/\(repositoryName).git",
+                         modelBaseFilePath])
+
+    print ("Cloned \(repositoryName) model to \(modelBaseFilePath)")
+
     try serviceModelDetails.forEach { (details) in
+        print ("Generating model for \(details.baseName)")
+
         let applicationDescription = "The \(details.baseName)Service."
         
         let unrecognizedErrorDeclaration =
