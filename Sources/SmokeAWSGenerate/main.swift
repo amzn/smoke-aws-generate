@@ -293,7 +293,7 @@ private func generateSmokeAWS(tempDirURL: URL,
 
     print("Cloning \(repositoryName) model @ \(goRepositoryTag)")
 
-    _ = call(arguments: ["git", "clone", "--branch", goRepositoryTag, "--filter=tree:0", "https://github.com/aws/\(repositoryName).git",
+    _ = call(arguments: ["git", "clone", "--branch", goRepositoryTag, "--depth=1", "https://github.com/aws/\(repositoryName).git",
                          modelBaseFilePath])
 
     print("Cloned \(repositoryName) model to \(modelBaseFilePath)")
