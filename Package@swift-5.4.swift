@@ -60,6 +60,7 @@ let package = Package(
             name: "APIGatewayClientInitialize", dependencies: [
                 .target(name: "APIGatewayClientModelGenerate"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "OpenAPIServiceModel", package: "ServiceModelSwiftCodeGenerate"),
             ]
         ),
         .target(
