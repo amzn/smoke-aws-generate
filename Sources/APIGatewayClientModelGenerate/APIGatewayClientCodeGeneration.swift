@@ -31,18 +31,24 @@ public enum GenerationType: String, Codable, ExpressibleByArgument {
 }
 
 public struct APIGatewayClientCodeGeneration {
-    let applicationDescription: ApplicationDescription
-    let fileHeader: String?
-    
     public static func generateFromModel<ModelType: ServiceModel>(
         modelFilePath: String,
         modelType: ModelType.Type,
         generationType: GenerationType,
+        modelTargetName: String, clientTargetName: String,
         customizations: CodeGenerationCustomizations,
         applicationDescription: ApplicationDescription,
-        modelOverride: ModelOverride?) throws -> ModelType {
-            func generatorFunction(codeGenerator: ServiceModelCodeGenerator,
-                                   serviceModel: ModelType) throws {
+        modelOverride: ModelOverride?) throws
+    -> ModelType {
+        let targetSupport = ModelAndClientTargetSupport(modelTargetName: modelTargetName,
+                                                        clientTargetName: clientTargetName)
+        
+        return try ServiceModelGenerate.generateFromModel(
+            modelFilePath: modelFilePath,
+            customizations: customizations,
+            applicationDescription: applicationDescription,
+            modelOverride: modelOverride,
+            targetSupport: targetSupport) { (codeGenerator, serviceModel) in
                 try codeGenerator.generateFromModel(serviceModel: serviceModel,
                                                     generationType: generationType,
                                                     asyncAwaitAPIs: customizations.asyncAwaitAPIs,
@@ -50,38 +56,42 @@ public struct APIGatewayClientCodeGeneration {
                                                     minimumCompilerSupport: customizations.minimumCompilerSupport,
                                                     clientConfigurationType: customizations.clientConfigurationType)
             }
-        
-            return try ServiceModelGenerate.generateFromModel(
-                    modelFilePath: modelFilePath,
-                    customizations: customizations,
-                    applicationDescription: applicationDescription,
-                    modelOverride: modelOverride,
-                    generatorFunction: generatorFunction)
     }
     
     public static func generateWithNoModel(modelLocation: ModelLocation,
+                                           modelTargetName: String, clientTargetName: String,
                                            modelPackageDependency: ModelPackageDependency?,
                                            applicationDescription: ApplicationDescription,
                                            fileHeader: String?) {
-        let codeGen = APIGatewayClientCodeGeneration(applicationDescription: applicationDescription, fileHeader: fileHeader)
+        let targetSupport = ModelAndClientTargetSupport(modelTargetName: modelTargetName,
+                                                        clientTargetName: clientTargetName)
+        
+        let codeGen = APIGatewayClientCodeGenerator(applicationDescription: applicationDescription, fileHeader: fileHeader,
+                                                    targetSupport: targetSupport)
         
         codeGen.generateClientApplicationFiles(modelLocation: modelLocation,
                                                modelPackageDependency: modelPackageDependency)
-        codeGen.generateCodeGenDummyFile(forPackagePostfix: "Model",
+        codeGen.generateCodeGenDummyFile(targetName: modelTargetName,
                                          plugin: "APIGatewaySwiftGenerateModel")
-        codeGen.generateCodeGenDummyFile(forPackagePostfix: "Client",
+        codeGen.generateCodeGenDummyFile(targetName: clientTargetName,
                                          plugin: "APIGatewaySwiftGenerateClient")
     }
+}
+
+struct APIGatewayClientCodeGenerator<TargetSupportType> {
+    let applicationDescription: ApplicationDescription
+    let fileHeader: String?
+    let targetSupport: TargetSupportType
     
     // Due to a current limitation of the SPM plugins for code generators, a placeholder Swift file
     // is required in each package to avoid the package as being seen as empty. These files need to
     // be a Swift file but doesn't require any particular contents.
-    private func generateCodeGenDummyFile(forPackagePostfix packagePostix: String,
-                                          plugin: String) {
+    func generateCodeGenDummyFile(targetName: String,
+                                  plugin: String) {
         let fileBuilder = FileBuilder()
         let baseFilePath = applicationDescription.baseFilePath
         let fileName = "codegen.swift"
-        let filePath = "\(baseFilePath)/Sources/\(applicationDescription.baseName)\(packagePostix)"
+        let filePath = "\(baseFilePath)/Sources/\(targetName)"
         
         fileBuilder.appendLine("""
             //
@@ -94,7 +104,7 @@ public struct APIGatewayClientCodeGeneration {
     }
 }
 
-extension ServiceModelCodeGenerator {
+extension ServiceModelCodeGenerator where TargetSupportType: ModelTargetSupport & ClientTargetSupport {
     
     func generateFromModel<ModelType: ServiceModel>(serviceModel: ModelType,
                                                     generationType: GenerationType,
@@ -112,24 +122,24 @@ extension ServiceModelCodeGenerator {
             generateModelErrors(delegate: awsModelErrorsDelegate)
             generateDefaultInstances(generationType: .internalTypes)
         case .codeGenClient:
-            let clientProtocolDelegate = ClientProtocolDelegate(
+            let clientProtocolDelegate = ClientProtocolDelegate<TargetSupportType>(
                 baseName: applicationDescription.baseName,
                 asyncAwaitAPIs: asyncAwaitAPIs,
                 eventLoopFutureClientAPIs: eventLoopFutureClientAPIs,
                 minimumCompilerSupport: minimumCompilerSupport)
-            let mockClientDelegate = MockClientDelegate(
+            let mockClientDelegate = MockClientDelegate<TargetSupportType>(
                 baseName: applicationDescription.baseName,
                 isThrowingMock: false,
                 asyncAwaitAPIs: asyncAwaitAPIs,
                 eventLoopFutureClientAPIs: eventLoopFutureClientAPIs,
                 minimumCompilerSupport: minimumCompilerSupport)
-            let throwingClientDelegate = MockClientDelegate(
+            let throwingClientDelegate = MockClientDelegate<TargetSupportType>(
                 baseName: applicationDescription.baseName,
                 isThrowingMock: true,
                 asyncAwaitAPIs: asyncAwaitAPIs,
                 eventLoopFutureClientAPIs: eventLoopFutureClientAPIs,
                 minimumCompilerSupport: minimumCompilerSupport)
-            let apiGatewayClientDelegate = APIGatewayClientDelegate(
+            let apiGatewayClientDelegate = APIGatewayClientDelegate<TargetSupportType>(
                 baseName: applicationDescription.baseName,
                 asyncAwaitAPIs: asyncAwaitAPIs,
                 eventLoopFutureClientAPIs: eventLoopFutureClientAPIs,

@@ -3,7 +3,7 @@
 <img src="https://github.com/amzn/smoke-aws-generate/actions/workflows/swift.yml/badge.svg?branch=main" alt="Build - main Branch">
 </a>
 <a href="http://swift.org">
-<img src="https://img.shields.io/badge/swift-5.4|5.5|5.6-orange.svg?style=flat" alt="Swift 5.4, 5.5 and 5.6 Tested">
+<img src="https://img.shields.io/badge/swift-5.5|5.6|5.7-orange.svg?style=flat" alt="Swift 5.5, 5.6 and 5.7 Tested">
 </a>
 <a href="https://gitter.im/SmokeServerSide">
 <img src="https://img.shields.io/badge/chat-on%20gitter-ee115e.svg?style=flat" alt="Join the Smoke Server Side community on gitter">
@@ -113,6 +113,9 @@ swift run APIGatewayClientInitialize -c release --base-file-path <path-to-the-cl
 **Note:** You can optionally specify a `--model-target-dependency` parameter if the target where the
 model file is hosted is not the same as the product name.
 
+You can also optionally specify `--model-target-name` and `--client-target-name` parameters to specify custom
+target names. Otherwise `\(base-name)Model` and `\(base-name)Client` will be used.
+
 **Note:** You can also manually generate a Swift package manifest and structure along with the configuration file (see next step). 
 The `APIGatewayClientInitialize` executable is simply a convenience and not required to build the client package.
 
@@ -146,6 +149,8 @@ You can add the following additional options to this configuration file-
 * **minimumCompilerSupport**: `UNKNOWN` will generate a client that supports Swift 5.5 and 5.4. Optional; defaulting to `5.6`.
 * **clientConfigurationType**: `GENERATOR` will generate a legacy client generator type instead of the configuration and 
         operations clients types. Optional; defaulting to `CONFIGURATION_OBJECT`.
+* **modelTargets**: Provides the ability to customise the model target used by a client target. Optional, if not 
+        specified ``\(baseName)Model` will be used.
 
 The schemas for the `modelOverride` and `httpClientConfiguration` fields can be found here - https://github.com/amzn/service-model-swift-code-generate/blob/main/Sources/ServiceModelEntities/ModelOverride.swift.
 
@@ -157,6 +162,26 @@ Shape protocols allow you to convert between similar types in different models
 extension Model1.Location: Model2.LocationShape {}
 
 let model2Location = model1.asModel2Location()
+```
+
+The `modelTargets` option can be specified as shown below.
+
+```
+{
+  "baseName" : "PersistenceExample",
+  "modelFormat" : "OPENAPI3_0",
+  "modelLocations" : {
+    "default" : {
+      "modelFilePath" : "OpenAPI30.yaml",
+      "modelProductDependency" : "ServiceModel"
+    }
+  },
+  "modelTargets": {
+      "MyClientTarget": {
+          "modelTargetName": "MyModelTarget"
+      }
+  }
+}
 ```
 
 ## Step 4: Depend on the client package

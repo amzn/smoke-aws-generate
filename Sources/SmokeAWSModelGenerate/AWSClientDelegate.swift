@@ -23,7 +23,8 @@ import ServiceModelEntities
  A ModelClientDelegate that can be used to generate an
  AWS Client from a Service Model.
  */
-public struct AWSClientDelegate: ModelClientDelegate {
+public struct AWSClientDelegate<TargetSupportType>: ModelClientDelegate
+where TargetSupportType: ModelTargetSupport {
     public let clientType: ClientType
     public let clientAttributes: AWSClientAttributes
     public let asyncAwaitAPIs: CodeGenFeatureStatus
@@ -70,8 +71,8 @@ public struct AWSClientDelegate: ModelClientDelegate {
         self.signAllHeaders = signAllHeaders
     }
     
-    public func addTypeDescription(codeGenerator: ServiceModelCodeGenerator,
-                                   delegate: ModelClientDelegate,
+    public func addTypeDescription(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
+                                   delegate: Self,
                                    fileBuilder: FileBuilder,
                                    entityType: ClientEntityType) {
         if entityType.isGenerator {
@@ -85,16 +86,16 @@ public struct AWSClientDelegate: ModelClientDelegate {
         }
     }
     
-    public func addCustomFileHeader(codeGenerator: ServiceModelCodeGenerator,
-                                    delegate: ModelClientDelegate,
+    public func addCustomFileHeader(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
+                                    delegate: Self,
                                     fileBuilder: FileBuilder,
                                     fileType: ClientFileType) {
         addAWSClientFileHeader(codeGenerator: codeGenerator, fileBuilder: fileBuilder, baseName: baseName, fileType: fileType,
                                defaultInvocationTraceContext: self.clientAttributes.defaultInvocationTraceContext)
     }
     
-    public func addCommonFunctions(codeGenerator: ServiceModelCodeGenerator,
-                                   delegate: ModelClientDelegate,
+    public func addCommonFunctions(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
+                                   delegate: Self,
                                    fileBuilder: FileBuilder,
                                    sortedOperations: [(String, OperationDescription)],
                                    entityType: ClientEntityType) {
@@ -108,8 +109,8 @@ public struct AWSClientDelegate: ModelClientDelegate {
                                     entityType: entityType)
     }
     
-    public func addOperationBody(codeGenerator: ServiceModelCodeGenerator,
-                                 delegate: ModelClientDelegate,
+    public func addOperationBody(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
+                                 delegate: Self,
                                  fileBuilder: FileBuilder,
                                  invokeType: InvokeType,
                                  operationName: String,

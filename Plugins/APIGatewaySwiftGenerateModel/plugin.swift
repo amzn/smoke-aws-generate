@@ -62,7 +62,7 @@ struct APIGatewaySwiftGenerateModelPlugin: BuildToolPlugin {
         let modelFilePathOverride = try getModelFilePathOverride(target: target, config: config,
                                                                  baseFilePath: context.package.directory)
         
-        let modelDirectory = sourcesDirectory.appending("\(baseName)\(targetSuffix)")
+        let modelDirectory = sourcesDirectory.appending(target.name)
         
         let modelFiles = ["\(baseName)\(targetSuffix)Errors.swift",
                           "\(baseName)\(targetSuffix)Structures.swift",
@@ -81,7 +81,8 @@ struct APIGatewaySwiftGenerateModelPlugin: BuildToolPlugin {
             "--base-file-path", context.package.directory.description,
             "--base-output-file-path", context.pluginWorkDirectory.description,
             "--generation-type", "codeGenModel",
-            "--model-path", modelFilePathOverride
+            "--model-path", modelFilePathOverride,
+            "--model-target-name", target.name
         ]
 
         // Append a command containing the information we generated.

@@ -36,8 +36,20 @@ struct APIGatewayClientGenerateCommand: ParsableCommand {
     @Option(name: .customLong("base-output-file-path"), help: "The file path to place the root of the generated Swift package.")
     var baseOutputFilePath: String
     
-    @Option(name: .customLong("generation-type"), help: "The code generation mode. Can only be specified with --model-path.")
+    @Option(name: .customLong("generation-type"), help: "The code generation mode.")
     var generationType: GenerationType
+    
+    @Option(name: .customLong("model-target-name"), help: """
+            When GenerationType == .codeGenModel, the name of this target;
+            When GenerationType == .codeGenClient, the name of the target with the generated model types.
+            """)
+    var modelTargetName: String?
+    
+    @Option(name: .customLong("client-target-name"), help: """
+            When GenerationType == .codeGenModel, ignored;
+            When GenerationType == .codeGenClient, the name of this target.
+            """)
+    var clientTargetName: String?
 
     mutating func run() throws {
         let configFilePath = "\(baseFilePath)/\(configFileName)"
@@ -81,6 +93,8 @@ struct APIGatewayClientGenerateCommand: ParsableCommand {
                                                                 applicationSuffix: "")
         
         let modelFormat = config.modelFormat ?? .openAPI30
+        let modelTargetName = self.modelTargetName ?? "\(baseName)Model"
+        let clientTargetName = self.clientTargetName ?? "\(baseName)Client"
         
         switch modelFormat {
         case .openAPI30:
@@ -88,6 +102,7 @@ struct APIGatewayClientGenerateCommand: ParsableCommand {
                 modelFilePath: modelFilePath,
                 modelType: OpenAPIServiceModel.self,
                 generationType: generationType,
+                modelTargetName: modelTargetName, clientTargetName: clientTargetName,
                 customizations: customizations,
                 applicationDescription: fullApplicationDescription,
                 modelOverride: config.modelOverride)
@@ -96,6 +111,7 @@ struct APIGatewayClientGenerateCommand: ParsableCommand {
                 modelFilePath: modelFilePath,
                 modelType: SwaggerServiceModel.self,
                 generationType: generationType,
+                modelTargetName: modelTargetName, clientTargetName: clientTargetName,
                 customizations: customizations,
                 applicationDescription: fullApplicationDescription,
                 modelOverride: config.modelOverride)

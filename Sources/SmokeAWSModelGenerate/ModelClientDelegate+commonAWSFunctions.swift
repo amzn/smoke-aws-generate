@@ -24,7 +24,7 @@ import CoralToJSONServiceModel
 extension ModelClientDelegate {
     func addAWSClientCommonFunctions(fileBuilder: FileBuilder, baseName: String,
                                      clientAttributes: AWSClientAttributes,
-                                     codeGenerator: ServiceModelCodeGenerator,
+                                     codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
                                      targetsAPIGateway: Bool,
                                      contentType: String,
                                      sortedOperations: [(String, OperationDescription)],

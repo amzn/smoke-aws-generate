@@ -35,15 +35,35 @@ struct APIGatewaySwiftGenerateClientPlugin: BuildToolPlugin {
         }
     }
     
+    struct ModelTargets: Decodable {
+        let `default`: ModelTarget?
+        let targetMap: [String: ModelTarget]
+        
+        enum CodingKeys: String, CodingKey {
+            case `default`
+        }
+        
+        init(from decoder: Decoder) throws {
+            let values = try decoder.container(keyedBy: CodingKeys.self)
+            self.`default` = try values.decodeIfPresent(ModelTarget.self, forKey: .default)
+            self.targetMap = try [String: ModelTarget].init(from: decoder)
+        }
+    }
+    
     enum ClientConfigurationType: String, Codable {
         case configurationObject = "CONFIGURATION_OBJECT"
         case generator = "GENERATOR"
+    }
+    
+    struct ModelTarget: Decodable {
+        let modelTargetName: String?
     }
     
     struct APIGatewayClientSwiftCodeGen: Decodable {
         let baseName: String
         let modelLocations: ModelLocations?
         let clientConfigurationType: ClientConfigurationType?
+        let modelTargets: ModelTargets?
     }
     
     /// This plugin's implementation returns a single build command which
@@ -68,7 +88,7 @@ struct APIGatewaySwiftGenerateClientPlugin: BuildToolPlugin {
         let modelFilePathOverride = try getModelFilePathOverride(target: target, config: config,
                                                                  baseFilePath: context.package.directory)
         
-        let clientDirectory = sourcesDirectory.appending("\(baseName)\(targetSuffix)")
+        let clientDirectory = sourcesDirectory.appending(target.name)
         
         let clientConfigurationType = config.clientConfigurationType ?? .configurationObject
         let configurationOrGeneratorFileSuffix: String
@@ -96,12 +116,17 @@ struct APIGatewaySwiftGenerateClientPlugin: BuildToolPlugin {
         let outputFiles = clientOutputPaths
 
         // Construct the command arguments.
-        let commandArgs = [
+        var commandArgs = [
             "--base-file-path", context.package.directory.description,
             "--base-output-file-path", context.pluginWorkDirectory.description,
             "--generation-type", "codeGenClient",
-            "--model-path", modelFilePathOverride
+            "--model-path", modelFilePathOverride,
+            "--client-target-name", target.name
         ]
+        
+        if let modelTargetName = getModelTargetName(target: target, config: config) {
+            commandArgs.append(contentsOf: ["--model-target-name", modelTargetName])
+        }
 
         // Append a command containing the information we generated.
         let command: Command = .buildCommand(
@@ -112,6 +137,22 @@ struct APIGatewaySwiftGenerateClientPlugin: BuildToolPlugin {
             outputFiles: outputFiles)
         
         return [command]
+    }
+    
+    private func getModelTargetName(target: Target, config: APIGatewayClientSwiftCodeGen) -> String? {
+        guard let modelTargets = config.modelTargets else {
+            return nil
+        }
+        
+        if let modelTargetName = modelTargets.targetMap[target.name]?.modelTargetName {
+            return modelTargetName
+        }
+        
+        if let modelTargetName = modelTargets.default?.modelTargetName {
+            return modelTargetName
+        }
+        
+        return nil
     }
     
     private func getModelFilePathOverride(target: Target, config: APIGatewayClientSwiftCodeGen,

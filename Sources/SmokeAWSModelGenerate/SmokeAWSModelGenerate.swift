@@ -28,26 +28,22 @@ public struct SmokeAWSModelGenerate {
         customizations: CodeGenerationCustomizations,
         applicationDescription: ApplicationDescription,
         modelOverride: ModelOverride?,
-        signAllHeaders: Bool) throws -> CoralToJSONServiceModel {
-            func generatorFunction(codeGenerator: ServiceModelCodeGenerator,
-                                   serviceModel: CoralToJSONServiceModel) throws {
+        signAllHeaders: Bool) throws
+    -> CoralToJSONServiceModel {
+        return try ServiceModelGenerate.generateFromModel(
+            modelFilePath: modelFilePath,
+            customizations: customizations,
+            applicationDescription: applicationDescription,
+            modelOverride: modelOverride) { (codeGenerator, serviceModel) in
                 try codeGenerator.generateFromCoralToJSONServiceModel(
                     coralToJSONServiceModel: serviceModel,
                     asyncAwaitAPIs: customizations.asyncAwaitAPIs,
-                    signAllHeaders: signAllHeaders
-                )
+                    signAllHeaders: signAllHeaders)
             }
-        
-            return try ServiceModelGenerate.generateFromModel(
-                    modelFilePath: modelFilePath,
-                    customizations: customizations,
-                    applicationDescription: applicationDescription,
-                    modelOverride: modelOverride,
-                    generatorFunction: generatorFunction)
     }
 }
 
-extension ServiceModelCodeGenerator {
+extension ServiceModelCodeGenerator where TargetSupportType: ModelTargetSupport & ClientTargetSupport {
     
     func generateFromCoralToJSONServiceModel(
             coralToJSONServiceModel: CoralToJSONServiceModel,
@@ -55,18 +51,18 @@ extension ServiceModelCodeGenerator {
             signAllHeaders: Bool) throws {
         let awsClientAttributes = coralToJSONServiceModel.getAWSClientAttributes()
         
-        let clientProtocolDelegate = ClientProtocolDelegate(
+        let clientProtocolDelegate = ClientProtocolDelegate<TargetSupportType>(
             baseName: applicationDescription.baseName,
             asyncAwaitAPIs: asyncAwaitAPIs)
-        let mockClientDelegate = MockClientDelegate(
+        let mockClientDelegate = MockClientDelegate<TargetSupportType>(
             baseName: applicationDescription.baseName,
             isThrowingMock: false,
             asyncAwaitAPIs: asyncAwaitAPIs)
-        let throwingClientDelegate = MockClientDelegate(
+        let throwingClientDelegate = MockClientDelegate<TargetSupportType>(
             baseName: applicationDescription.baseName,
             isThrowingMock: true,
             asyncAwaitAPIs: asyncAwaitAPIs)
-        let awsClientDelegate = AWSClientDelegate(
+        let awsClientDelegate = AWSClientDelegate<TargetSupportType>(
             baseName: applicationDescription.baseName,
             clientAttributes: awsClientAttributes,
             signAllHeaders: signAllHeaders,
