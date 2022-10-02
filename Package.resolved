@@ -15,8 +15,8 @@
         "repositoryURL": "https://github.com/amzn/service-model-swift-code-generate.git",
         "state": {
           "branch": null,
-          "revision": "4c0ccda7df61c87538df34fc47982435c4a52206",
-          "version": "3.0.0-beta.5"
+          "revision": "a1adc01dc7c692d46484ccc2db154a1f62cb3d33",
+          "version": "3.0.0-beta.12"
         }
       },
       {

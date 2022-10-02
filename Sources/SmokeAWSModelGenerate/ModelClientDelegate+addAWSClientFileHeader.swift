@@ -23,8 +23,8 @@ import CoralToJSONServiceModel
 
 public typealias SpecificErrorBehaviour = (retriableErrors: [String], unretriableErrors: [String], defaultBehaviorErrorsCount: Int)
 
-extension ModelClientDelegate {
-    func addAWSClientFileHeader(codeGenerator: ServiceModelCodeGenerator,
+extension ModelClientDelegate where TargetSupportType: ModelTargetSupport {
+    func addAWSClientFileHeader(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
                                 fileBuilder: FileBuilder, baseName: String,
                                 fileType: ClientFileType, defaultInvocationTraceContext: InvocationTraceContextDeclaration) {
         fileBuilder.appendLine("""
@@ -105,7 +105,7 @@ extension ModelClientDelegate {
         fileBuilder.decIndent()
     }
     
-    public func getSpecificErrors(codeGenerator: ServiceModelCodeGenerator, baseName: String) -> SpecificErrorBehaviour {
+    public func getSpecificErrors(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>, baseName: String) -> SpecificErrorBehaviour {
         let sortedErrors = codeGenerator.getSortedErrors(allErrorTypes: codeGenerator.model.errorTypes)
         
         var retriableErrors: [String] = []
@@ -135,7 +135,7 @@ extension ModelClientDelegate {
         return (retriableErrors, unretriableErrors, defaultBehaviorErrorsCount)
     }
     
-    public func addTypedErrorRetriableExtension(codeGenerator: ServiceModelCodeGenerator,
+    public func addTypedErrorRetriableExtension(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
                                                 fileBuilder: FileBuilder, baseName: String,
                                                 specificErrorBehaviour: SpecificErrorBehaviour) {
         let errorType = "\(baseName)Error"
@@ -174,7 +174,7 @@ extension ModelClientDelegate {
         """)
     }
     
-    public func addErrorRetriableExtension(codeGenerator: ServiceModelCodeGenerator,
+    public func addErrorRetriableExtension(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
                                            fileBuilder: FileBuilder, baseName: String) {
         let errorType = "\(baseName)Error"
                 

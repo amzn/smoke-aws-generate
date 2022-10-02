@@ -66,6 +66,18 @@ struct APIGatewayClientInitializeCommand: ParsableCommand {
     @Option(name: .customLong("version-requirement-type"),
             help: "For models hosted in an external product, the version requirement type of the package dependency.")
     var versionRequirementType: VersionRequirementType?
+    
+    @Option(name: .customLong("model-target-name"), help: """
+            When GenerationType == .codeGenModel, the name of this target;
+            When GenerationType == .codeGenClient, the name of the target with the generated model types.
+            """)
+    var modelTargetName: String?
+    
+    @Option(name: .customLong("client-target-name"), help: """
+            When GenerationType == .codeGenModel, ignored;
+            When GenerationType == .codeGenClient, the name of this target.
+            """)
+    var clientTargetName: String?
 
     mutating func run() throws {
         let fullApplicationDescription = ApplicationDescription(baseName: baseName,
@@ -90,18 +102,33 @@ struct APIGatewayClientInitializeCommand: ParsableCommand {
                                           modelProductDependency: self.modelProductDependency,
                                           modelTargetDependency: self.modelTargetDependency)
         
+        let modelTargetName = self.modelTargetName ?? "\(baseName)Model"
+        let clientTargetName = self.clientTargetName ?? "\(baseName)Client"
+        
         APIGatewayClientCodeGeneration.generateWithNoModel(
             modelLocation: modelLocation,
+            modelTargetName: modelTargetName, clientTargetName: clientTargetName,
             modelPackageDependency: modelPackageDependency,
             applicationDescription: fullApplicationDescription,
             fileHeader: nil)
         
         let configFilePath = "\(baseFilePath)/\(configFileName)"
         
+        let modelTargets: ModelTargets?
+        if let modelTargetName = self.modelTargetName {
+            let modelTarget = ModelTarget(modelTargetName: modelTargetName)
+            
+            modelTargets = ModelTargets(default: nil,
+                                        targetMap: [clientTargetName : modelTarget])
+        } else {
+            modelTargets = nil
+        }
+        
         if !FileManager.default.fileExists(atPath: configFilePath) {
             let apiGatewayClientSwiftCodeGen = APIGatewayClientSwiftCodeGen(
                 modelFormat: self.modelFormat,
                 modelLocations: ModelLocations(default: modelLocation),
+                modelTargets: modelTargets,
                 baseName: self.baseName)
             let jsonEncoder = JSONEncoder()
             jsonEncoder.outputFormatting = [.prettyPrinted, .sortedKeys]

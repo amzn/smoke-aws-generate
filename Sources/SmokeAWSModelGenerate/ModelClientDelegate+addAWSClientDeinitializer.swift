@@ -23,7 +23,7 @@ import CoralToJSONServiceModel
 extension ModelClientDelegate {
     func addAWSClientDeinitializer(fileBuilder: FileBuilder, baseName: String,
                                    clientAttributes: AWSClientAttributes,
-                                   codeGenerator: ServiceModelCodeGenerator,
+                                   codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
                                    targetsAPIGateway: Bool,
                                    contentType: String,
                                    entityType: ClientEntityType) {
@@ -77,7 +77,7 @@ extension ModelClientDelegate {
     private func addShutdownMethod(methodName: String,
                                    isAsync: Bool,
                                    fileBuilder: FileBuilder,
-                                   codeGenerator: ServiceModelCodeGenerator,
+                                   codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
                                    entityType: ClientEntityType) {
         let httpClientConfiguration = codeGenerator.customizations.httpClientConfiguration
         

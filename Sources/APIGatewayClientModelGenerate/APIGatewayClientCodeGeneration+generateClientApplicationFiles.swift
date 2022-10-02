@@ -53,7 +53,7 @@ public struct ModelLocation: Codable {
     }
 }
 
-extension APIGatewayClientCodeGeneration {
+extension APIGatewayClientCodeGenerator where TargetSupportType: ModelTargetSupport & ClientTargetSupport {
     /**
      Generate the main Swift file for the generated application as a Container Server.
      */
@@ -66,6 +66,8 @@ extension APIGatewayClientCodeGeneration {
     
     private func generatePackageFile(fileName: String, modelLocation: ModelLocation,
                                      modelPackageDependency: ModelPackageDependency?) {
+        let modelTargetName = self.targetSupport.modelTargetName
+        let clientTargetName = self.targetSupport.clientTargetName
         
         let fileBuilder = FileBuilder()
         let baseName = applicationDescription.baseName
@@ -91,11 +93,11 @@ extension APIGatewayClientCodeGeneration {
                 products: [
                     // Products define the executables and libraries produced by a package, and make them visible to other packages.
                     .library(
-                        name: "\(baseName)Model",
-                        targets: ["\(baseName)Model"]),
+                        name: "\(modelTargetName)",
+                        targets: ["\(modelTargetName)"]),
                     .library(
-                        name: "\(baseName)Client",
-                        targets: ["\(baseName)Client"]),
+                        name: "\(clientTargetName)",
+                        targets: ["\(clientTargetName)"]),
                     ],
                 dependencies: [
             """)
@@ -142,7 +144,7 @@ extension APIGatewayClientCodeGeneration {
                 targets: [
                     // Targets are the basic building blocks of a package. A target can define a module or a test suite.
                     // Targets can depend on other targets in this package, and on products in packages which this package depends on.
-                    .target(name: "\(baseName)Model", dependencies: [
+                    .target(name: "\(modelTargetName)", dependencies: [
                         .product(name: "Logging", package: "swift-log"),
             """)
         
@@ -159,8 +161,8 @@ extension APIGatewayClientCodeGeneration {
                             .plugin(name: "APIGatewaySwiftGenerateModel", package: "smoke-aws-generate")
                         ]
                     ),
-                    .target(name: "\(baseName)Client", dependencies: [
-                        .target(name: "\(baseName)Model"),
+                    .target(name: "\(clientTargetName)", dependencies: [
+                        .target(name: "\(modelTargetName)"),
             """)
         
         if let modelProduct = modelProduct {

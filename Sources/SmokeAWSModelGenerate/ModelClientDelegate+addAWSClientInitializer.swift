@@ -73,7 +73,7 @@ public enum InitializerType {
 extension ModelClientDelegate {
     func addAWSClientInitializerAndMembers(fileBuilder: FileBuilder, baseName: String,
                                            clientAttributes: AWSClientAttributes,
-                                           codeGenerator: ServiceModelCodeGenerator,
+                                           codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
                                            targetsAPIGateway: Bool,
                                            contentType: String,
                                            sortedOperations: [(String, OperationDescription)],
@@ -270,7 +270,7 @@ extension ModelClientDelegate {
     
     private func addAWSClientInitializer(fileBuilder: FileBuilder, baseName: String,
                                          clientAttributes: AWSClientAttributes,
-                                         codeGenerator: ServiceModelCodeGenerator,
+                                         codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
                                          endpointDefault: String, regionDefault: String,
                                          regionAssignmentPostfix: String, targetsAPIGateway: Bool,
                                          contentType: String, contentTypeAssignment: String, targetAssignment: String,
@@ -297,7 +297,7 @@ extension ModelClientDelegate {
     }
     
     public func addAWSClientOperationMetricsParameters(fileBuilder: FileBuilder, baseName: String,
-                                                        codeGenerator: ServiceModelCodeGenerator,
+                                                        codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
                                                         sortedOperations: [(String, OperationDescription)],
                                                         entityType: ClientEntityType) {
         guard entityType.isGenerator || entityType.isClientImplementation else {
@@ -318,7 +318,7 @@ extension ModelClientDelegate {
     }
     
     public func addAWSClientOperationMetricsInitializerBody(fileBuilder: FileBuilder, baseName: String,
-                                                            codeGenerator: ServiceModelCodeGenerator,
+                                                            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
                                                             sortedOperations: [(String, OperationDescription)],
                                                             entityType: ClientEntityType, initializerType: InitializerType,
                                                             inputPrefix: String) {
@@ -397,7 +397,7 @@ extension ModelClientDelegate {
             contentType: String,
             httpClientConfiguration: HttpClientConfiguration,
             baseName: String,
-            codeGenerator: ServiceModelCodeGenerator,
+            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
             regionAssignmentPostfix: String,
             targetAssignment: String,
             targetsAPIGateway: Bool,
@@ -644,7 +644,7 @@ extension ModelClientDelegate {
     
     private func addAdditionalHttpClients(
             httpClientConfiguration: HttpClientConfiguration,
-            codeGenerator: ServiceModelCodeGenerator,
+            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
             fileBuilder: FileBuilder, initializerType: InitializerType,
             connectionTimeoutEqualityLine: String) {
         httpClientConfiguration.additionalClients?.forEach { (key, _) in
@@ -753,7 +753,7 @@ extension ModelClientDelegate {
             contentType: String,
             baseName: String,
             httpClientConfiguration: HttpClientConfiguration,
-            codeGenerator: ServiceModelCodeGenerator,
+            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
             entityType: ClientEntityType) {
         if entityType.isClientImplementation || entityType.isGenerator {
             fileBuilder.appendLine("""
@@ -851,7 +851,7 @@ extension ModelClientDelegate {
             contentType: String,
             baseName: String,
             httpClientConfiguration: HttpClientConfiguration,
-            codeGenerator: ServiceModelCodeGenerator,
+            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
             targetsAPIGateway: Bool,
             entityType: ClientEntityType) {
         if entityType.isClientImplementation || entityType.isGenerator {
@@ -953,7 +953,7 @@ extension ModelClientDelegate {
             fileBuilder: FileBuilder,
             baseName: String,
             httpClientConfiguration: HttpClientConfiguration,
-            codeGenerator: ServiceModelCodeGenerator,
+            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
             regionDefault: String,
             endpointDefault: String,
             targetsAPIGateway: Bool,
@@ -1134,7 +1134,7 @@ extension ModelClientDelegate {
     public func addAWSClientGeneratorWithReporting(
             fileBuilder: FileBuilder,
             baseName: String,
-            codeGenerator: ServiceModelCodeGenerator,
+            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
             targetsAPIGateway: Bool,
             clientAttributes: AWSClientAttributes,
             contentType: String) {
@@ -1148,7 +1148,7 @@ extension ModelClientDelegate {
     public func addAWSClientGeneratorWithReporting(
             fileBuilder: FileBuilder,
             baseName: String,
-            codeGenerator: ServiceModelCodeGenerator,
+            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
             targetsAPIGateway: Bool,
             contentType: String) {
         guard case .struct(let clientName, _, _) = clientType else {
@@ -1208,7 +1208,7 @@ extension ModelClientDelegate {
     public func addAWSClientGeneratorWithTraceContext(
             fileBuilder: FileBuilder,
             baseName: String,
-            codeGenerator: ServiceModelCodeGenerator,
+            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
             targetsAPIGateway: Bool,
             clientAttributes: AWSClientAttributes,
             contentType: String) {
@@ -1222,7 +1222,7 @@ extension ModelClientDelegate {
     public func addAWSClientGeneratorWithTraceContext(
             fileBuilder: FileBuilder,
             baseName: String,
-            codeGenerator: ServiceModelCodeGenerator,
+            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
             targetsAPIGateway: Bool,
             contentType: String) {
         guard case .struct(let clientName, _, _) = clientType else {
@@ -1250,7 +1250,7 @@ extension ModelClientDelegate {
     public func addAWSClientGeneratorWithAWSTraceContext(
             fileBuilder: FileBuilder,
             baseName: String,
-            codeGenerator: ServiceModelCodeGenerator,
+            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
             targetsAPIGateway: Bool,
             clientAttributes: AWSClientAttributes,
             contentType: String) {
@@ -1265,7 +1265,7 @@ extension ModelClientDelegate {
     public func addAWSClientGeneratorWithLogger(
             fileBuilder: FileBuilder,
             baseName: String,
-            codeGenerator: ServiceModelCodeGenerator,
+            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
             targetsAPIGateway: Bool,
             invocationTraceContext: InvocationTraceContextDeclaration,
             contentType: String) {
