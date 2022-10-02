@@ -82,6 +82,7 @@ let package = Package(
         .target(
             name: "APIGatewayClientModelGenerate", dependencies: [
                 .target(name: "SmokeAWSModelGenerate"),
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
         ),
     ],
