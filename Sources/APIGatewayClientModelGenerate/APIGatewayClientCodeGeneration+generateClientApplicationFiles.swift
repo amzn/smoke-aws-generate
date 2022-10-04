@@ -17,41 +17,6 @@
 
 import Foundation
 import ServiceModelCodeGeneration
-import ArgumentParser
-
-public enum VersionRequirementType: String, Codable, ExpressibleByArgument {
-    case from
-    case branch
-    case path
-}
-
-public struct ModelPackageDependency {
-    public let versionRequirementType: VersionRequirementType
-    public let versionRequirement: String?
-    public let packageLocation: String
-    
-    public init (versionRequirementType: VersionRequirementType,
-                 versionRequirement: String?,
-                 packageLocation: String) {
-        self.versionRequirementType = versionRequirementType
-        self.versionRequirement = versionRequirement
-        self.packageLocation = packageLocation
-    }
-}
-
-public struct ModelLocation: Codable {
-    public let modelProductDependency: String?
-    public let modelTargetDependency: String?
-    public let modelFilePath: String
-    
-    public init (modelFilePath: String,
-                 modelProductDependency: String?,
-                 modelTargetDependency: String?) {
-        self.modelFilePath = modelFilePath
-        self.modelProductDependency = modelProductDependency
-        self.modelTargetDependency = modelTargetDependency
-    }
-}
 
 extension APIGatewayClientCodeGenerator where TargetSupportType: ModelTargetSupport & ClientTargetSupport {
     /**

@@ -9,9 +9,9 @@ import APIGatewayClientModelGenerate
 import ArgumentParser
 
 struct ModelLocations: Encodable {
-    let `default`: APIGatewayClientModelGenerate.ModelLocation?
+    let `default`: ModelLocation?
     
-    init(`default`: APIGatewayClientModelGenerate.ModelLocation?) {
+    init(`default`: ModelLocation?) {
         self.default = `default`
     }
 }

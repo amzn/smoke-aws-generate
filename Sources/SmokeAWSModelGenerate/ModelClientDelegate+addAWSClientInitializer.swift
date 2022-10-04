@@ -28,48 +28,6 @@ public enum DelegateStatementType {
     case instanceVariableAssignment
 }
 
-public enum InitializerType {
-    case standard
-    case forGenerator
-    case copyInitializer
-    case genericTraceContextType
-    case usesDefaultReportingType(defaultInvocationTraceContext: InvocationTraceContextDeclaration)
-    case traceContextTypeFromConfig(configurationObjectName: String)
-    case traceContextTypeFromOperationsClient(operationsClientName: String)
-    
-    public var isCopyInitializer: Bool {
-        if case .copyInitializer = self {
-            return true
-        }
-        
-        return false
-    }
-
-    public var isGenerator: Bool {
-        if case .forGenerator = self {
-            return true
-        }
-        
-        return false
-    }
-    
-    public var isDefaultReportingType: Bool {
-        if case .usesDefaultReportingType = self {
-            return true
-        }
-        
-        return false
-    }
-    
-    public var isStandard: Bool {
-        if case .standard = self {
-            return true
-        }
-        
-        return false
-    }
-}
-
 extension ModelClientDelegate {
     func addAWSClientInitializerAndMembers(fileBuilder: FileBuilder, baseName: String,
                                            clientAttributes: AWSClientAttributes,
@@ -153,9 +111,9 @@ extension ModelClientDelegate {
             initializerType = .forGenerator
         }
         
-        addAWSClientOperationMetricsParameters(fileBuilder: fileBuilder, baseName: baseName,
-                                               codeGenerator: codeGenerator, sortedOperations: sortedOperations,
-                                               entityType: entityType)
+        addClientOperationMetricsParameters(fileBuilder: fileBuilder, baseName: baseName,
+                                            codeGenerator: codeGenerator, sortedOperations: sortedOperations,
+                                            entityType: entityType)
         
         addAWSClientInitializer(fileBuilder: fileBuilder, baseName: baseName, clientAttributes: clientAttributes,
                                 codeGenerator: codeGenerator, endpointDefault: endpointDefault, regionDefault: regionDefault,
@@ -192,8 +150,8 @@ extension ModelClientDelegate {
         // being generated. Add initializers create a client implementation from these types.
         if case .clientImplementation(initializationStructs: let initializationStructsOptional) = entityType,
                 let initializationStructs = initializationStructsOptional {
-            addAWSClientInitializerFromConfigWithInvocationAttributes(fileBuilder: fileBuilder,
-                                                                      configurationObjectName: initializationStructs.configurationObjectName)
+            addClientInitializerFromConfigWithInvocationAttributes(fileBuilder: fileBuilder,
+                                                                   configurationObjectName: initializationStructs.configurationObjectName)
             
             addAWSClientInitializer(fileBuilder: fileBuilder, baseName: baseName, clientAttributes: clientAttributes,
                                     codeGenerator: codeGenerator, endpointDefault: endpointDefault, regionDefault: regionDefault,
@@ -204,8 +162,8 @@ extension ModelClientDelegate {
                                     entityType: entityType,
                                     initializerType: .traceContextTypeFromConfig(configurationObjectName: initializationStructs.configurationObjectName))
             
-            addAWSClientInitializerFromOperationsWithInvocationAttributes(fileBuilder: fileBuilder,
-                                                                          operationsClientName: initializationStructs.operationsClientName)
+            addClientInitializerFromOperationsWithInvocationAttributes(fileBuilder: fileBuilder,
+                                                                       operationsClientName: initializationStructs.operationsClientName)
             
             addAWSClientInitializer(fileBuilder: fileBuilder, baseName: baseName, clientAttributes: clientAttributes,
                                     codeGenerator: codeGenerator, endpointDefault: endpointDefault, regionDefault: regionDefault,
@@ -215,56 +173,6 @@ extension ModelClientDelegate {
                                     targetOrVersionParameter: targetOrVersionParameterNormalConstructor, sortedOperations: sortedOperations,
                                     entityType: entityType,
                                     initializerType: .traceContextTypeFromOperationsClient(operationsClientName: initializationStructs.operationsClientName))
-        }
-    }
-    
-    public func addAWSClientInitializerFromConfigWithInvocationAttributes(fileBuilder: FileBuilder,
-                                                                          configurationObjectName: String) {
-        fileBuilder.appendLine("""
-            
-            public init<TraceContextType: InvocationTraceContext, InvocationAttributesType: HTTPClientInvocationAttributes>(
-                config: \(configurationObjectName)<StandardHTTPClientCoreInvocationReporting<TraceContextType>>,
-                invocationAttributes: InvocationAttributesType,
-                httpClient: HTTPOperationsClient? = nil)
-            where InvocationReportingType == StandardHTTPClientCoreInvocationReporting<TraceContextType> {
-                self.init(config: config,
-                          logger: invocationAttributes.logger,
-                          internalRequestId: invocationAttributes.internalRequestId,
-                          eventLoop: !config.ignoreInvocationEventLoop ? invocationAttributes.eventLoop : nil,
-                          httpClient: httpClient,
-                          outwardsRequestAggregator: invocationAttributes.outwardsRequestAggregator)
-            }
-            """)
-    }
-    
-    public func addAWSClientInitializerFromOperationsWithInvocationAttributes(fileBuilder: FileBuilder,
-                                                                              operationsClientName: String) {
-        fileBuilder.appendLine("""
-            
-            public init<TraceContextType: InvocationTraceContext, InvocationAttributesType: HTTPClientInvocationAttributes>(
-                operationsClient: \(operationsClientName)<StandardHTTPClientCoreInvocationReporting<TraceContextType>>,
-                invocationAttributes: InvocationAttributesType)
-            where InvocationReportingType == StandardHTTPClientCoreInvocationReporting<TraceContextType> {
-                self.init(operationsClient: operationsClient,
-                          logger: invocationAttributes.logger,
-                          internalRequestId: invocationAttributes.internalRequestId,
-                          eventLoop: !operationsClient.config.ignoreInvocationEventLoop ? invocationAttributes.eventLoop : nil,
-                          outwardsRequestAggregator: invocationAttributes.outwardsRequestAggregator)
-            }
-            """)
-    }
-    
-    public func addOperationsClientConfigInitializer(fileBuilder: FileBuilder,
-                                                     entityType: ClientEntityType) {
-        if case .operationsClient(let configurationObjectName) = entityType {
-            fileBuilder.appendLine("""
-                
-                public init(config: \(configurationObjectName)<InvocationReportingType>,
-                            httpClient: HTTPOperationsClient? = nil) {
-                    self.config = config
-                    self.httpClient = httpClient ?? self.config.createHTTPOperationsClient()
-                }
-                """)
         }
     }
     
@@ -294,58 +202,6 @@ extension ModelClientDelegate {
             targetAssignment: targetAssignment, targetsAPIGateway: targetsAPIGateway, sortedOperations: sortedOperations,
             entityType: entityType, initializerType: initializerType)
         fileBuilder.appendLine("}")
-    }
-    
-    public func addAWSClientOperationMetricsParameters(fileBuilder: FileBuilder, baseName: String,
-                                                        codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
-                                                        sortedOperations: [(String, OperationDescription)],
-                                                        entityType: ClientEntityType) {
-        guard entityType.isGenerator || entityType.isClientImplementation else {
-            // nothing to do
-            return
-        }
-        
-        fileBuilder.appendEmptyLine()
-        fileBuilder.appendLine("""
-            let operationsReporting: \(baseName)OperationsReporting
-            """)
-        
-        if !entityType.isGenerator {
-            fileBuilder.appendLine("""
-                let invocationsReporting: \(baseName)InvocationsReporting<InvocationReportingType>
-                """)
-        }
-    }
-    
-    public func addAWSClientOperationMetricsInitializerBody(fileBuilder: FileBuilder, baseName: String,
-                                                            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
-                                                            sortedOperations: [(String, OperationDescription)],
-                                                            entityType: ClientEntityType, initializerType: InitializerType,
-                                                            inputPrefix: String) {
-        guard entityType.isGenerator || entityType.isClientImplementation else {
-            // nothing to do
-            return
-        }
-        
-        guard case .struct(let clientName, _, _) = clientType else {
-            fatalError()
-        }
-        
-        if !initializerType.isCopyInitializer {
-            fileBuilder.appendLine("""
-                self.operationsReporting = \(baseName)OperationsReporting(clientName: "\(clientName)", reportingConfiguration: \(inputPrefix)reportingConfiguration)
-                """)
-        } else {
-            fileBuilder.appendLine("""
-                self.operationsReporting = operationsReporting
-                """)
-        }
-        
-        if !initializerType.isGenerator {
-            fileBuilder.appendLine("""
-                self.invocationsReporting = \(baseName)InvocationsReporting(reporting: reporting, operationsReporting: self.operationsReporting)
-                """)
-        }
     }
     
     private func addDefaultReportingTypeConfigurationObjectBody(fileBuilder: FileBuilder,
@@ -634,10 +490,10 @@ extension ModelClientDelegate {
                 """)
         }
         
-        addAWSClientOperationMetricsInitializerBody(fileBuilder: fileBuilder, baseName: baseName,
-                                                    codeGenerator: codeGenerator, sortedOperations: sortedOperations,
-                                                    entityType: entityType,
-                                                    initializerType: initializerType, inputPrefix: inputPrefix)
+        addClientOperationMetricsInitializerBody(fileBuilder: fileBuilder, baseName: baseName,
+                                                 codeGenerator: codeGenerator, sortedOperations: sortedOperations,
+                                                 entityType: entityType,
+                                                 initializerType: initializerType, inputPrefix: inputPrefix)
         
         fileBuilder.decIndent()
     }
@@ -1203,48 +1059,6 @@ extension ModelClientDelegate {
                 operationsReporting: self.operationsReporting)
         }
         """)
-    }
-   
-    public func addAWSClientGeneratorWithTraceContext(
-            fileBuilder: FileBuilder,
-            baseName: String,
-            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
-            targetsAPIGateway: Bool,
-            clientAttributes: AWSClientAttributes,
-            contentType: String) {
-        addAWSClientGeneratorWithTraceContext(fileBuilder: fileBuilder,
-                                              baseName: baseName,
-                                              codeGenerator: codeGenerator,
-                                              targetsAPIGateway: targetsAPIGateway,
-                                              contentType: contentType)
-    }
-    
-    public func addAWSClientGeneratorWithTraceContext(
-            fileBuilder: FileBuilder,
-            baseName: String,
-            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
-            targetsAPIGateway: Bool,
-            contentType: String) {
-        guard case .struct(let clientName, _, _) = clientType else {
-            fatalError()
-        }
-        
-        fileBuilder.appendLine("""
-            
-            public func with<NewTraceContextType: InvocationTraceContext>(
-                    logger: Logging.Logger,
-                    internalRequestId: String = "none",
-                    traceContext: NewTraceContextType,
-                    eventLoop: EventLoop? = nil) -> Generic\(clientName)<StandardHTTPClientCoreInvocationReporting<NewTraceContextType>> {
-                let reporting = StandardHTTPClientCoreInvocationReporting(
-                    logger: logger,
-                    internalRequestId: internalRequestId,
-                    traceContext: traceContext,
-                    eventLoop: eventLoop)
-                
-                return with(reporting: reporting)
-            }
-            """)
     }
     
     public func addAWSClientGeneratorWithAWSTraceContext(
