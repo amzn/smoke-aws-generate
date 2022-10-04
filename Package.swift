@@ -47,8 +47,9 @@ let package = Package(
             targets: ["APIGatewaySwiftGenerateClient"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/amzn/service-model-swift-code-generate.git", from: "3.0.0-beta.12"),
+        .package(url: "https://github.com/amzn/service-model-swift-code-generate.git", from: "3.0.0-beta.14"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "0.3.0"),
+        .package(url: "https://github.com/amzn/openapi-swift-code-generate.git", from: "1.0.0-beta.1"),
     ],
     targets: [
         .plugin(
@@ -71,14 +72,16 @@ let package = Package(
             name: "APIGatewayClientGenerate", dependencies: [
                 .target(name: "APIGatewayClientModelGenerate"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "OpenAPIServiceModel", package: "service-model-swift-code-generate"),
+                .product(name: "OpenAPIServiceModel", package: "openapi-swift-code-generate"),
+                .product(name: "SwaggerServiceModel", package: "openapi-swift-code-generate"),
             ]
         ),
         .executableTarget(
             name: "APIGatewayClientInitialize", dependencies: [
                 .target(name: "APIGatewayClientModelGenerate"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "OpenAPIServiceModel", package: "service-model-swift-code-generate"),
+                .product(name: "OpenAPIServiceModel", package: "openapi-swift-code-generate"),
+                .product(name: "SwaggerServiceModel", package: "openapi-swift-code-generate"),
             ]
         ),
         .target(
