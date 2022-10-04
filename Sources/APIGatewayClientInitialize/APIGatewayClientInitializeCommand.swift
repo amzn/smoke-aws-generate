@@ -65,7 +65,7 @@ struct APIGatewayClientInitializeCommand: ParsableCommand {
     
     @Option(name: .customLong("version-requirement-type"),
             help: "For models hosted in an external product, the version requirement type of the package dependency.")
-    var versionRequirementType: VersionRequirementType?
+    var versionRequirementType: APIGatewayClientModelGenerate.VersionRequirementType?
     
     @Option(name: .customLong("model-target-name"), help: """
             When GenerationType == .codeGenModel, the name of this target;
@@ -85,7 +85,7 @@ struct APIGatewayClientInitializeCommand: ParsableCommand {
                                                                 applicationDescription: "The \(baseName) Swift client.",
                                                                 applicationSuffix: "")
         
-        let modelPackageDependency: ModelPackageDependency?
+        let modelPackageDependency: APIGatewayClientModelGenerate.ModelPackageDependency?
         if self.modelProductDependency != nil {
             guard let packageLocation = self.packageLocation, let versionRequirementType = self.versionRequirementType else {
                 fatalError("package-location and version-requirement-type must be specified if model-product-dependency is")
@@ -98,9 +98,9 @@ struct APIGatewayClientInitializeCommand: ParsableCommand {
             modelPackageDependency = nil
         }
         
-        let modelLocation = ModelLocation(modelFilePath: self.modelFilePath,
-                                          modelProductDependency: self.modelProductDependency,
-                                          modelTargetDependency: self.modelTargetDependency)
+        let modelLocation = APIGatewayClientModelGenerate.ModelLocation(modelFilePath: self.modelFilePath,
+                                                                        modelProductDependency: self.modelProductDependency,
+                                                                        modelTargetDependency: self.modelTargetDependency)
         
         let modelTargetName = self.modelTargetName ?? "\(baseName)Model"
         let clientTargetName = self.clientTargetName ?? "\(baseName)Client"
