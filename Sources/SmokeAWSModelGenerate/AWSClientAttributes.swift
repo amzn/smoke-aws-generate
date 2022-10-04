@@ -17,16 +17,7 @@
 
 import Foundation
 import CoralToJSONServiceModel
-
-public struct InvocationTraceContextDeclaration {
-    public let name: String
-    public let importPackage: String?
-    
-    public init(name: String, importPackage: String? = nil) {
-        self.name = name
-        self.importPackage = importPackage
-    }
-}
+import ServiceModelCodeGeneration
 
 /**
  Structure that specifies the attributes of an AWS client.

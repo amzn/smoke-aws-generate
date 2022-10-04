@@ -54,7 +54,7 @@ extension ModelClientDelegate {
                 codeGenerator: codeGenerator, targetsAPIGateway: targetsAPIGateway,
                 contentType: contentType)
             
-            addAWSClientGeneratorWithTraceContext(
+            addClientGeneratorWithTraceContext(
                 fileBuilder: fileBuilder, baseName: baseName,
                 codeGenerator: codeGenerator, targetsAPIGateway: targetsAPIGateway,
                 contentType: contentType)
