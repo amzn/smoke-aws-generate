@@ -18,6 +18,10 @@ enum APIGatewayClientGenerateCommandError: Error {
     case invalidParameterConbination(reason: String)
 }
 
+extension GenerationType: ExpressibleByArgument {
+    
+}
+
 @main
 struct APIGatewayClientGenerateCommand: ParsableCommand {
     static var configuration: CommandConfiguration {
