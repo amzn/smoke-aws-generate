@@ -36,7 +36,7 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.44.60"
+let goRepositoryTag = "v1.44.114"
 
 let fileHeader = """
     // Copyright 2018-2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -138,7 +138,7 @@ func getPackageTargetEntriesPackageFile(name: String) -> String {
 func generatePackageFile(baseNames: [String]) -> String {
     
     var packageFileContents = """
-        // swift-tools-version:5.2
+        // swift-tools-version:5.5
         //
         \(fileHeader)
         
@@ -177,6 +177,7 @@ func generatePackageFile(baseNames: [String]) -> String {
                 .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
                 .package(url: "https://github.com/LiveUI/XMLCoding.git", from: "0.4.1"),
                 .package(url: "https://github.com/amzn/smoke-http.git", from: "2.12.0"),
+                .package(url: "https://github.com/amzn/smoke-aws-support.git", from: "1.0.0"),
                 .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"),
             ],
             targets: [\n
@@ -193,6 +194,8 @@ func generatePackageFile(baseNames: [String]) -> String {
                         .product(name: "Metrics", package: "swift-metrics"),
                         .product(name: "XMLCoding", package: "XMLCoding"),
                         .product(name: "SmokeHTTPClient", package: "smoke-http"),
+                        .product(name: "AWSCore", package: "smoke-aws-support"),
+                        .product(name: "AWSLogging", package: "smoke-aws-support"),
                     ]),
                 .target(
                     name: "SmokeAWSHttp", dependencies: [
@@ -205,6 +208,7 @@ func generatePackageFile(baseNames: [String]) -> String {
                         .product(name: "HTTPPathCoding", package: "smoke-http"),
                         .product(name: "HTTPHeadersCoding", package: "smoke-http"),
                         .product(name: "Crypto", package: "swift-crypto"),
+                        .product(name: "AWSHttp", package: "smoke-aws-support"),
                     ]),
                 .target(
                     name: "_SmokeAWSHttpConcurrency", dependencies: [
