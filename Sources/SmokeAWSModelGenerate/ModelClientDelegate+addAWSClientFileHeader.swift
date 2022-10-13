@@ -26,9 +26,9 @@ extension ModelClientDelegate where TargetSupportType: ModelTargetSupport {
                                 fileBuilder: FileBuilder, baseName: String,
                                 fileType: ClientFileType, defaultInvocationTraceContext: InvocationTraceContextDeclaration) {
         fileBuilder.appendLine("""
-            import SmokeAWSHttp
+            import AWSCore
+            import AWSHttp
             import NIO
-            import NIOHTTP1
             import AsyncHTTPClient
             import Logging
             """)

@@ -54,11 +54,11 @@ extension ServiceModelCodeGenerator where TargetSupportType: ModelTargetSupport 
         let clientProtocolDelegate = ClientProtocolDelegate<TargetSupportType>(
             baseName: applicationDescription.baseName,
             asyncAwaitAPIs: asyncAwaitAPIs)
-        let mockClientDelegate = MockClientDelegate<TargetSupportType>(
+        let mockClientDelegate = MockAWSClientDelegate<TargetSupportType>(
             baseName: applicationDescription.baseName,
             isThrowingMock: false,
             asyncAwaitAPIs: asyncAwaitAPIs)
-        let throwingClientDelegate = MockClientDelegate<TargetSupportType>(
+        let throwingClientDelegate = MockAWSClientDelegate<TargetSupportType>(
             baseName: applicationDescription.baseName,
             isThrowingMock: true,
             asyncAwaitAPIs: asyncAwaitAPIs)
@@ -69,19 +69,77 @@ extension ServiceModelCodeGenerator where TargetSupportType: ModelTargetSupport 
             asyncAwaitAPIs: asyncAwaitAPIs)
         let awsModelErrorsDelegate = AWSModelErrorsDelegate(awsClientAttributes: awsClientAttributes)
         
-        generateClient(delegate: clientProtocolDelegate, fileType: .clientImplementation)
-        generateClient(delegate: mockClientDelegate, fileType: .clientImplementation)
-        generateClient(delegate: throwingClientDelegate, fileType: .clientImplementation)
-        generateClient(delegate: awsClientDelegate, fileType: .clientImplementation)
-        generateClient(delegate: awsClientDelegate, fileType: .clientGenerator)
+        generateAWSClient(delegate: clientProtocolDelegate, fileType: .clientImplementation)
+        generateAWSClient(delegate: mockClientDelegate, fileType: .clientImplementation)
+        generateAWSClient(delegate: throwingClientDelegate, fileType: .clientImplementation)
+        generateAWSClient(delegate: awsClientDelegate, fileType: .clientImplementation)
+        generateAWSClient(delegate: awsClientDelegate, fileType: .clientGenerator)
         generateModelOperationsEnum()
-        generateOperationsReporting()
-        generateInvocationsReporting()
+        generateAWSOperationsReporting()
+        generateAWSInvocationsReporting()
         generateModelOperationClientInput()
         generateModelOperationClientOutput()
         generateModelStructures()
         generateModelTypes()
         generateModelErrors(delegate: awsModelErrorsDelegate)
         generateDefaultInstances(generationType: .internalTypes)
+    }
+}
+
+public extension ServiceModelCodeGenerator where TargetSupportType: ModelTargetSupport & ClientTargetSupport {
+    func generateAWSClient<DelegateType: ModelClientDelegate>(delegate: DelegateType, fileType: ClientFileType)
+    where DelegateType.TargetSupportType == TargetSupportType {
+        let defaultTraceContextType = DefaultTraceContextType(typeName: "AWSClientInvocationTraceContext",
+                                                              importTargetName: "AWSHttp")
+        generateClient(delegate: delegate, fileType: fileType, defaultTraceContextType: defaultTraceContextType)
+    }
+    
+    func generateAWSOperationsReporting() {
+        let operationsReportingType = OperationsReportingType(
+            typeName: "StandardSmokeAWSOperationReporting",
+            targetImportName: "AWSCore") { (variableName, thePrefix, fileBuilder) in
+                fileBuilder.appendLine("""
+                    \(thePrefix)StandardSmokeAWSOperationReporting(
+                    clientName: clientName, operation: .\(variableName), configuration: reportingConfiguration)
+                    """)
+                }
+        
+        generateOperationsReporting(operationsReportingType: operationsReportingType)
+    }
+    
+    func generateAWSInvocationsReporting() {
+        let invocationReportingType = InvocationReportingType(
+            typeName: "SmokeAWSHTTPClientInvocationReporting",
+            targetImportName: "AWSHttp") { (variableName, thePrefix, fileBuilder) in
+                fileBuilder.appendLine("""
+                    \(thePrefix)SmokeAWSHTTPClientInvocationReporting(smokeAWSInvocationReporting: reporting,
+                        smokeAWSOperationReporting: operationsReporting.\(variableName))
+                    """)
+                }
+        
+        generateInvocationsReporting(invocationReportingType: invocationReportingType)
+    }
+}
+
+public typealias MockAWSClientDelegate = MockClientDelegate
+
+public extension MockAWSClientDelegate {
+    init(baseName: String, isThrowingMock: Bool,
+         asyncAwaitAPIs: CodeGenFeatureStatus,
+         eventLoopFutureClientAPIs: CodeGenFeatureStatus = .enabled,
+         minimumCompilerSupport: MinimumCompilerSupport = .unknown) {
+        let supportingTargetName: String?
+        switch eventLoopFutureClientAPIs {
+        case .disabled:
+            supportingTargetName = nil
+        case .enabled:
+            supportingTargetName = "AWSHttp"
+        }
+        
+        self.init(baseName: baseName, isThrowingMock: isThrowingMock,
+                  asyncAwaitAPIs: asyncAwaitAPIs,
+                  eventLoopFutureClientAPIs: eventLoopFutureClientAPIs,
+                  supportingTargetName: supportingTargetName,
+                  minimumCompilerSupport: minimumCompilerSupport)
     }
 }

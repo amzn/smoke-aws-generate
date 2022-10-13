@@ -126,13 +126,13 @@ extension ServiceModelCodeGenerator where TargetSupportType: ModelTargetSupport 
                 asyncAwaitAPIs: asyncAwaitAPIs,
                 eventLoopFutureClientAPIs: eventLoopFutureClientAPIs,
                 minimumCompilerSupport: minimumCompilerSupport)
-            let mockClientDelegate = MockClientDelegate<TargetSupportType>(
+            let mockClientDelegate = MockAWSClientDelegate<TargetSupportType>(
                 baseName: applicationDescription.baseName,
                 isThrowingMock: false,
                 asyncAwaitAPIs: asyncAwaitAPIs,
                 eventLoopFutureClientAPIs: eventLoopFutureClientAPIs,
                 minimumCompilerSupport: minimumCompilerSupport)
-            let throwingClientDelegate = MockClientDelegate<TargetSupportType>(
+            let throwingClientDelegate = MockAWSClientDelegate<TargetSupportType>(
                 baseName: applicationDescription.baseName,
                 isThrowingMock: true,
                 asyncAwaitAPIs: asyncAwaitAPIs,
@@ -153,13 +153,13 @@ extension ServiceModelCodeGenerator where TargetSupportType: ModelTargetSupport 
                 generatorFileType = .clientGenerator
             }
             
-            generateClient(delegate: clientProtocolDelegate, fileType: .clientImplementation)
-            generateClient(delegate: mockClientDelegate, fileType: .clientImplementation)
-            generateClient(delegate: throwingClientDelegate, fileType: .clientImplementation)
-            generateClient(delegate: apiGatewayClientDelegate, fileType: .clientImplementation)
-            generateClient(delegate: apiGatewayClientDelegate, fileType: generatorFileType)
-            generateOperationsReporting()
-            generateInvocationsReporting()
+            generateAWSClient(delegate: clientProtocolDelegate, fileType: .clientImplementation)
+            generateAWSClient(delegate: mockClientDelegate, fileType: .clientImplementation)
+            generateAWSClient(delegate: throwingClientDelegate, fileType: .clientImplementation)
+            generateAWSClient(delegate: apiGatewayClientDelegate, fileType: .clientImplementation)
+            generateAWSClient(delegate: apiGatewayClientDelegate, fileType: generatorFileType)
+            generateAWSOperationsReporting()
+            generateAWSInvocationsReporting()
             generateModelOperationClientInput()
             generateModelOperationClientOutput()
         }
