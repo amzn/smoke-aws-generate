@@ -100,7 +100,7 @@ public extension ServiceModelCodeGenerator where TargetSupportType: ModelTargetS
             targetImportName: "AWSCore") { (variableName, thePrefix, fileBuilder) in
                 fileBuilder.appendLine("""
                     \(thePrefix)StandardSmokeAWSOperationReporting(
-                    clientName: clientName, operation: .\(variableName), configuration: reportingConfiguration)
+                        clientName: clientName, operation: .\(variableName), configuration: reportingConfiguration)
                     """)
                 }
         
