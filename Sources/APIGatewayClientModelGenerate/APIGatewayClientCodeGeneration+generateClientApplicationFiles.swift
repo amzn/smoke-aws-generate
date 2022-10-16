@@ -101,10 +101,10 @@ extension APIGatewayClientCodeGenerator where TargetSupportType: ModelTargetSupp
         }
         
         fileBuilder.appendLine("""
-                    .package(url: "https://github.com/amzn/smoke-aws.git", from: "2.35.31"),
+                    .package(url: "https://github.com/amzn/smoke-aws-support.git", from: "1.0.0"),
                     .package(url: "https://github.com/amzn/smoke-http.git", from: "2.14.0"),
                     .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
-                    .package(url: "https://github.com/amzn/smoke-aws-generate.git", from: "3.0.0-beta.5"),
+                    .package(url: "https://github.com/amzn/smoke-aws-generate.git", from: "3.0.0-rc.1"),
                     ],
                 targets: [
                     // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -137,7 +137,7 @@ extension APIGatewayClientCodeGenerator where TargetSupportType: ModelTargetSupp
         }
         
         fileBuilder.appendLine("""
-                        .product(name: "SmokeAWSHttp", package: "smoke-aws"),
+                        .product(name: "AWSHttp", package: "smoke-aws-support"),
                         .product(name: "SmokeHTTPClient", package: "smoke-http"),
                         .product(name: "APIGatewayClientModelGenerate", package: "smoke-aws-generate")
                         ],

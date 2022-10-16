@@ -649,7 +649,7 @@ extension ModelClientDelegate {
                 public let target: String?
                 public let retryConfiguration: HTTPClientRetryConfiguration
                 public let traceContext: InvocationReportingType.TraceContextType
-                public let reportingConfiguration: SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>
+                public let reportingConfiguration: HTTPClientReportingConfiguration<\(baseName)ModelOperations>
                 public let ignoreInvocationEventLoop: Bool
                 """)
         case .clientGenerator:
@@ -746,7 +746,7 @@ extension ModelClientDelegate {
                 public let target: String?
                 public let retryConfiguration: HTTPClientRetryConfiguration
                 public let traceContext: InvocationReportingType.TraceContextType
-                public let reportingConfiguration: SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>
+                public let reportingConfiguration: HTTPClientReportingConfiguration<\(baseName)ModelOperations>
                 public let ignoreInvocationEventLoop: Bool
                 """)
         case .clientGenerator:
@@ -951,27 +951,27 @@ extension ModelClientDelegate {
                             connectionPoolConfiguration: HTTPClient.Configuration.ConnectionPool? = nil,
                             retryConfiguration: HTTPClientRetryConfiguration = .default,
                             eventLoopProvider: HTTPClient.EventLoopGroupProvider = .createNew,
-                            reportingConfiguration: SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>
+                            reportingConfiguration: HTTPClientReportingConfiguration<\(baseName)ModelOperations>
                 """)
             
             switch initializerType {
             case .standard, .forGenerator, .copyInitializer:
                 fileBuilder.appendLine("""
-                                    = SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>() ) {
+                                    = HTTPClientReportingConfiguration<\(baseName)ModelOperations>() ) {
                     """)
             case .genericTraceContextType, .traceContextTypeFromConfig:
                 fileBuilder.appendLine("""
-                                    = SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>() )
+                                    = HTTPClientReportingConfiguration<\(baseName)ModelOperations>() )
                     where InvocationReportingType == StandardHTTPClientCoreInvocationReporting<TraceContextType> {
                     """)
             case .usesDefaultReportingType(let defaultInvocationTraceContext):
                 fileBuilder.appendLine("""
-                                    = SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>() )
+                                    = HTTPClientReportingConfiguration<\(baseName)ModelOperations>() )
                     where InvocationReportingType == StandardHTTPClientCoreInvocationReporting<\(defaultInvocationTraceContext.name)> {
                     """)
             case .traceContextTypeFromOperationsClient:
                 fileBuilder.appendLine("""
-                                    = SmokeAWSClientReportingConfiguration<\(baseName)ModelOperations>() )
+                                    = HTTPClientReportingConfiguration<\(baseName)ModelOperations>() )
                     where InvocationReportingType == StandardHTTPClientCoreInvocationReporting<OperationsClientInvocationReportingType.TraceContextType> {
                     """)
             }
