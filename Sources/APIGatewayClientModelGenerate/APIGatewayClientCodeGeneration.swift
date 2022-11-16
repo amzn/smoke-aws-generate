@@ -57,6 +57,59 @@ public struct APIGatewayClientCodeGeneration {
             }
     }
     
+    public static func generateFromModel<ModelType: ServiceModel>(
+        modelFilePaths: [String],
+        modelType: ModelType.Type,
+        generationType: GenerationType,
+        modelTargetName: String, clientTargetName: String,
+        customizations: CodeGenerationCustomizations,
+        applicationDescription: ApplicationDescription,
+        modelOverride: ModelOverride?) throws {
+            let targetSupport = ModelAndClientTargetSupport(modelTargetName: modelTargetName,
+                                                            clientTargetName: clientTargetName)
+            
+            _ = try ServiceModelGenerate.generateFromModel(
+                    modelFilePaths: modelFilePaths,
+                    customizations: customizations,
+                    applicationDescription: applicationDescription,
+                    modelOverride: modelOverride,
+                    targetSupport: targetSupport) { (codeGenerator, serviceModel: ModelType) in
+                        try codeGenerator.generateFromModel(serviceModel: serviceModel,
+                                                            generationType: generationType,
+                                                            asyncAwaitAPIs: customizations.asyncAwaitAPIs,
+                                                            eventLoopFutureClientAPIs: customizations.eventLoopFutureClientAPIs,
+                                                            minimumCompilerSupport: customizations.minimumCompilerSupport,
+                                                            clientConfigurationType: customizations.clientConfigurationType)
+                    }
+    }
+    
+    public static func generateFromModel<ModelType: ServiceModel>(
+        modelDirectoryPaths: [String], fileExtension: String,
+        modelType: ModelType.Type,
+        generationType: GenerationType,
+        modelTargetName: String, clientTargetName: String,
+        customizations: CodeGenerationCustomizations,
+        applicationDescription: ApplicationDescription,
+        modelOverride: ModelOverride?) throws {
+            let targetSupport = ModelAndClientTargetSupport(modelTargetName: modelTargetName,
+                                                            clientTargetName: clientTargetName)
+            
+            _ = try ServiceModelGenerate.generateFromModel(
+                    modelDirectoryPaths: modelDirectoryPaths,
+                    fileExtension: fileExtension,
+                    customizations: customizations,
+                    applicationDescription: applicationDescription,
+                    modelOverride: modelOverride,
+                    targetSupport: targetSupport) { (codeGenerator, serviceModel: ModelType) in
+                        try codeGenerator.generateFromModel(serviceModel: serviceModel,
+                                                            generationType: generationType,
+                                                            asyncAwaitAPIs: customizations.asyncAwaitAPIs,
+                                                            eventLoopFutureClientAPIs: customizations.eventLoopFutureClientAPIs,
+                                                            minimumCompilerSupport: customizations.minimumCompilerSupport,
+                                                            clientConfigurationType: customizations.clientConfigurationType)
+                    }
+    }
+    
     public static func generateWithNoModel(modelLocation: ModelLocation,
                                            modelTargetName: String, clientTargetName: String,
                                            modelPackageDependency: ModelPackageDependency?,
