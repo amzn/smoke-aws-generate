@@ -24,7 +24,9 @@ public struct ClientCodeGenerator {
     let fromVersion: String
     let modelCodeGenPluginName: String
     let clientCodeGenPluginName: String
-    let swift65WorkaroundTargetName: String
+    // an additional target from the code generator package
+    // to work around https://github.com/apple/swift-package-manager/issues/4334 on Swift 5.6
+    let swift56WorkaroundTargetName: String
     
     public init(packageName: String, url: String, fromVersion: String, modelTargetName: String,
                 clientTargetName: String, swift65WorkaroundTargetName: String) {
@@ -33,7 +35,7 @@ public struct ClientCodeGenerator {
         self.fromVersion = fromVersion
         self.modelCodeGenPluginName = modelTargetName
         self.clientCodeGenPluginName = clientTargetName
-        self.swift65WorkaroundTargetName = swift65WorkaroundTargetName
+        self.swift56WorkaroundTargetName = swift65WorkaroundTargetName
     }
     
     public static let this = Self(packageName: "smoke-aws-generate",
@@ -149,7 +151,7 @@ extension APIGatewayClientCodeGenerator where TargetSupportType: ModelTargetSupp
         }
         
         fileBuilder.appendLine("""
-                            .product(name: "\(clientCodeGenerator.swift65WorkaroundTargetName)", package: "\(clientCodeGenerator.packageName)")
+                            .product(name: "\(clientCodeGenerator.swift56WorkaroundTargetName)", package: "\(clientCodeGenerator.packageName)")
                         ],
                         plugins: [
                             .plugin(name: "\(clientCodeGenerator.modelCodeGenPluginName)", package: "\(clientCodeGenerator.packageName)")
@@ -168,7 +170,7 @@ extension APIGatewayClientCodeGenerator where TargetSupportType: ModelTargetSupp
         fileBuilder.appendLine("""
                         .product(name: "AWSHttp", package: "smoke-aws-support"),
                         .product(name: "SmokeHTTPClient", package: "smoke-http"),
-                        .product(name: "\(clientCodeGenerator.swift65WorkaroundTargetName)", package: "\(clientCodeGenerator.packageName)")
+                        .product(name: "\(clientCodeGenerator.swift56WorkaroundTargetName)", package: "\(clientCodeGenerator.packageName)")
                         ],
                         plugins: [
                             .plugin(name: "\(clientCodeGenerator.clientCodeGenPluginName)", package: "\(clientCodeGenerator.packageName)")
