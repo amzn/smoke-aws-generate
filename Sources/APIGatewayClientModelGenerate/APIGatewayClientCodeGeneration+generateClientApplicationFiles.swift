@@ -18,19 +18,50 @@
 import Foundation
 import ServiceModelCodeGeneration
 
+public struct ClientCodeGenerator {
+    let packageName: String
+    let url: String
+    let fromVersion: String
+    let modelCodeGenPluginName: String
+    let clientCodeGenPluginName: String
+    // an additional target from the code generator package
+    // to work around https://github.com/apple/swift-package-manager/issues/4334 on Swift 5.6
+    let swift56WorkaroundTargetName: String
+    
+    public init(packageName: String, url: String, fromVersion: String, modelTargetName: String,
+                clientTargetName: String, swift65WorkaroundTargetName: String) {
+        self.packageName = packageName
+        self.url = url
+        self.fromVersion = fromVersion
+        self.modelCodeGenPluginName = modelTargetName
+        self.clientCodeGenPluginName = clientTargetName
+        self.swift56WorkaroundTargetName = swift65WorkaroundTargetName
+    }
+    
+    public static let this = Self(packageName: "smoke-aws-generate",
+                                  url: "https://github.com/amzn/smoke-aws-generate.git",
+                                  fromVersion: "3.0.0-rc.1",
+                                  modelTargetName: "APIGatewaySwiftGenerateModel",
+                                  clientTargetName: "APIGatewaySwiftGenerateClient",
+                                  swift65WorkaroundTargetName: "APIGatewayClientModelGenerate")
+}
+
 extension APIGatewayClientCodeGenerator where TargetSupportType: ModelTargetSupport & ClientTargetSupport {
     /**
      Generate the main Swift file for the generated application as a Container Server.
      */
     func generateClientApplicationFiles(modelLocation: ModelLocation,
-                                        modelPackageDependency: ModelPackageDependency?) {
+                                        modelPackageDependency: ModelPackageDependency?,
+                                        clientCodeGenerator: ClientCodeGenerator) {
         generatePackageFile(fileName: "Package.swift", modelLocation: modelLocation,
-                            modelPackageDependency: modelPackageDependency)
+                            modelPackageDependency: modelPackageDependency,
+                            clientCodeGenerator: clientCodeGenerator)
         generateGitIgnoreFile()
     }
     
     private func generatePackageFile(fileName: String, modelLocation: ModelLocation,
-                                     modelPackageDependency: ModelPackageDependency?) {
+                                     modelPackageDependency: ModelPackageDependency?,
+                                     clientCodeGenerator: ClientCodeGenerator) {
         let modelTargetName = self.targetSupport.modelTargetName
         let clientTargetName = self.targetSupport.clientTargetName
         
@@ -104,7 +135,7 @@ extension APIGatewayClientCodeGenerator where TargetSupportType: ModelTargetSupp
                     .package(url: "https://github.com/amzn/smoke-aws-support.git", from: "1.0.0"),
                     .package(url: "https://github.com/amzn/smoke-http.git", from: "2.14.0"),
                     .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
-                    .package(url: "https://github.com/amzn/smoke-aws-generate.git", from: "3.0.0-rc.1"),
+                    .package(url: "\(clientCodeGenerator.url)", from: "\(clientCodeGenerator.fromVersion)"),
                     ],
                 targets: [
                     // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -120,10 +151,10 @@ extension APIGatewayClientCodeGenerator where TargetSupportType: ModelTargetSupp
         }
         
         fileBuilder.appendLine("""
-                            .product(name: "APIGatewayClientModelGenerate", package: "smoke-aws-generate")
+                            .product(name: "\(clientCodeGenerator.swift56WorkaroundTargetName)", package: "\(clientCodeGenerator.packageName)")
                         ],
                         plugins: [
-                            .plugin(name: "APIGatewaySwiftGenerateModel", package: "smoke-aws-generate")
+                            .plugin(name: "\(clientCodeGenerator.modelCodeGenPluginName)", package: "\(clientCodeGenerator.packageName)")
                         ]
                     ),
                     .target(name: "\(clientTargetName)", dependencies: [
@@ -139,10 +170,10 @@ extension APIGatewayClientCodeGenerator where TargetSupportType: ModelTargetSupp
         fileBuilder.appendLine("""
                         .product(name: "AWSHttp", package: "smoke-aws-support"),
                         .product(name: "SmokeHTTPClient", package: "smoke-http"),
-                        .product(name: "APIGatewayClientModelGenerate", package: "smoke-aws-generate")
+                        .product(name: "\(clientCodeGenerator.swift56WorkaroundTargetName)", package: "\(clientCodeGenerator.packageName)")
                         ],
                         plugins: [
-                            .plugin(name: "APIGatewaySwiftGenerateClient", package: "smoke-aws-generate")
+                            .plugin(name: "\(clientCodeGenerator.clientCodeGenPluginName)", package: "\(clientCodeGenerator.packageName)")
                         ]
                     ),
                 ],

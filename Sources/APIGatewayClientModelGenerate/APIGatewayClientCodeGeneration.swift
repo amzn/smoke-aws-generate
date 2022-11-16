@@ -114,7 +114,8 @@ public struct APIGatewayClientCodeGeneration {
                                            modelTargetName: String, clientTargetName: String,
                                            modelPackageDependency: ModelPackageDependency?,
                                            applicationDescription: ApplicationDescription,
-                                           fileHeader: String?) {
+                                           fileHeader: String?,
+                                           clientCodeGenerator: ClientCodeGenerator = .this) {
         let targetSupport = ModelAndClientTargetSupport(modelTargetName: modelTargetName,
                                                         clientTargetName: clientTargetName)
         
@@ -122,11 +123,12 @@ public struct APIGatewayClientCodeGeneration {
                                                     targetSupport: targetSupport)
         
         codeGen.generateClientApplicationFiles(modelLocation: modelLocation,
-                                               modelPackageDependency: modelPackageDependency)
+                                               modelPackageDependency: modelPackageDependency,
+                                               clientCodeGenerator: clientCodeGenerator)
         codeGen.generateCodeGenDummyFile(targetName: modelTargetName,
-                                         plugin: "APIGatewaySwiftGenerateModel")
+                                         plugin: clientCodeGenerator.modelCodeGenPluginName)
         codeGen.generateCodeGenDummyFile(targetName: clientTargetName,
-                                         plugin: "APIGatewaySwiftGenerateClient")
+                                         plugin: clientCodeGenerator.clientCodeGenPluginName)
     }
 }
 
