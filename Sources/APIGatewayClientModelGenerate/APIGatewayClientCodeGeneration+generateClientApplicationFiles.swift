@@ -29,13 +29,13 @@ public struct ClientCodeGenerator {
     let swift56WorkaroundTargetName: String
     
     public init(packageName: String, url: String, fromVersion: String, modelTargetName: String,
-                clientTargetName: String, swift65WorkaroundTargetName: String) {
+                clientTargetName: String, swift56WorkaroundTargetName: String) {
         self.packageName = packageName
         self.url = url
         self.fromVersion = fromVersion
         self.modelCodeGenPluginName = modelTargetName
         self.clientCodeGenPluginName = clientTargetName
-        self.swift56WorkaroundTargetName = swift65WorkaroundTargetName
+        self.swift56WorkaroundTargetName = swift56WorkaroundTargetName
     }
     
     public static let this = Self(packageName: "smoke-aws-generate",
@@ -43,7 +43,7 @@ public struct ClientCodeGenerator {
                                   fromVersion: "3.0.0-rc.1",
                                   modelTargetName: "APIGatewaySwiftGenerateModel",
                                   clientTargetName: "APIGatewaySwiftGenerateClient",
-                                  swift65WorkaroundTargetName: "APIGatewayClientModelGenerate")
+                                  swift56WorkaroundTargetName: "APIGatewayClientModelGenerate")
 }
 
 extension APIGatewayClientCodeGenerator where TargetSupportType: ModelTargetSupport & ClientTargetSupport {
