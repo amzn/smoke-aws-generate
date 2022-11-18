@@ -19,8 +19,8 @@ import Foundation
 import ServiceModelEntities
 
 internal struct DynamoDBConfiguration {
-    static let modelOverride = ModelOverride(matchCase: ["AttributeValue"],
-                                             fieldRawTypeOverride: ["Long": CommonConfiguration.intOverride])
+    static let modelOverride = ModelOverride<NoModelTypeOverrides>(matchCase: ["AttributeValue"],
+                                                                   fieldRawTypeOverride: ["Long": CommonConfiguration.intOverride])
     
     static let httpClientConfiguration = HttpClientConfiguration(
         retryOnUnknownError: true,

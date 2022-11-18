@@ -22,7 +22,7 @@ import ServiceModelGenerate
 import CoralToJSONServiceModel
 
 extension ModelClientDelegate where TargetSupportType: ModelTargetSupport {
-    func addAWSClientFileHeader(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
+    func addAWSClientFileHeader(codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
                                 fileBuilder: FileBuilder, baseName: String,
                                 fileType: ClientFileType, defaultInvocationTraceContext: InvocationTraceContextDeclaration) {
         fileBuilder.appendLine("""

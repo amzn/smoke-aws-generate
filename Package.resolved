@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/amzn/openapi-swift-code-generate.git",
         "state": {
           "branch": null,
-          "revision": "f724141e19f151197b283ffe05acd7fc691f66d0",
-          "version": "1.0.0-beta.1"
+          "revision": "4210a8db0c2dc1e78bae9e302165c448d2ee361e",
+          "version": "1.0.0-rc.1"
         }
       },
       {
@@ -24,8 +24,8 @@
         "repositoryURL": "https://github.com/amzn/service-model-swift-code-generate.git",
         "state": {
           "branch": null,
-          "revision": "42c354dc16893d30d602bd24f8f570f20fc6206a",
-          "version": "3.0.0-rc.1"
+          "revision": "3cacd62f7290554185ffcf839ec75c4ee2584d8e",
+          "version": "3.0.0-rc.2"
         }
       },
       {
@@ -42,8 +42,8 @@
         "repositoryURL": "https://github.com/apple/swift-argument-parser",
         "state": {
           "branch": null,
-          "revision": "9f39744e025c7d377987f30b03770805dcb0bcd1",
-          "version": "1.1.4"
+          "revision": "fddd1c00396eed152c45a46bea9f47b98e59301d",
+          "version": "1.2.0"
         }
       },
       {

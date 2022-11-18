@@ -27,7 +27,7 @@ public struct SmokeAWSModelGenerate {
         modelFilePath: String,
         customizations: CodeGenerationCustomizations,
         applicationDescription: ApplicationDescription,
-        modelOverride: ModelOverride?,
+        modelOverride: ModelOverride<NoModelTypeOverrides>?,
         signAllHeaders: Bool) throws
     -> CoralToJSONServiceModel {
         return try ServiceModelGenerate.generateFromModel(
@@ -48,21 +48,22 @@ extension ServiceModelCodeGenerator where TargetSupportType: ModelTargetSupport 
     func generateFromCoralToJSONServiceModel(
             coralToJSONServiceModel: CoralToJSONServiceModel,
             asyncAwaitAPIs: CodeGenFeatureStatus,
-            signAllHeaders: Bool) throws {
+            signAllHeaders: Bool) throws
+    where ModelType == CoralToJSONServiceModel {
         let awsClientAttributes = coralToJSONServiceModel.getAWSClientAttributes()
         
-        let clientProtocolDelegate = ClientProtocolDelegate<TargetSupportType>(
+        let clientProtocolDelegate = ClientProtocolDelegate<CoralToJSONServiceModel, TargetSupportType>(
             baseName: applicationDescription.baseName,
             asyncAwaitAPIs: asyncAwaitAPIs)
-        let mockClientDelegate = MockAWSClientDelegate<TargetSupportType>(
+        let mockClientDelegate = MockAWSClientDelegate<CoralToJSONServiceModel, TargetSupportType>(
             baseName: applicationDescription.baseName,
             isThrowingMock: false,
             asyncAwaitAPIs: asyncAwaitAPIs)
-        let throwingClientDelegate = MockAWSClientDelegate<TargetSupportType>(
+        let throwingClientDelegate = MockAWSClientDelegate<CoralToJSONServiceModel, TargetSupportType>(
             baseName: applicationDescription.baseName,
             isThrowingMock: true,
             asyncAwaitAPIs: asyncAwaitAPIs)
-        let awsClientDelegate = AWSClientDelegate<TargetSupportType>(
+        let awsClientDelegate = AWSClientDelegate<CoralToJSONServiceModel, TargetSupportType>(
             baseName: applicationDescription.baseName,
             clientAttributes: awsClientAttributes,
             signAllHeaders: signAllHeaders,
@@ -88,7 +89,7 @@ extension ServiceModelCodeGenerator where TargetSupportType: ModelTargetSupport 
 
 public extension ServiceModelCodeGenerator where TargetSupportType: ModelTargetSupport & ClientTargetSupport {
     func generateAWSClient<DelegateType: ModelClientDelegate>(delegate: DelegateType, fileType: ClientFileType)
-    where DelegateType.TargetSupportType == TargetSupportType {
+    where DelegateType.TargetSupportType == TargetSupportType, DelegateType.ModelType == ModelType {
         let defaultTraceContextType = DefaultTraceContextType(typeName: "AWSClientInvocationTraceContext",
                                                               importTargetName: "AWSHttp")
         generateClient(delegate: delegate, fileType: fileType, defaultTraceContextType: defaultTraceContextType)

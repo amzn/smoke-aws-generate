@@ -295,7 +295,7 @@ public struct CoralToJSONServiceModel: Decodable {
 
 /// Use CoralToJSONModel as a ServiceModel
 extension CoralToJSONServiceModel: ServiceModel {
-    public static func create(data: Data, modelFormat: ModelFormat, modelOverride: ModelOverride?) throws -> CoralToJSONServiceModel {
+    public static func create(data: Data, modelFormat: ModelFormat, modelOverride: ModelOverride<OverridesType>?) throws -> CoralToJSONServiceModel {
         let decoder = JSONDecoder()
         
         return try decoder.decode(CoralToJSONServiceModel.self, from: data)

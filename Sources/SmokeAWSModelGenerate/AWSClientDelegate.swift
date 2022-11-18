@@ -23,7 +23,7 @@ import ServiceModelEntities
  A ModelClientDelegate that can be used to generate an
  AWS Client from a Service Model.
  */
-public struct AWSClientDelegate<TargetSupportType>: ModelClientDelegate
+public struct AWSClientDelegate<ModelType: ServiceModel, TargetSupportType>: ModelClientDelegate
 where TargetSupportType: ModelTargetSupport {
     public let clientType: ClientType
     public let clientAttributes: AWSClientAttributes
@@ -71,7 +71,7 @@ where TargetSupportType: ModelTargetSupport {
         self.signAllHeaders = signAllHeaders
     }
     
-    public func addTypeDescription(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
+    public func addTypeDescription(codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
                                    delegate: Self,
                                    fileBuilder: FileBuilder,
                                    entityType: ClientEntityType) {
@@ -86,7 +86,7 @@ where TargetSupportType: ModelTargetSupport {
         }
     }
     
-    public func addCustomFileHeader(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
+    public func addCustomFileHeader(codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
                                     delegate: Self,
                                     fileBuilder: FileBuilder,
                                     fileType: ClientFileType) {
@@ -94,7 +94,7 @@ where TargetSupportType: ModelTargetSupport {
                                defaultInvocationTraceContext: self.clientAttributes.defaultInvocationTraceContext)
     }
     
-    public func addCommonFunctions(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
+    public func addCommonFunctions(codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
                                    delegate: Self,
                                    fileBuilder: FileBuilder,
                                    sortedOperations: [(String, OperationDescription)],
@@ -109,7 +109,7 @@ where TargetSupportType: ModelTargetSupport {
                                     entityType: entityType)
     }
     
-    public func addOperationBody(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
+    public func addOperationBody(codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
                                  delegate: Self,
                                  fileBuilder: FileBuilder,
                                  invokeType: InvokeType,

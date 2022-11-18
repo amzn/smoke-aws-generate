@@ -42,7 +42,7 @@ internal struct SimpleQueueConfiguration {
          "TagQueue": overrideInputDescription,
          "UntagQueue": overrideInputDescription]
     
-    static let modelOverride = ModelOverride(
+    static let modelOverride = ModelOverride<NoModelTypeOverrides>(
         operationInputOverrides: operationInputOverrides,
         codingKeyOverrides: ["ReceiveMessageResult.Messages": "Message",
                              "ChangeMessageVisibilityBatchRequest.Entries": "ChangeMessageVisibilityBatchRequestEntry",

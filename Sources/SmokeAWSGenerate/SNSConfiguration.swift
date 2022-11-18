@@ -19,7 +19,7 @@ import Foundation
 import ServiceModelEntities
 
 internal struct SNSConfiguration {
-    static let modelOverride = ModelOverride(
+    static let modelOverride = ModelOverride<NoModelTypeOverrides>(
         codingKeyOverrides: ["AuthorizationErrorException.message": "Message",
                              "EndpointDisabledException.message": "Message",
                              "FilterPolicyLimitExceededException.message": "Message",

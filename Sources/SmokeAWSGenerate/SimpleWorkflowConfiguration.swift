@@ -19,7 +19,7 @@ import Foundation
 import ServiceModelEntities
 
 internal struct SimpleWorkflowConfiguration {
-    static let modelOverride = ModelOverride(
+    static let modelOverride = ModelOverride<NoModelTypeOverrides>(
         fieldRawTypeOverride:
             [Fields.timestamp.typeDescription: CommonConfiguration.integerDateOverride,
              "Long": CommonConfiguration.intOverride])
