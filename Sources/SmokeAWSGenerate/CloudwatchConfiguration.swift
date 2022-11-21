@@ -19,7 +19,7 @@ import Foundation
 import ServiceModelEntities
 
 internal struct CloudwatchConfiguration {
-    static let modelOverride = ModelOverride(fieldRawTypeOverride: ["Long": CommonConfiguration.intOverride])
+    static let modelOverride = ModelOverride<NoModelTypeOverrides>(fieldRawTypeOverride: ["Long": CommonConfiguration.intOverride])
     
     static let httpClientConfiguration = HttpClientConfiguration(
         retryOnUnknownError: true,

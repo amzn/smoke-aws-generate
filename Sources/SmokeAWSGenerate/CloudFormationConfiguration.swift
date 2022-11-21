@@ -38,7 +38,7 @@ private let additionalErrors: Set<String> = [
     "ValidationError"]
 
 internal struct CloudFormationConfiguration {
-    static let modelOverride = ModelOverride(enumerations:
+    static let modelOverride = ModelOverride<NoModelTypeOverrides>(enumerations:
         EnumerationNaming(usingUpperCamelCase: ["ChangeSource", "ChangeAction", "ChangeType", "EvaluationType",
                                                 "HandlerErrorCode", "Replacement", "RequiresRecreation", "ResourceAttribute"]),
                                              additionalErrors: additionalErrors)

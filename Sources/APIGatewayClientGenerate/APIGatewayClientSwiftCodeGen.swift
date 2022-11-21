@@ -15,7 +15,7 @@ enum ModelFormat: String, Codable {
 struct APIGatewayClientSwiftCodeGen: Decodable {
     let modelFormat: ModelFormat?
     let baseName: String
-    let modelOverride: ModelOverride?
+    let modelOverride: ModelOverride<NoModelTypeOverrides>?
     let httpClientConfiguration: HttpClientConfiguration?
     let shapeProtocols: CodeGenFeatureStatus?
     let eventLoopFutureClientAPIs: CodeGenFeatureStatus?

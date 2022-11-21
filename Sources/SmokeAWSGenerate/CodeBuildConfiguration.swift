@@ -19,7 +19,7 @@ import Foundation
 import ServiceModelEntities
 
 internal struct CodeBuildConfiguration {
-    static let modelOverride = ModelOverride(matchCase: [])
+    static let modelOverride = ModelOverride<NoModelTypeOverrides>(matchCase: [])
     
     static let httpClientConfiguration = HttpClientConfiguration(
         retryOnUnknownError: true,

@@ -37,7 +37,7 @@ public struct APIGatewayClientCodeGeneration {
         modelTargetName: String, clientTargetName: String,
         customizations: CodeGenerationCustomizations,
         applicationDescription: ApplicationDescription,
-        modelOverride: ModelOverride?) throws
+        modelOverride: ModelOverride<ModelType.OverridesType>?) throws
     -> ModelType {
         let targetSupport = ModelAndClientTargetSupport(modelTargetName: modelTargetName,
                                                         clientTargetName: clientTargetName)
@@ -64,7 +64,7 @@ public struct APIGatewayClientCodeGeneration {
         modelTargetName: String, clientTargetName: String,
         customizations: CodeGenerationCustomizations,
         applicationDescription: ApplicationDescription,
-        modelOverride: ModelOverride?) throws {
+        modelOverride: ModelOverride<ModelType.OverridesType>?) throws {
             let targetSupport = ModelAndClientTargetSupport(modelTargetName: modelTargetName,
                                                             clientTargetName: clientTargetName)
             
@@ -90,7 +90,7 @@ public struct APIGatewayClientCodeGeneration {
         modelTargetName: String, clientTargetName: String,
         customizations: CodeGenerationCustomizations,
         applicationDescription: ApplicationDescription,
-        modelOverride: ModelOverride?) throws {
+        modelOverride: ModelOverride<ModelType.OverridesType>?) throws {
             let targetSupport = ModelAndClientTargetSupport(modelTargetName: modelTargetName,
                                                             clientTargetName: clientTargetName)
             
@@ -160,12 +160,12 @@ struct APIGatewayClientCodeGenerator<TargetSupportType> {
 
 extension ServiceModelCodeGenerator where TargetSupportType: ModelTargetSupport & ClientTargetSupport {
     
-    func generateFromModel<ModelType: ServiceModel>(serviceModel: ModelType,
-                                                    generationType: GenerationType,
-                                                    asyncAwaitAPIs: CodeGenFeatureStatus,
-                                                    eventLoopFutureClientAPIs: CodeGenFeatureStatus,
-                                                    minimumCompilerSupport: MinimumCompilerSupport,
-                                                    clientConfigurationType: ClientConfigurationType) throws {
+    func generateFromModel(serviceModel: ModelType,
+                           generationType: GenerationType,
+                           asyncAwaitAPIs: CodeGenFeatureStatus,
+                           eventLoopFutureClientAPIs: CodeGenFeatureStatus,
+                           minimumCompilerSupport: MinimumCompilerSupport,
+                           clientConfigurationType: ClientConfigurationType) throws {
         switch generationType {
         case .codeGenModel:
             let awsModelErrorsDelegate = APIGatewayClientModelErrorsDelegate()
@@ -176,24 +176,24 @@ extension ServiceModelCodeGenerator where TargetSupportType: ModelTargetSupport 
             generateModelErrors(delegate: awsModelErrorsDelegate)
             generateDefaultInstances(generationType: .internalTypes)
         case .codeGenClient:
-            let clientProtocolDelegate = ClientProtocolDelegate<TargetSupportType>(
+            let clientProtocolDelegate = ClientProtocolDelegate<ModelType, TargetSupportType>(
                 baseName: applicationDescription.baseName,
                 asyncAwaitAPIs: asyncAwaitAPIs,
                 eventLoopFutureClientAPIs: eventLoopFutureClientAPIs,
                 minimumCompilerSupport: minimumCompilerSupport)
-            let mockClientDelegate = MockAWSClientDelegate<TargetSupportType>(
+            let mockClientDelegate = MockAWSClientDelegate<ModelType, TargetSupportType>(
                 baseName: applicationDescription.baseName,
                 isThrowingMock: false,
                 asyncAwaitAPIs: asyncAwaitAPIs,
                 eventLoopFutureClientAPIs: eventLoopFutureClientAPIs,
                 minimumCompilerSupport: minimumCompilerSupport)
-            let throwingClientDelegate = MockAWSClientDelegate<TargetSupportType>(
+            let throwingClientDelegate = MockAWSClientDelegate<ModelType, TargetSupportType>(
                 baseName: applicationDescription.baseName,
                 isThrowingMock: true,
                 asyncAwaitAPIs: asyncAwaitAPIs,
                 eventLoopFutureClientAPIs: eventLoopFutureClientAPIs,
                 minimumCompilerSupport: minimumCompilerSupport)
-            let apiGatewayClientDelegate = APIGatewayClientDelegate<TargetSupportType>(
+            let apiGatewayClientDelegate = APIGatewayClientDelegate<ModelType, TargetSupportType>(
                 baseName: applicationDescription.baseName,
                 asyncAwaitAPIs: asyncAwaitAPIs,
                 eventLoopFutureClientAPIs: eventLoopFutureClientAPIs,

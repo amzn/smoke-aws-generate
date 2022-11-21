@@ -20,7 +20,7 @@ import ServiceModelEntities
 
 internal struct ECRConfiguration {
     
-    static let modelOverride = ModelOverride(
+    static let modelOverride = ModelOverride<NoModelTypeOverrides>(
         enumerations: EnumerationNaming(usingUpperCamelCase: ["ImageFailureCode", "LayerFailureCode"]),
         fieldRawTypeOverride:
             [Fields.timestamp.typeDescription: CommonConfiguration.longDateOverride])

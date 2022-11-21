@@ -19,7 +19,7 @@ import Foundation
 import ServiceModelEntities
 
 internal struct StepFunctionsConfiguration {
-    static let modelOverride = ModelOverride(
+    static let modelOverride = ModelOverride<NoModelTypeOverrides>(
         enumerations: EnumerationNaming(usingUpperCamelCase:
             ["DecisionType", "EventType", "HistoryEventType"]),
         fieldRawTypeOverride:

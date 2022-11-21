@@ -246,7 +246,7 @@ struct ServiceModelDetails {
     let serviceName: String
     let serviceVersion: String
     let baseName: String
-    let modelOverride: ModelOverride?
+    let modelOverride: ModelOverride<NoModelTypeOverrides>?
     let httpClientConfiguration: HttpClientConfiguration
     let signAllHeaders: Bool
 }

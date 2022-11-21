@@ -19,7 +19,7 @@ import Foundation
 import ServiceModelEntities
 
 internal struct CodePipelineConfiguration {
-    static let modelOverride = ModelOverride(
+    static let modelOverride = ModelOverride<NoModelTypeOverrides>(
         enumerations: EnumerationNaming(usingUpperCamelCase: ["ActionConfigurationPropertyType",
                                                               "ActionExecutionStatus",
                                                               "ActionOwner.ThirdParty",

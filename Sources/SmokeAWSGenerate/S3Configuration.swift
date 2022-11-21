@@ -30,7 +30,7 @@ internal struct S3Configuration {
         retriableUnknownErrors: [],
         additionalClients: ["dataHttpClient": additionalHttpClient])
     
-    static let modelOverride = ModelOverride(enumerations:
+    static let modelOverride = ModelOverride<NoModelTypeOverrides>(enumerations:
         EnumerationNaming(usingUpperCamelCase: ["Event"]),
                                              fieldRawTypeOverride: ["Long": CommonConfiguration.intOverride])
     

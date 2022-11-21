@@ -23,7 +23,7 @@ import ServiceModelEntities
  A ModelClientDelegate that can be used to generate an
  API Gateway Client from a Service Model.
  */
-public struct APIGatewayClientDelegate<TargetSupportType>: ModelClientDelegate
+public struct APIGatewayClientDelegate<ModelType: ServiceModel, TargetSupportType>: ModelClientDelegate
 where TargetSupportType: ModelTargetSupport {
     public let clientType: ClientType
     public let baseName: String
@@ -74,7 +74,7 @@ where TargetSupportType: ModelTargetSupport {
         self.defaultInvocationTraceContext = defaultInvocationTraceContext
     }
     
-    public func addTypeDescription(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
+    public func addTypeDescription(codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
                                    delegate: Self,
                                    fileBuilder: FileBuilder,
                                    entityType: ClientEntityType) {
@@ -98,7 +98,7 @@ where TargetSupportType: ModelTargetSupport {
         }
     }
     
-    public func addCustomFileHeader(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
+    public func addCustomFileHeader(codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
                                     delegate: Self,
                                     fileBuilder: FileBuilder,
                                     fileType: ClientFileType) {
@@ -106,7 +106,7 @@ where TargetSupportType: ModelTargetSupport {
                                defaultInvocationTraceContext: self.defaultInvocationTraceContext)
     }
     
-    public func addCommonFunctions(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
+    public func addCommonFunctions(codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
                                    delegate: Self,
                                    fileBuilder: FileBuilder,
                                    sortedOperations: [(String, OperationDescription)],
@@ -129,7 +129,7 @@ where TargetSupportType: ModelTargetSupport {
                                     entityType: entityType)
     }
     
-    public func addOperationBody(codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
+    public func addOperationBody(codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
                                  delegate: Self,
                                  fileBuilder: FileBuilder, invokeType: InvokeType,
                                  operationName: String,
@@ -157,7 +157,7 @@ where TargetSupportType: ModelTargetSupport {
     
     private func addAPIGatewayClientOperationBody(
             operationName: String,
-            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
+            codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
             fileBuilder: FileBuilder,
             function: APIGatewayClientFunction,
             httpVerb: String,

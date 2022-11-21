@@ -371,7 +371,7 @@ private let additionalErrors: Set<String> = [
         "Unavailable"]
 
 internal struct EC2Configuration {
-    static let modelOverride = ModelOverride(
+    static let modelOverride = ModelOverride<NoModelTypeOverrides>(
         fieldRawTypeOverride: ["Long": CommonConfiguration.intOverride],
         additionalErrors: additionalErrors)
     

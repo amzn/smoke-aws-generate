@@ -23,7 +23,7 @@ internal extension AWSClientDelegate {
     func addAWSClientQueryOperationBody(
             name: String,
             fileBuilder: FileBuilder,
-            codeGenerator: ServiceModelCodeGenerator<TargetSupportType>,
+            codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
             function: AWSClientFunction,
             http: (verb: String, url: String),
             invokeType: InvokeType,
