@@ -114,6 +114,21 @@ internal extension AWSClientDelegate {
                 retryConfiguration: retryConfiguration,
                 retryOnError: retryOnErrorProvider)
             """
+        case .asyncFunction:
+            return """
+            do {
+                return try await \(httpClientName).executeRetriableWithOutput(
+                    endpointPath: "\(http.url)",
+                    httpMethod: .\(http.verb),
+                    input: requestInput,
+                    invocationContext: invocationContext,
+                    retryConfiguration: retryConfiguration,
+                    retryOnError: retryOnErrorProvider)
+            } catch {
+                let typedError: \(baseName)Error = error.asTypedError()
+                throw typedError
+            }
+            """
         }
     }
     
@@ -147,6 +162,21 @@ internal extension AWSClientDelegate {
                 invocationContext: invocationContext,
                 retryConfiguration: retryConfiguration,
                 retryOnError: retryOnErrorProvider)
+            """
+        case .asyncFunction:
+            return """
+            do {
+                try await \(httpClientName).executeRetriableWithoutOutput(
+                    endpointPath: "\(http.url)",
+                    httpMethod: .\(http.verb),
+                    input: requestInput,
+                    invocationContext: invocationContext,
+                    retryConfiguration: retryConfiguration,
+                    retryOnError: retryOnErrorProvider)
+            } catch {
+                let typedError: \(baseName)Error = error.asTypedError()
+                throw typedError
+            }
             """
         }
     }
