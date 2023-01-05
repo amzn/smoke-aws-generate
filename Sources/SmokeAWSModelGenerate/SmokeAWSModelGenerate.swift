@@ -57,12 +57,20 @@ extension ServiceModelCodeGenerator {
         
         let clientProtocolDelegate = ClientProtocolDelegate(
             baseName: applicationDescription.baseName)
+        let clientProtocolDelegateV2 = ClientProtocolDelegate(
+            baseName: applicationDescription.baseName, protocolAPIShape: .structuredConcurrency)
         let mockClientDelegate = MockClientDelegate(
             baseName: applicationDescription.baseName,
             isThrowingMock: false)
+        let mockClientDelegateV2 = MockClientDelegate(
+            baseName: applicationDescription.baseName,
+            isThrowingMock: false, clientAPIShape: .structuredConcurrency)
         let throwingClientDelegate = MockClientDelegate(
             baseName: applicationDescription.baseName,
             isThrowingMock: true)
+        let throwingClientDelegateV2 = MockClientDelegate(
+            baseName: applicationDescription.baseName,
+            isThrowingMock: true, clientAPIShape: .structuredConcurrency)
         let awsClientDelegate = AWSClientDelegate(
             baseName: applicationDescription.baseName,
             clientAttributes: awsClientAttributes,
@@ -73,9 +81,12 @@ extension ServiceModelCodeGenerator {
                                                             baseName: applicationDescription.baseName)
         
         generateClient(delegate: clientProtocolDelegate, isGenerator: false)
+        generateClient(delegate: clientProtocolDelegateV2, isGenerator: false, clientAPISupport: .structuredConcurrency)
         generateClient(delegate: mockClientDelegate, isGenerator: false)
         generateClient(delegate: throwingClientDelegate, isGenerator: false)
-        generateClient(delegate: awsClientDelegate, isGenerator: false)
+        generateClient(delegate: mockClientDelegateV2, isGenerator: false, clientAPISupport: .structuredConcurrency)
+        generateClient(delegate: throwingClientDelegateV2, isGenerator: false, clientAPISupport: .structuredConcurrency)
+                generateClient(delegate: awsClientDelegate, isGenerator: false, clientAPISupport: [.syncAndCallback, .structuredConcurrency])
         generateClient(delegate: awsClientDelegate, isGenerator: true)
         generateProtocolAsyncExtensions()
         generateModelOperationsEnum()

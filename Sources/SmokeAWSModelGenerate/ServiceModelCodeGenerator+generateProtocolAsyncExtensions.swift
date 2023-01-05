@@ -165,7 +165,7 @@ public extension ServiceModelCodeGenerator {
         fileBuilder.incIndent()
         
         fileBuilder.appendLine("""
-            return try await withUnsafeThrowingContinuation { cont in
+            return try await withCheckedThrowingContinuation { cont in
             """)
         fileBuilder.incIndent()
         

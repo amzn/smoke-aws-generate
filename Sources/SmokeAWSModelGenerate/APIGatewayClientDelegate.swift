@@ -159,6 +159,21 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                         retryConfiguration: retryConfiguration,
                         retryOnError: retryOnErrorProvider)
                     """
+            case .asyncFunction:
+                return """
+                    do {
+                        return try await \(httpClientName).executeRetriableWithOutput(
+                            endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(functionName).operationPath,
+                            httpMethod: .\(httpVerb),
+                            input: requestInput,
+                            invocationContext: invocationContext,
+                            retryConfiguration: retryConfiguration,
+                            retryOnError: retryOnErrorProvider)
+                    } catch {
+                        let typedError: \(baseName)Error = error.asTypedError()
+                        throw typedError
+                    }
+                    """
             }
         } else {
             switch invokeType {
@@ -187,6 +202,21 @@ public struct APIGatewayClientDelegate: ModelClientDelegate {
                         invocationContext: invocationContext,
                         retryConfiguration: retryConfiguration,
                         retryOnError: retryOnErrorProvider)
+                    """
+            case .asyncFunction:
+                return """
+                    do {
+                        try await \(httpClientName).executeRetriableWithoutOutput(
+                            endpointPath: "/\\(stage)" + \(baseName)ModelOperations.\(functionName).operationPath,
+                            httpMethod: .\(httpVerb),
+                            input: requestInput,
+                            invocationContext: invocationContext,
+                            retryConfiguration: retryConfiguration,
+                            retryOnError: retryOnErrorProvider)
+                        } catch {
+                            let typedError: \(baseName)Error = error.asTypedError()
+                            throw typedError
+                        }
                     """
             }
         }
