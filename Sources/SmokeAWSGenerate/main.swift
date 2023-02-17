@@ -36,7 +36,7 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.44.114"
+let goRepositoryTag = "v1.44.174"
 
 let fileHeader = """
     // Copyright 2018-2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
