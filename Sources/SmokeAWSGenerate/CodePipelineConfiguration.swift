@@ -29,7 +29,9 @@ internal struct CodePipelineConfiguration {
                                                               "PipelineExecutionStatus",
                                                               "StageExecutionStatus",
                                                               "TriggerType"]
-        ))
+        ),
+        fieldRawTypeOverride:
+            [Fields.timestamp.typeDescription: CommonConfiguration.integerDateOverride])
     
     static let httpClientConfiguration = HttpClientConfiguration(
         retryOnUnknownError: true,

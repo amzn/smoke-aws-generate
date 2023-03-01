@@ -126,7 +126,9 @@ where TargetSupportType: ModelTargetSupport {
                                     contentType: contentType,
                                     sortedOperations: sortedOperations,
                                     defaultInvocationTraceContext: self.defaultInvocationTraceContext,
-                                    entityType: entityType)
+                                    entityType: entityType,
+                                    awsCustomization: AWSCodeGenerationCustomizations(
+                                        contentTypeHeaderOverride: nil))
     }
     
     public func addOperationBody(codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,

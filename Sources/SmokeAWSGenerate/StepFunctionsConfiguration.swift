@@ -24,14 +24,16 @@ internal struct StepFunctionsConfiguration {
             ["DecisionType", "EventType", "HistoryEventType"]),
         fieldRawTypeOverride:
             [Fields.timestamp.typeDescription: CommonConfiguration.integerDateOverride,
-             "Long": CommonConfiguration.intOverride])
-    
+             "Long": CommonConfiguration.intOverride],
+        additionalErrors: ["ThrottlingException"])
+
     static let httpClientConfiguration = HttpClientConfiguration(
         retryOnUnknownError: true,
         knownErrorsDefaultRetryBehavior: .fail,
         unretriableUnknownErrors: [],
         retriableUnknownErrors: ["ActivityLimitExceeded", "ActivityWorkerLimitExceeded",
-                                 "ExecutionLimitExceeded", "StateMachineLimitExceeded"])
+                                 "ExecutionLimitExceeded", "StateMachineLimitExceeded",
+                                 "ThrottlingException"])
     
     static let serviceModelDetails = ServiceModelDetails(
         serviceName: "states", serviceVersion: "2016-11-23",

@@ -37,10 +37,10 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.38.57"
+let goRepositoryTag = "v1.44.174"
 
 let fileHeader = """
-    // Copyright 2018-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+    // Copyright 2018-2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
     //
     // Licensed under the Apache License, Version 2.0 (the "License").
     // You may not use this file except in compliance with the License.
@@ -114,9 +114,7 @@ func getPackageTargetEntriesPackageFile(name: String) -> String {
                     .target(
                         name: "\(name)Client", dependencies: [
                             .target(name: "\(name)Model"),
-                            .target(name: "SmokeAWSHttp"),
-                            .target(name: "_SmokeAWSHttpConcurrency"),
-                            .product(name: "_NIOConcurrency", package: "swift-nio"),
+                            .product(name: "AWSHttp", package: "smoke-aws-support"),
                         ]),
                     .target(
                         name: "\(name)Model", dependencies: [
@@ -128,7 +126,7 @@ func getPackageTargetEntriesPackageFile(name: String) -> String {
 func generatePackageFile(baseNames: [String]) -> String {
     
     var packageFileContents = """
-        // swift-tools-version:5.2
+        // swift-tools-version:5.5
         //
         \(fileHeader)
         
@@ -137,7 +135,7 @@ func generatePackageFile(baseNames: [String]) -> String {
         let package = Package(
             name: "smoke-aws",
             platforms: [
-                .macOS(.v10_15), .iOS(.v10)
+                .macOS(.v10_15), .iOS(.v13), .tvOS(.v13)
                 ],
             products: [\n
         """
@@ -148,27 +146,14 @@ func generatePackageFile(baseNames: [String]) -> String {
 
     packageFileContents += """
                 .library(
-                    name: "SmokeAWSCore",
-                    targets: ["SmokeAWSCore"]),
-                .library(
-                    name: "SmokeAWSHttp",
-                    targets: ["SmokeAWSHttp"]),
-                .library(
-                    name: "_SmokeAWSHttpConcurrency",
-                    targets: ["_SmokeAWSHttpConcurrency"]),
-                .library(
                     name: "SmokeAWSMetrics",
                     targets: ["SmokeAWSMetrics"]),
             ],
             dependencies: [
-                .package(url: "https://github.com/apple/swift-nio.git", from: "2.28.0"),
-                .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.0.0"),
                 .package(url: "https://github.com/apple/swift-log", from: "1.0.0"),
                 .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
-                .package(url: "https://github.com/LiveUI/XMLCoding.git", from: "0.4.1"),
-                .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.5.1"),
-                .package(url: "https://github.com/amzn/smoke-http.git", from: "2.8.0"),
-                .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"),
+                .package(path: "/Users/simonpi/Packages/smoke-http"),
+                .package(path: "/Users/simonpi/Packages/smoke-aws-support"),
             ],
             targets: [\n
         """
@@ -178,31 +163,6 @@ func generatePackageFile(baseNames: [String]) -> String {
     }
     
     packageFileContents += """
-                .target(
-                    name: "SmokeAWSCore", dependencies: [
-                        .product(name: "Logging", package: "swift-log"),
-                        .product(name: "Metrics", package: "swift-metrics"),
-                        .product(name: "XMLCoding", package: "XMLCoding"),
-                        .product(name: "SmokeHTTPClient", package: "smoke-http"),
-                    ]),
-                .target(
-                    name: "SmokeAWSHttp", dependencies: [
-                        .product(name: "Logging", package: "swift-log"),
-                        .product(name: "NIO", package: "swift-nio"),
-                        .product(name: "NIOHTTP1", package: "swift-nio"),
-                        .target(name: "SmokeAWSCore"),
-                        .product(name: "SmokeHTTPClient", package: "smoke-http"),
-                        .product(name: "QueryCoding", package: "smoke-http"),
-                        .product(name: "HTTPPathCoding", package: "smoke-http"),
-                        .product(name: "HTTPHeadersCoding", package: "smoke-http"),
-                        .product(name: "Crypto", package: "swift-crypto"),
-                        .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
-                    ]),
-                .target(
-                    name: "_SmokeAWSHttpConcurrency", dependencies: [
-                        .target(name: "SmokeAWSHttp"),
-                        .product(name: "_SmokeHTTPClientConcurrency", package: "smoke-http"),
-                    ]),
                 .target(
                     name: "SmokeAWSMetrics", dependencies: [
                         .product(name: "Logging", package: "swift-log"),
@@ -233,6 +193,10 @@ func generatePackageFile(baseNames: [String]) -> String {
                     name: "RDSClientTests", dependencies: [
                         .target(name: "RDSClient"),
                     ]),
+                .testTarget(
+                    name: "AppConfigClientTests", dependencies: [
+                        .target(name: "AppConfigClient"),
+                    ]),
             ],
             swiftLanguageVersions: [.v5]
         )
@@ -249,6 +213,23 @@ struct ServiceModelDetails {
     let modelOverride: ModelOverride<NoModelTypeOverrides>?
     let httpClientConfiguration: HttpClientConfiguration
     let signAllHeaders: Bool
+    let awsCodeGenerationCustomizations: AWSCodeGenerationCustomizations
+
+    init(serviceName: String,
+         serviceVersion: String,
+         baseName: String,
+         modelOverride: ModelOverride<NoModelTypeOverrides>?,
+         httpClientConfiguration: HttpClientConfiguration,
+         signAllHeaders: Bool,
+         awsCodeGenerationCustomizations: AWSCodeGenerationCustomizations = AWSCodeGenerationCustomizations(contentTypeHeaderOverride: nil)) {
+        self.serviceName = serviceName
+        self.serviceVersion = serviceVersion
+        self.baseName = baseName
+        self.modelOverride = modelOverride
+        self.httpClientConfiguration = httpClientConfiguration
+        self.signAllHeaders = signAllHeaders
+        self.awsCodeGenerationCustomizations = awsCodeGenerationCustomizations
+    }
 }
 
 private func generateSmokeAWS(tempDirURL: URL,
@@ -262,10 +243,17 @@ private func generateSmokeAWS(tempDirURL: URL,
     if FileManager.default.fileExists(atPath: modelBaseFilePath, isDirectory: &isDirectory) {
         try FileManager.default.removeItem(at: modelBase)
     }
-    
-    _ = call(arguments: ["git", "clone", "--branch", goRepositoryTag, "https://github.com/aws/\(repositoryName).git", modelBaseFilePath])
-    
+
+    print("Cloning \(repositoryName) model @ \(goRepositoryTag)")
+
+    _ = call(arguments: ["git", "clone", "--branch", goRepositoryTag, "--depth=1", "https://github.com/aws/\(repositoryName).git",
+                         modelBaseFilePath])
+
+    print("Cloned \(repositoryName) model to \(modelBaseFilePath)")
+
     try serviceModelDetails.forEach { (details) in
+        print("Generating model for \(details.baseName)")
+
         let applicationDescription = "The \(details.baseName)Service."
         
         let unrecognizedErrorDeclaration =
@@ -275,6 +263,9 @@ private func generateSmokeAWS(tempDirURL: URL,
             validationErrorDeclaration: .internal,
             unrecognizedErrorDeclaration: unrecognizedErrorDeclaration,
             asyncAwaitAPIs: .enabled,
+            eventLoopFutureClientAPIs: .disabled,
+            minimumCompilerSupport: .v5_6,
+            clientConfigurationType: .configurationObject,
             generateModelShapeConversions: false,
             optionalsInitializeEmpty: true,
             fileHeader: fileHeader,
@@ -296,6 +287,7 @@ private func generateSmokeAWS(tempDirURL: URL,
         _ = try SmokeAWSModelGenerate.generateFromModel(
             modelFilePath: modelFilePath,
             customizations: customizations,
+            awsCustomizations: details.awsCodeGenerationCustomizations,
             applicationDescription: fullApplicationDescription,
             modelOverride: details.modelOverride,
             signAllHeaders: details.signAllHeaders)
@@ -343,8 +335,9 @@ func handleApplication(baseFilePath: String) throws {
         RDSDataConfiguration.serviceModelDetails,
         // disabled; currently untested
         //CodeBuildConfiguration.serviceModelDetails,
-        //CodePipelineConfiguration.serviceModelDetails,
-        ECRConfiguration.serviceModelDetails]
+        CodePipelineConfiguration.serviceModelDetails,
+        ECRConfiguration.serviceModelDetails,
+        AppConfigConfiguration.serviceModelDetails]
     
     var errorMessage: String?
     let tempDirURL = createTempDirectory(errorMessage: &errorMessage)

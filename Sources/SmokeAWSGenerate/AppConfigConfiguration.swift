@@ -11,30 +11,39 @@
 // express or implied. See the License for the specific language governing
 // permissions and limitations under the License.
 //
-// DynamoDBConfiguration.swift
+// AppConfigConfiguration.swift
 // SmokeAWSGenerate
 //
 
 import Foundation
 import ServiceModelEntities
 
-internal struct DynamoDBConfiguration {
+private let errorTypeHTTPHeaderName = "x-amzn-ErrorType"
+
+internal struct AppConfigConfiguration {
     static let modelOverride = ModelOverride<NoModelTypeOverrides>(
-        matchCase: ["AttributeValue"],
-        fieldRawTypeOverride: ["Long": CommonConfiguration.intOverride],
-        additionalErrors: ["ThrottlingException"])
+        namedFieldOverride: ["Tags": "[:] as [String:String]"],
+        codingKeyOverrides: ["AppConfigError.message": "Message"],
+        additionalErrors: ["AccessDeniedException"])
+    
+    static let additionalHttpClient = AdditionalHttpClient(
+        clientDelegateNameOverride: "DataAWSHttpClientDelegate",
+        clientDelegateParameters: ["errorTypeHTTPHeader: \"\(errorTypeHTTPHeaderName)\""],
+        operations: ["GetConfiguration", "GetHostedConfigurationVersion"])
     
     static let httpClientConfiguration = HttpClientConfiguration(
         retryOnUnknownError: true,
         knownErrorsDefaultRetryBehavior: .fail,
         unretriableUnknownErrors: [],
-        retriableUnknownErrors: ["ItemCollectionSizeLimitExceededException", "LimitExceededException",
-                                 "ProvisionedThroughputExceededException", "RequestLimitExceeded", "InternalServerError",
-                                 "ThrottlingException"])
+        retriableUnknownErrors: [],
+        clientDelegateParameters: ["errorTypeHTTPHeader: \"\(errorTypeHTTPHeaderName)\""],
+        additionalClients: ["dataHttpClient": additionalHttpClient])
     
     static let serviceModelDetails = ServiceModelDetails(
-        serviceName: "dynamodb", serviceVersion: "2012-08-10",
-        baseName: "DynamoDB", modelOverride: modelOverride,
+        serviceName: "appconfig",
+        serviceVersion: "2019-10-09",
+        baseName: "AppConfig",
+        modelOverride: modelOverride,
         httpClientConfiguration: httpClientConfiguration,
         signAllHeaders: false)
 }

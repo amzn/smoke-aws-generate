@@ -28,8 +28,7 @@ extension ModelClientDelegate where TargetSupportType: ModelTargetSupport {
         fileBuilder.appendLine("""
             import AWSCore
             import AWSHttp
-            import NIO
-            import AsyncHTTPClient
+            import ClientRuntime
             import Logging
             """)
         

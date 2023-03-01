@@ -32,6 +32,7 @@ where TargetSupportType: ModelTargetSupport {
     public let minimumCompilerSupport: MinimumCompilerSupport
     public let baseName: String
     public let signAllHeaders: Bool
+    public let awsCustomizations: AWSCodeGenerationCustomizations
     
     struct AWSClientFunction {
         let name: String
@@ -50,7 +51,8 @@ where TargetSupportType: ModelTargetSupport {
                 clientAttributes: AWSClientAttributes,
                 signAllHeaders: Bool,
                 asyncAwaitAPIs: CodeGenFeatureStatus,
-                eventLoopFutureClientAPIs: CodeGenFeatureStatus = .enabled,
+                awsCustomizations: AWSCodeGenerationCustomizations,
+                eventLoopFutureClientAPIs: CodeGenFeatureStatus = .disabled,
                 minimumCompilerSupport: MinimumCompilerSupport = .unknown) {
         let clientProtocol: String
         switch clientAttributes.contentType.contentTypeDefaultInputLocation {
@@ -69,6 +71,7 @@ where TargetSupportType: ModelTargetSupport {
         self.clientType = .struct(name: "AWS\(baseName)Client", genericParameters: genericParameters,
                                   conformingProtocolNames: ["\(baseName)ClientProtocol", clientProtocol])
         self.signAllHeaders = signAllHeaders
+        self.awsCustomizations = awsCustomizations
     }
     
     public func addTypeDescription(codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
@@ -106,7 +109,8 @@ where TargetSupportType: ModelTargetSupport {
                                     contentType: clientAttributes.contentType,
                                     sortedOperations: sortedOperations,
                                     defaultInvocationTraceContext: self.clientAttributes.defaultInvocationTraceContext,
-                                    entityType: entityType)
+                                    entityType: entityType,
+                                    awsCustomization: self.awsCustomizations)
     }
     
     public func addOperationBody(codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,

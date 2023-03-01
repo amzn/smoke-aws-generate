@@ -29,7 +29,8 @@ extension ModelClientDelegate {
                                      contentType: String,
                                      sortedOperations: [(String, OperationDescription)],
                                      defaultInvocationTraceContext: InvocationTraceContextDeclaration,
-                                     entityType: ClientEntityType) {
+                                     entityType: ClientEntityType,
+                                     awsCustomization: AWSCodeGenerationCustomizations) {
         addAWSClientInitializerAndMembers(fileBuilder: fileBuilder,
                                           baseName: baseName,
                                           clientAttributes: clientAttributes,
@@ -38,15 +39,8 @@ extension ModelClientDelegate {
                                           contentType: contentType,
                                           sortedOperations: sortedOperations,
                                           defaultInvocationTraceContext: defaultInvocationTraceContext,
-                                          entityType: entityType)
-        
-        addAWSClientDeinitializer(fileBuilder: fileBuilder,
-                                  baseName: baseName,
-                                  clientAttributes: clientAttributes,
-                                  codeGenerator: codeGenerator,
-                                  targetsAPIGateway: targetsAPIGateway,
-                                  contentType: contentType,
-                                  entityType: entityType)
+                                          entityType: entityType,
+                                          awsCustomization: awsCustomization)
         
         if entityType.isGenerator {
             addAWSClientGeneratorWithReporting(
@@ -68,17 +62,33 @@ extension ModelClientDelegate {
         if case .configurationObject = entityType {
             fileBuilder.appendLine("""
                 
-                internal func createHTTPOperationsClient(eventLoopOverride: EventLoop? = nil) -> HTTPOperationsClient {
+                internal func createHTTPOperationsClient() -> HTTPOperationsClient {
                     return HTTPOperationsClient(
                         endpointHostName: self.endpointHostName,
                         endpointPort: self.endpointPort,
                         contentType: self.contentType,
                         clientDelegate: self.clientDelegate,
-                        timeoutConfiguration: self.timeoutConfiguration,
-                        eventLoopProvider: .shared(eventLoopOverride ?? self.eventLoopGroup),
-                        connectionPoolConfiguration: self.connectionPoolConfiguration)
+                        runtimeConfig: self.runtimeConfig)
                 }
                 """)
+            
+            let httpClientConfiguration = codeGenerator.customizations.httpClientConfiguration
+            
+            httpClientConfiguration.additionalClients?.forEach { (key, value) in
+                let postfix = key.startingWithUppercase
+                
+                fileBuilder.appendLine("""
+                    
+                    internal func createHTTPOperationsClientFor\(postfix)() -> HTTPOperationsClient {
+                        return HTTPOperationsClient(
+                            endpointHostName: self.endpointHostName,
+                            endpointPort: self.endpointPort,
+                            contentType: self.contentType,
+                            clientDelegate: self.clientDelegateFor\(postfix),
+                            runtimeConfig: self.runtimeConfig)
+                    }
+                    """)
+            }
         }
     }
 }

@@ -170,7 +170,7 @@ extension ServiceModelCodeGenerator where TargetSupportType: ModelTargetSupport 
         case .codeGenModel:
             let awsModelErrorsDelegate = APIGatewayClientModelErrorsDelegate()
             
-            generateModelOperationsEnum()
+            generateModelOperationsEnum(delegate: awsModelErrorsDelegate)
             generateModelStructures()
             generateModelTypes()
             generateModelErrors(delegate: awsModelErrorsDelegate)

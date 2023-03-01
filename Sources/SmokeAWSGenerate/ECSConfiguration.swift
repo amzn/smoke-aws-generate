@@ -19,7 +19,9 @@ import Foundation
 import ServiceModelEntities
 
 internal struct ECSConfiguration {
-    static let modelOverride = ModelOverride<NoModelTypeOverrides>(fieldRawTypeOverride: ["Long": CommonConfiguration.intOverride])
+    static let modelOverride = ModelOverride<NoModelTypeOverrides>(
+        fieldRawTypeOverride: [Fields.timestamp.typeDescription: CommonConfiguration.integerDateOverride,
+                               "Long": CommonConfiguration.intOverride])
 
     static let httpClientConfiguration = HttpClientConfiguration(
         retryOnUnknownError: true,

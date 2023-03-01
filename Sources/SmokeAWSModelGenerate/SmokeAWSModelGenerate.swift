@@ -26,6 +26,7 @@ public struct SmokeAWSModelGenerate {
     public static func generateFromModel(
         modelFilePath: String,
         customizations: CodeGenerationCustomizations,
+        awsCustomizations: AWSCodeGenerationCustomizations,
         applicationDescription: ApplicationDescription,
         modelOverride: ModelOverride<NoModelTypeOverrides>?,
         signAllHeaders: Bool) throws
@@ -38,7 +39,11 @@ public struct SmokeAWSModelGenerate {
                 try codeGenerator.generateFromCoralToJSONServiceModel(
                     coralToJSONServiceModel: serviceModel,
                     asyncAwaitAPIs: customizations.asyncAwaitAPIs,
-                    signAllHeaders: signAllHeaders)
+                    eventLoopFutureClientAPIs: customizations.eventLoopFutureClientAPIs,
+                    minimumCompilerSupport: customizations.minimumCompilerSupport,
+                    clientConfigurationType: customizations.clientConfigurationType,
+                    signAllHeaders: signAllHeaders,
+                    awsCustomizations: awsCustomizations)
             }
     }
 }
@@ -48,34 +53,55 @@ extension ServiceModelCodeGenerator where TargetSupportType: ModelTargetSupport 
     func generateFromCoralToJSONServiceModel(
             coralToJSONServiceModel: CoralToJSONServiceModel,
             asyncAwaitAPIs: CodeGenFeatureStatus,
-            signAllHeaders: Bool) throws
+            eventLoopFutureClientAPIs: CodeGenFeatureStatus,
+            minimumCompilerSupport: MinimumCompilerSupport,
+            clientConfigurationType: ClientConfigurationType,
+            signAllHeaders: Bool,
+            awsCustomizations: AWSCodeGenerationCustomizations) throws
     where ModelType == CoralToJSONServiceModel {
         let awsClientAttributes = coralToJSONServiceModel.getAWSClientAttributes()
         
         let clientProtocolDelegate = ClientProtocolDelegate<CoralToJSONServiceModel, TargetSupportType>(
             baseName: applicationDescription.baseName,
-            asyncAwaitAPIs: asyncAwaitAPIs)
+            asyncAwaitAPIs: asyncAwaitAPIs,
+            eventLoopFutureClientAPIs: eventLoopFutureClientAPIs,
+            minimumCompilerSupport: minimumCompilerSupport)
         let mockClientDelegate = MockAWSClientDelegate<CoralToJSONServiceModel, TargetSupportType>(
             baseName: applicationDescription.baseName,
             isThrowingMock: false,
-            asyncAwaitAPIs: asyncAwaitAPIs)
+            asyncAwaitAPIs: asyncAwaitAPIs,
+            eventLoopFutureClientAPIs: eventLoopFutureClientAPIs,
+            minimumCompilerSupport: minimumCompilerSupport)
         let throwingClientDelegate = MockAWSClientDelegate<CoralToJSONServiceModel, TargetSupportType>(
             baseName: applicationDescription.baseName,
             isThrowingMock: true,
-            asyncAwaitAPIs: asyncAwaitAPIs)
+            asyncAwaitAPIs: asyncAwaitAPIs,
+            eventLoopFutureClientAPIs: eventLoopFutureClientAPIs,
+            minimumCompilerSupport: minimumCompilerSupport)
         let awsClientDelegate = AWSClientDelegate<CoralToJSONServiceModel, TargetSupportType>(
             baseName: applicationDescription.baseName,
             clientAttributes: awsClientAttributes,
             signAllHeaders: signAllHeaders,
-            asyncAwaitAPIs: asyncAwaitAPIs)
+            asyncAwaitAPIs: asyncAwaitAPIs,
+            awsCustomizations: awsCustomizations,
+            eventLoopFutureClientAPIs: eventLoopFutureClientAPIs,
+            minimumCompilerSupport: minimumCompilerSupport)
         let awsModelErrorsDelegate = AWSModelErrorsDelegate(awsClientAttributes: awsClientAttributes)
+        
+        let generatorFileType: ClientFileType
+        switch clientConfigurationType {
+        case .configurationObject:
+            generatorFileType = .clientConfiguration
+        case .generator:
+            generatorFileType = .clientGenerator
+        }
         
         generateAWSClient(delegate: clientProtocolDelegate, fileType: .clientImplementation)
         generateAWSClient(delegate: mockClientDelegate, fileType: .clientImplementation)
         generateAWSClient(delegate: throwingClientDelegate, fileType: .clientImplementation)
         generateAWSClient(delegate: awsClientDelegate, fileType: .clientImplementation)
-        generateAWSClient(delegate: awsClientDelegate, fileType: .clientGenerator)
-        generateModelOperationsEnum()
+        generateAWSClient(delegate: awsClientDelegate, fileType: generatorFileType)
+        generateModelOperationsEnum(delegate: awsModelErrorsDelegate)
         generateAWSOperationsReporting()
         generateAWSInvocationsReporting()
         generateModelOperationClientInput()

@@ -36,7 +36,8 @@ extension ModelClientDelegate {
                                            contentType: String,
                                            sortedOperations: [(String, OperationDescription)],
                                            defaultInvocationTraceContext: InvocationTraceContextDeclaration,
-                                           entityType: ClientEntityType) {
+                                           entityType: ClientEntityType,
+                                           awsCustomization: AWSCodeGenerationCustomizations) {
         let targetValue: String
         if let target = clientAttributes.target {
             targetValue = "\"\(target)\""
@@ -82,8 +83,12 @@ extension ModelClientDelegate {
             targetAssignmentFromConfig = "self.target = nil"
             targetAssignmentFromOperationsClient = "self.target = nil"
             
-            // use 'application/octet-stream' as the content type
-            contentTypeAssignment = "contentType: String = \"application/octet-stream\""
+            // use 'application/octet-stream' as the content type unless specified otherwise
+            if let contentTypeHeaderOverride = awsCustomization.contentTypeHeaderOverride {
+                contentTypeAssignment = "contentType: String = \"\(contentTypeHeaderOverride)\""
+            } else {
+                contentTypeAssignment = "contentType: String = \"application/octet-stream\""
+            }
         case .body:
             addAWSClientBodyMembers(
                 fileBuilder: fileBuilder, contentType: contentType, baseName: baseName,
@@ -98,7 +103,11 @@ extension ModelClientDelegate {
             targetAssignmentFromOperationsClient = "self.target = operationsClient.config.target"
             
             // use the content type from the client attributes as the default
-            contentTypeAssignment = "contentType: String = \"\(clientAttributes.contentType)\""
+            if let contentTypeHeaderOverride = awsCustomization.contentTypeHeaderOverride {
+                contentTypeAssignment = "contentType: String = \"\(contentTypeHeaderOverride)\""
+            } else {
+                contentTypeAssignment = "contentType: String = \"\(clientAttributes.contentType)\""
+            }
         }
         
         let initializerType: InitializerType
@@ -144,7 +153,7 @@ extension ModelClientDelegate {
             }
         }
         
-        addOperationsClientConfigInitializer(fileBuilder: fileBuilder, entityType: entityType)
+        addOperationsClientConfigInitializer(fileBuilder: fileBuilder, codeGenerator: codeGenerator, entityType: entityType)
         
         // if this is the client implementation where the configuration object and operations client are also
         // being generated. Add initializers create a client implementation from these types.
@@ -205,27 +214,50 @@ extension ModelClientDelegate {
     }
     
     private func addDefaultReportingTypeConfigurationObjectBody(fileBuilder: FileBuilder,
+                                                                contentType: String,
+                                                                targetsAPIGateway: Bool,
                                                                 defaultReportingType: InvocationTraceContextDeclaration) {
         fileBuilder.appendLine("""
             self.init(credentialsProvider: credentialsProvider,
                       awsRegion: awsRegion,
                       endpointHostName: endpointHostName,
-                      stage: stage,
+            """)
+        
+        if targetsAPIGateway {
+            fileBuilder.appendLine("""
+                        stage: stage,
+                """)
+        }
+        
+        fileBuilder.appendLine("""
                       endpointPort: endpointPort,
                       requiresTLS: requiresTLS,
                       service: service,
                       contentType: contentType,
-                      target: target,
+            """)
+        
+        // If this is a query, set the apiVersion
+        if case .query = contentType.contentTypeDefaultInputLocation {
+            fileBuilder.appendLine("""
+                          apiVersion: apiVersion,
+                """)
+        } else {
+            fileBuilder.appendLine("""
+                          target: target,
+                """)
+        }
+        
+        fileBuilder.appendLine("""
                       traceContext: \(defaultReportingType.name)(),
-                      timeoutConfiguration: timeoutConfiguration,
-                      connectionPoolConfiguration: connectionPoolConfiguration,
-                      retryConfiguration: retryConfiguration,
-                      eventLoopProvider: eventLoopProvider,
+                      runtimeConfig: runtimeConfig,
                       reportingConfiguration: reportingConfiguration)
             """)
     }
     
     private func addOperationClientInitializerBody(fileBuilder: FileBuilder,
+                                                   codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
+                                                   contentType: String,
+                                                   targetsAPIGateway: Bool,
                                                    configurationObjectName: String,
                                                    traceContextValue: String) {
         fileBuilder.appendLine("""
@@ -233,21 +265,50 @@ extension ModelClientDelegate {
                 credentialsProvider: credentialsProvider,
                 awsRegion: awsRegion,
                 endpointHostName: endpointHostName,
-                stage: stage,
+            """)
+        
+        if targetsAPIGateway {
+            fileBuilder.appendLine("""
+                        stage: stage,
+                """)
+        }
+        
+        fileBuilder.appendLine("""
                 endpointPort: endpointPort,
                 requiresTLS: requiresTLS,
                 service: service,
                 contentType: contentType,
-                target: target,
-                ignoreInvocationEventLoop: ignoreInvocationEventLoop,
+            """)
+        
+        // If this is a query, set the apiVersion
+        if case .query = contentType.contentTypeDefaultInputLocation {
+            fileBuilder.appendLine("""
+                    apiVersion: apiVersion,
+                """)
+        } else {
+            fileBuilder.appendLine("""
+                    target: target,
+                """)
+        }
+        
+        fileBuilder.appendLine("""
                 traceContext: \(traceContextValue),
-                timeoutConfiguration: timeoutConfiguration,
-                connectionPoolConfiguration: connectionPoolConfiguration,
+                runtimeConfig: runtimeConfig,
                 retryConfiguration: retryConfiguration,
-                eventLoopProvider: eventLoopProvider,
                 reportingConfiguration: reportingConfiguration)
             self.httpClient = self.config.createHTTPOperationsClient()
             """)
+        
+        let httpClientConfiguration = codeGenerator.customizations.httpClientConfiguration
+        
+        httpClientConfiguration.additionalClients?.forEach { (key, value) in
+            let variableName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
+            let postfix = key.startingWithUppercase
+            
+            fileBuilder.appendLine("""
+                self.\(variableName) = self.config.createHTTPOperationsClientFor\(postfix)()
+                """)
+        }
     }
     
     private func addAWSClientInitializerBody(
@@ -265,7 +326,8 @@ extension ModelClientDelegate {
         fileBuilder.incIndent()
                 
         if case .usesDefaultReportingType(let defaultReportingType) = initializerType, case .configurationObject = entityType {
-            addDefaultReportingTypeConfigurationObjectBody(fileBuilder: fileBuilder,
+            addDefaultReportingTypeConfigurationObjectBody(fileBuilder: fileBuilder, contentType: contentType,
+                                                           targetsAPIGateway: targetsAPIGateway,
                                                            defaultReportingType: defaultReportingType)
             fileBuilder.decIndent()
             return
@@ -277,45 +339,34 @@ extension ModelClientDelegate {
                 traceContextValue = "traceContext"
             }
             
-            addOperationClientInitializerBody(fileBuilder: fileBuilder,
+            addOperationClientInitializerBody(fileBuilder: fileBuilder, codeGenerator: codeGenerator,
+                                              contentType: contentType,
+                                              targetsAPIGateway: targetsAPIGateway,
                                               configurationObjectName: configurationObjectName,
                                               traceContextValue: traceContextValue)
             fileBuilder.decIndent()
             return
         }
                 
-        let connectionTimeoutEqualityLine: String
-        if case .standard = initializerType {
-            connectionTimeoutEqualityLine = "connectionTimeoutSeconds: connectionTimeoutSeconds"
-        } else {
-            connectionTimeoutEqualityLine = "timeoutConfiguration: timeoutConfiguration"
+        let statementType: DelegateStatementType
+        switch initializerType {
+        case .standard, .forGenerator, .copyInitializer, .usesDefaultReportingType:
+            statementType = .localVariable
+        case .genericTraceContextType:
+            statementType = .instanceVariableAssignment
+        case .traceContextTypeFromConfig, .traceContextTypeFromOperationsClient:
+            statementType = .fromConfig
         }
         
         if !initializerType.isCopyInitializer {
             switch initializerType {
             case .standard, .forGenerator, .copyInitializer, .genericTraceContextType, .usesDefaultReportingType:
                 fileBuilder.appendLine("""
-                    self.eventLoopGroup = AWSClientHelper.getEventLoop(eventLoopGroupProvider: eventLoopProvider)
                     let useTLS = requiresTLS ?? AWSHTTPClientDelegate.requiresTLS(forEndpointPort: endpointPort)
                     """)
-            case .traceContextTypeFromConfig:
-                fileBuilder.appendLine("""
-                    self.eventLoopGroup = eventLoop ?? config.eventLoopGroup
-                    """)
-            case .traceContextTypeFromOperationsClient:
-                fileBuilder.appendLine("""
-                    self.eventLoopGroup = eventLoop ?? operationsClient.config.eventLoopGroup
-                    """)
-            }
-            
-            let statementType: DelegateStatementType
-            switch initializerType {
-            case .standard, .forGenerator, .copyInitializer, .usesDefaultReportingType:
-                statementType = .localVariable
-            case .genericTraceContextType:
-                statementType = .instanceVariableAssignment
             case .traceContextTypeFromConfig, .traceContextTypeFromOperationsClient:
-                statementType = .fromConfig
+                // nothing to do
+                break
             }
             
             switch contentType.contentTypePayloadType {
@@ -334,8 +385,7 @@ extension ModelClientDelegate {
                     let reporting = StandardHTTPClientCoreInvocationReporting(
                         logger: logger,
                         internalRequestId: internalRequestId,
-                        traceContext: \(defaultInvocationTraceContext.name)(),
-                        eventLoop: self.eventLoopGroup.next())
+                        traceContext: \(defaultInvocationTraceContext.name)())
                     """)
             }
             
@@ -348,13 +398,11 @@ extension ModelClientDelegate {
                             endpointPort: endpointPort,
                             contentType: contentType,
                             clientDelegate: clientDelegate,
-                            \(connectionTimeoutEqualityLine),
-                            eventLoopProvider: .shared(self.eventLoopGroup),
-                            connectionPoolConfiguration: connectionPoolConfiguration)
+                            runtimeConfig: runtimeConfig)
                         """)
                 case .traceContextTypeFromConfig:
                     fileBuilder.appendLine("""
-                        self.httpClient = httpClient ?? config.createHTTPOperationsClient(eventLoopOverride: eventLoop)
+                        self.httpClient = httpClient ?? config.createHTTPOperationsClient()
                         """)
                 case .traceContextTypeFromOperationsClient:
                     fileBuilder.appendLine("""
@@ -364,7 +412,6 @@ extension ModelClientDelegate {
             }
         } else {
             fileBuilder.appendLine("""
-                self.eventLoopGroup = eventLoopGroup
                 self.httpClient = httpClient
                 """)
         }
@@ -372,30 +419,7 @@ extension ModelClientDelegate {
         if entityType.isGenerator || entityType.isClientImplementation {
             addAdditionalHttpClients(
                 httpClientConfiguration: httpClientConfiguration,
-                codeGenerator: codeGenerator, fileBuilder: fileBuilder, initializerType: initializerType,
-                connectionTimeoutEqualityLine: connectionTimeoutEqualityLine)
-            
-            switch initializerType {
-            case .standard, .copyInitializer, .genericTraceContextType, .usesDefaultReportingType:
-                fileBuilder.appendLine("""
-                    self.ownsHttpClients = \(String(describing: !initializerType.isCopyInitializer))
-                    """)
-            case .traceContextTypeFromConfig:
-                fileBuilder.appendLine("""
-                    if httpClient != nil {
-                        self.ownsHttpClients = false
-                    } else {
-                        self.ownsHttpClients = true
-                    }
-                    """)
-            case .traceContextTypeFromOperationsClient:
-                fileBuilder.appendLine("""
-                    self.ownsHttpClients = false
-                    """)
-            case .forGenerator:
-                break
-                //nothing to do
-            }
+                codeGenerator: codeGenerator, fileBuilder: fileBuilder, initializerType: initializerType)
         }
                 
         if case .genericTraceContextType = initializerType {
@@ -404,23 +428,26 @@ extension ModelClientDelegate {
                 self.endpointPort = endpointPort
                 self.contentType = contentType
                 self.traceContext = traceContext
-                self.timeoutConfiguration = timeoutConfiguration
-                self.connectionPoolConfiguration = connectionPoolConfiguration
+                self.runtimeConfig = runtimeConfig
                 """)
         }
                 
         let inputPrefix: String
+        let postfix: String
         switch initializerType {
         case .standard, .forGenerator, .copyInitializer, .genericTraceContextType, .usesDefaultReportingType:
             inputPrefix = ""
+            postfix = regionAssignmentPostfix
         case .traceContextTypeFromConfig:
             inputPrefix = "config."
+            postfix = ""
         case .traceContextTypeFromOperationsClient:
             inputPrefix = "operationsClient.config."
+            postfix = ""
         }
         
         fileBuilder.appendLine("""
-            self.awsRegion = \(inputPrefix)awsRegion\(regionAssignmentPostfix)
+            self.awsRegion = \(inputPrefix)awsRegion\(postfix)
             self.service = \(inputPrefix)service
             \(targetAssignment)
             self.credentialsProvider = \(inputPrefix)credentialsProvider
@@ -433,7 +460,6 @@ extension ModelClientDelegate {
                     logger: logger,
                     internalRequestId: internalRequestId,
                     traceContext: config.traceContext,
-                    eventLoop: eventLoop,
                     outwardsRequestAggregator: outwardsRequestAggregator)
                 """)
         } else if case .traceContextTypeFromOperationsClient = initializerType {
@@ -442,7 +468,6 @@ extension ModelClientDelegate {
                     logger: logger,
                     internalRequestId: internalRequestId,
                     traceContext: operationsClient.config.traceContext,
-                    eventLoop: eventLoop,
                     outwardsRequestAggregator: outwardsRequestAggregator)
                 """)
         } else if entityType.isClientImplementation {
@@ -480,14 +505,12 @@ extension ModelClientDelegate {
         if case .genericTraceContextType = initializerType {
             fileBuilder.appendLine("""
                 self.reportingConfiguration = reportingConfiguration
-                self.ignoreInvocationEventLoop = ignoreInvocationEventLoop
                                 
-                self.reportingProvider = { (logger, internalRequestId, eventLoop) in
+                self.reportingProvider = { (logger, internalRequestId) in
                     return StandardHTTPClientCoreInvocationReporting(
                         logger: logger,
                         internalRequestId: internalRequestId,
-                        traceContext: traceContext,
-                        eventLoop: eventLoop)
+                        traceContext: traceContext)
                 }
                 """)
         }
@@ -503,25 +526,35 @@ extension ModelClientDelegate {
     private func addAdditionalHttpClients(
             httpClientConfiguration: HttpClientConfiguration,
             codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
-            fileBuilder: FileBuilder, initializerType: InitializerType,
-            connectionTimeoutEqualityLine: String) {
+            fileBuilder: FileBuilder, initializerType: InitializerType) {
         httpClientConfiguration.additionalClients?.forEach { (key, _) in
             let variableName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
             
-            if !initializerType.isCopyInitializer {
+            switch initializerType {
+            case .standard, .forGenerator, .copyInitializer, .genericTraceContextType, .usesDefaultReportingType:
+                if !initializerType.isCopyInitializer {
+                    let postfix = key.startingWithUppercase
+                    fileBuilder.appendLine("""
+                        self.\(variableName) = HTTPOperationsClient(
+                            endpointHostName: endpointHostName,
+                            endpointPort: endpointPort,
+                            contentType: contentType,
+                            clientDelegate: clientDelegateFor\(postfix),
+                            runtimeConfig: runtimeConfig)
+                        """)
+                } else {
+                    fileBuilder.appendLine("""
+                        self.\(variableName) = \(variableName)
+                        """)
+                }
+            case .traceContextTypeFromConfig:
                 let postfix = key.startingWithUppercase
                 fileBuilder.appendLine("""
-                    self.\(variableName) = HTTPOperationsClient(
-                        endpointHostName: endpointHostName,
-                        endpointPort: endpointPort,
-                        contentType: contentType,
-                        clientDelegate: clientDelegateFor\(postfix),
-                        connectionTimeoutSeconds: connectionTimeoutSeconds,
-                        eventLoopProvider: .shared(self.eventLoopGroup))
+                    self.\(variableName) = \(variableName) ?? config.createHTTPOperationsClientFor\(postfix)()
                     """)
-            } else {
+            case .traceContextTypeFromOperationsClient:
                 fileBuilder.appendLine("""
-                    self.\(variableName) = \(variableName)
+                    self.\(variableName) = operationsClient.\(variableName)
                     """)
             }
         }
@@ -615,7 +648,7 @@ extension ModelClientDelegate {
             entityType: ClientEntityType) {
         if entityType.isClientImplementation || entityType.isGenerator {
             fileBuilder.appendLine("""
-                    let httpClient: HTTPOperationsClient
+                    public let httpClient: HTTPOperationsClient
                     """)
             
             httpClientConfiguration.additionalClients?.forEach { (key, _) in
@@ -629,7 +662,6 @@ extension ModelClientDelegate {
         switch entityType {
         case .clientImplementation:
             fileBuilder.appendLine("""
-                let ownsHttpClients: Bool
                 public let awsRegion: AWSRegion
                 public let service: String
                 public let apiVersion: String
@@ -643,8 +675,7 @@ extension ModelClientDelegate {
                 public let endpointHostName: String
                 public let endpointPort: Int
                 public let contentType: String
-                public let timeoutConfiguration: HTTPClient.Configuration.Timeout
-                public let connectionPoolConfiguration: HTTPClient.Configuration.ConnectionPool?
+                public let runtimeConfig: ClientRuntime.SDKRuntimeConfiguration
                 public let awsRegion: AWSRegion
                 public let service: String
                 public let apiVersion: String
@@ -652,7 +683,6 @@ extension ModelClientDelegate {
                 public let retryConfiguration: HTTPClientRetryConfiguration
                 public let traceContext: InvocationReportingType.TraceContextType
                 public let reportingConfiguration: HTTPClientReportingConfiguration<\(baseName)ModelOperations>
-                public let ignoreInvocationEventLoop: Bool
                 """)
         case .clientGenerator:
             fileBuilder.appendLine("""
@@ -670,13 +700,16 @@ extension ModelClientDelegate {
                 public let httpClient: HTTPOperationsClient
                 """)
             
+            httpClientConfiguration.additionalClients?.forEach { (key, _) in
+                let variableName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
+                
+                fileBuilder.appendLine("""
+                    public let \(variableName): HTTPOperationsClient
+                    """)
+            }
+            
             return
         }
-        
-        fileBuilder.appendLine("""
-
-            public let eventLoopGroup: EventLoopGroup
-            """)
         
         if case .clientImplementation = entityType {
             fileBuilder.appendLine("""
@@ -698,7 +731,7 @@ extension ModelClientDelegate {
             }
             
             fileBuilder.appendLine("""
-                internal let reportingProvider: (Logger, String, EventLoop?) -> InvocationReportingType
+                internal let reportingProvider: (Logger, String) -> InvocationReportingType
                 internal let credentialsProvider: CredentialsProvider
                 """)
         }
@@ -714,7 +747,7 @@ extension ModelClientDelegate {
             entityType: ClientEntityType) {
         if entityType.isClientImplementation || entityType.isGenerator {
             fileBuilder.appendLine("""
-                    let httpClient: HTTPOperationsClient
+                    public let httpClient: HTTPOperationsClient
                     """)
             
             httpClientConfiguration.additionalClients?.forEach { (key, _) in
@@ -728,7 +761,6 @@ extension ModelClientDelegate {
         switch entityType {
         case .clientImplementation:
             fileBuilder.appendLine("""
-                let ownsHttpClients: Bool
                 public let awsRegion: AWSRegion
                 public let service: String
                 public let target: String?
@@ -741,15 +773,13 @@ extension ModelClientDelegate {
                 public let endpointHostName: String
                 public let endpointPort: Int
                 public let contentType: String
-                public let timeoutConfiguration: HTTPClient.Configuration.Timeout
-                public let connectionPoolConfiguration: HTTPClient.Configuration.ConnectionPool?
+                public let runtimeConfig: ClientRuntime.SDKRuntimeConfiguration
                 public let awsRegion: AWSRegion
                 public let service: String
                 public let target: String?
                 public let retryConfiguration: HTTPClientRetryConfiguration
                 public let traceContext: InvocationReportingType.TraceContextType
                 public let reportingConfiguration: HTTPClientReportingConfiguration<\(baseName)ModelOperations>
-                public let ignoreInvocationEventLoop: Bool
                 """)
         case .clientGenerator:
             fileBuilder.appendLine("""
@@ -766,13 +796,16 @@ extension ModelClientDelegate {
                 public let httpClient: HTTPOperationsClient
                 """)
             
+            httpClientConfiguration.additionalClients?.forEach { (key, _) in
+                let variableName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
+                
+                fileBuilder.appendLine("""
+                    public let \(variableName): HTTPOperationsClient
+                    """)
+            }
+            
             return
         }
-        
-        fileBuilder.appendLine("""
-
-            public let eventLoopGroup: EventLoopGroup
-            """)
     
         if case .clientImplementation = entityType {
             fileBuilder.appendLine("""
@@ -801,7 +834,7 @@ extension ModelClientDelegate {
             }
             
             fileBuilder.appendLine("""
-                internal let reportingProvider: (Logger, String, EventLoop?) -> InvocationReportingType
+                internal let reportingProvider: (Logger, String) -> InvocationReportingType
                 internal let credentialsProvider: CredentialsProvider
                 """)
         }
@@ -829,8 +862,18 @@ extension ModelClientDelegate {
                     config: \(configurationObjectName)<StandardHTTPClientCoreInvocationReporting<TraceContextType>>,
                     logger: Logging.Logger = Logger(label: "\(baseName)Client"),
                     internalRequestId: String = "none",
-                    eventLoop: EventLoop? = nil,
                     httpClient: HTTPOperationsClient? = nil,
+                """)
+            
+            httpClientConfiguration.additionalClients?.forEach { (key, value) in
+                let variableName = codeGenerator.getNormalizedVariableName(modelTypeName: key)
+                
+                fileBuilder.appendLine("""
+                        \(variableName): HTTPOperationsClient? = nil,
+                    """)
+            }
+            
+            fileBuilder.appendLine("""
                     outwardsRequestAggregator: OutwardsRequestAggregator? = nil)
                 where InvocationReportingType == StandardHTTPClientCoreInvocationReporting<TraceContextType> {
                 """)
@@ -842,7 +885,6 @@ extension ModelClientDelegate {
                             operationsClient: \(operationsClientName)<StandardHTTPClientCoreInvocationReporting<TraceContextType>>,
                             logger: Logging.Logger = Logger(label: "\(baseName)Client"),
                             internalRequestId: String = "none",
-                            eventLoop: EventLoop? = nil,
                             outwardsRequestAggregator: OutwardsRequestAggregator? = nil)
                 where InvocationReportingType == StandardHTTPClientCoreInvocationReporting<TraceContextType> {
                 """)
@@ -918,13 +960,9 @@ extension ModelClientDelegate {
                 """)
             
             switch entityType {
-            case .clientImplementation, .clientGenerator:
+            case .clientImplementation, .clientGenerator, .configurationObject, .operationsClient:
                 // nothing to do
                 break
-            case .configurationObject, .operationsClient:
-                fileBuilder.appendLine("""
-                        ignoreInvocationEventLoop: Bool = false,
-                """)
             }
             
             if !entityType.isClientImplementation && !entityType.isGenerator {
@@ -933,26 +971,11 @@ extension ModelClientDelegate {
                                     traceContext: TraceContextType,
                         """)
                 }
-                
-                fileBuilder.appendLine("""
-                                timeoutConfiguration: HTTPClient.Configuration.Timeout = .init(),
-                    """)
-            } else {
-                if case .standard = initializerType {
-                    fileBuilder.appendLine("""
-                                    connectionTimeoutSeconds: Int64 = 10,
-                        """)
-                } else {
-                    fileBuilder.appendLine("""
-                                    timeoutConfiguration: HTTPClient.Configuration.Timeout = .init(),
-                        """)
-                }
             }
             
             fileBuilder.appendLine("""
-                            connectionPoolConfiguration: HTTPClient.Configuration.ConnectionPool? = nil,
+                            runtimeConfig: ClientRuntime.SDKRuntimeConfiguration,
                             retryConfiguration: HTTPClientRetryConfiguration = .default,
-                            eventLoopProvider: HTTPClient.EventLoopGroupProvider = .createNew,
                             reportingConfiguration: HTTPClientReportingConfiguration<\(baseName)ModelOperations>
                 """)
             
@@ -981,7 +1004,6 @@ extension ModelClientDelegate {
             fileBuilder.appendLine("""
                         service: String,
                         \(targetOrVersionParameter),
-                        eventLoopGroup: EventLoopGroup,
                         retryOnErrorProvider: @escaping (SmokeHTTPClient.HTTPClientError) -> Bool,
                         retryConfiguration: HTTPClientRetryConfiguration,
                         operationsReporting: \(baseName)OperationsReporting) {
