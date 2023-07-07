@@ -23,7 +23,7 @@ internal struct ECRConfiguration {
     static let modelOverride = ModelOverride(
         enumerations: EnumerationNaming(usingUpperCamelCase: ["ImageFailureCode", "LayerFailureCode"]),
         fieldRawTypeOverride:
-            [Fields.timestamp.typeDescription: CommonConfiguration.longDateOverride])
+            [Fields.timestamp.typeDescription: CommonConfiguration.integerDateOverride])
     
     static let httpClientConfiguration = HttpClientConfiguration(
         retryOnUnknownError: true,
