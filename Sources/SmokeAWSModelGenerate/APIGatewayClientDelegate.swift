@@ -180,11 +180,26 @@ where TargetSupportType: ModelTargetSupport {
         case .asyncFunction:
             callPrefix = "try await "
         }
+                
+        fileBuilder.appendLine("""
+            let stagePrefix: String
+            if let stage = stage { stagePrefix = "/\\(stage)"; } else { stagePrefix = ""; }
+            """)
+                
+        let postfix: String
+        if case .asyncFunction = invokeType {
+            fileBuilder.appendLine("""
+                do {
+                """)
+            fileBuilder.incIndent()
+            
+            postfix = ""
+        } else {
+            postfix = ".flatMapErrorThrowing { error in"
+        }
         
         if function.outputType != nil {
             fileBuilder.appendLine("""
-                let stagePrefix: String
-                if let stage = stage { stagePrefix = "/\\(stage)"; } else { stagePrefix = ""; }
                 return \(callPrefix)executeWithOutput(
                     httpClient: \(httpClientName),
                     endpointPath: stagePrefix + \(baseName)ModelOperations.\(function.name).operationPath,
@@ -201,12 +216,10 @@ where TargetSupportType: ModelTargetSupport {
             }
             
             fileBuilder.appendLine("""
-                    errorType: \(baseName)Error.self)
+                    errorType: \(baseName)Error.self)\(postfix)
                 """)
         } else {
             fileBuilder.appendLine("""
-                let stagePrefix: String
-                if let stage = stage { stagePrefix = "/\\(stage)"; } else { stagePrefix = ""; }
                 return \(callPrefix)executeWithoutOutput(
                     httpClient: \(httpClientName),
                     endpointPath: stagePrefix + \(baseName)ModelOperations.\(function.name).operationPath,
@@ -223,8 +236,28 @@ where TargetSupportType: ModelTargetSupport {
             }
             
             fileBuilder.appendLine("""
-                    errorType: \(baseName)Error.self)
+                    errorType: \(baseName)Error.self)\(postfix)
                 """)
+        }
+                
+        if case .asyncFunction = invokeType {
+            fileBuilder.decIndent()
+            fileBuilder.appendLine("""
+                } catch HTTPError.deserializationError(cause: let cause) {
+                    throw \(baseName)UnmodeledError.deserializationError(cause: cause)
+                }
+                """)
+        } else {
+            fileBuilder.incIndent()
+            fileBuilder.appendLine("""
+                    if let httpError = error as? HTTPError, case .deserializationError(cause: let cause) = httpError {
+                        throw \(baseName)UnmodeledError.deserializationError(cause: cause)
+                    }
+                
+                    throw error
+                }
+                """)
+            fileBuilder.decIndent()
         }
         
         fileBuilder.appendLine("}", preDec: true)
