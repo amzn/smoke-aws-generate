@@ -23,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/amzn/service-model-swift-code-generate.git",
       "state" : {
-        "revision" : "b9d45b4d05196c26247d4bd3aca83c1e53eed72c",
-        "version" : "3.0.2"
+        "revision" : "2f4352075991d3f9b4b1a9a1075bf5e142e5a39e",
+        "version" : "3.1.0"
       }
     },
     {
