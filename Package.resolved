@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/amzn/openapi-swift-code-generate.git",
       "state" : {
-        "revision" : "9ac750f50061f9046d6dbdf71fe064234f4ed099",
-        "version" : "1.0.1"
+        "revision" : "c89614f73d55fb76d7e9d7c52149e86f61cd4a6b",
+        "version" : "2.0.0"
       }
     },
     {
@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/mattpolzin/OpenAPIKit.git",
       "state" : {
-        "revision" : "d40e6c3d57b1b27ac2114861d5a83cf8ee9d206d",
-        "version" : "3.0.0-alpha.6"
+        "revision" : "e805233e54afd394937cecb0a28e575b3388f60f",
+        "version" : "3.0.0-alpha.9"
       }
     },
     {
