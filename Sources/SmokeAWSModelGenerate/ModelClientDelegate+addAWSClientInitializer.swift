@@ -614,7 +614,7 @@ extension ModelClientDelegate {
             codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
             entityType: ClientEntityType) {
         fileBuilder.appendLine("""
-            let clientName = \(baseName)Client
+            let clientName = "\(baseName)Client"
             """)
                 
         if entityType.isClientImplementation || entityType.isGenerator {
@@ -717,7 +717,7 @@ extension ModelClientDelegate {
             targetsAPIGateway: Bool,
             entityType: ClientEntityType) {
         fileBuilder.appendLine("""
-            let clientName = \(baseName)Client
+            let clientName = "\(baseName)Client"
             """)
                 
         if entityType.isClientImplementation || entityType.isGenerator {
@@ -960,7 +960,7 @@ extension ModelClientDelegate {
             fileBuilder.appendLine("""
                             connectionPoolConfiguration: HTTPClient.Configuration.ConnectionPool? = nil,
                             retryConfiguration: HTTPClientRetryConfiguration = .default,
-                            eventLoopProvider: HTTPClient.EventLoopGroupProvider = .createNew,
+                            eventLoopProvider: HTTPClient.EventLoopGroupProvider = .singleton,
                             reportingConfiguration: HTTPClientReportingConfiguration<\(baseName)ModelOperations>
                 """)
             
