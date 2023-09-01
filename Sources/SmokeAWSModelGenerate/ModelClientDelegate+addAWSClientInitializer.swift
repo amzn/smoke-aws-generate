@@ -613,9 +613,11 @@ extension ModelClientDelegate {
             httpClientConfiguration: HttpClientConfiguration,
             codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
             entityType: ClientEntityType) {
-        fileBuilder.appendLine("""
-            public let clientName = "\(baseName)Client"
-            """)
+        if entityType.isClientImplementation {
+            fileBuilder.appendLine("""
+                public let clientName = "\(baseName)Client"
+                """)
+        }
                 
         if entityType.isClientImplementation || entityType.isGenerator {
             fileBuilder.appendLine("""
@@ -716,9 +718,11 @@ extension ModelClientDelegate {
             codeGenerator: ServiceModelCodeGenerator<ModelType, TargetSupportType>,
             targetsAPIGateway: Bool,
             entityType: ClientEntityType) {
-        fileBuilder.appendLine("""
-            public let clientName = "\(baseName)Client"
-            """)
+        if entityType.isClientImplementation {
+            fileBuilder.appendLine("""
+                public let clientName = "\(baseName)Client"
+                """)
+        }
                 
         if entityType.isClientImplementation || entityType.isGenerator {
             fileBuilder.appendLine("""
