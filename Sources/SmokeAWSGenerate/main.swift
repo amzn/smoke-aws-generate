@@ -36,7 +36,7 @@ struct CommonConfiguration {
 }
 
 var isUsage = CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--help"
-let goRepositoryTag = "v1.44.174"
+let goRepositoryTag = "v1.46.5"
 
 let fileHeader = """
     // Copyright 2018-2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -386,6 +386,7 @@ func handleApplication() throws {
         //CodeBuildConfiguration.serviceModelDetails,
         CodePipelineConfiguration.serviceModelDetails,
         ECRConfiguration.serviceModelDetails,
+        SchedulerConfiguration.serviceModelDetails,
         AppConfigConfiguration.serviceModelDetails]
     
     var baseFilePath: String?
