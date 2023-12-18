@@ -30,9 +30,19 @@ internal extension AWSClientDelegate {
         fileBuilder.incIndent()
         
         let typeName = function.name.getNormalizedTypeName(forModel: codeGenerator.model)
+                
+        let initializerPrefix: String
+        let initializerPostfix: String
+        if case .asyncFunction = invokeType {
+            initializerPrefix = "try await "
+            initializerPostfix = ".get"
+        } else {
+            initializerPrefix = ""
+            initializerPostfix = ""
+        }
         
         fileBuilder.appendLine("""
-            let handlerDelegate = AWSClientInvocationDelegate(
+            let handlerDelegate = \(initializerPrefix)AWSClientInvocationDelegate\(initializerPostfix)(
                         credentialsProvider: credentialsProvider,
                         awsRegion: awsRegion,
                         service: service,

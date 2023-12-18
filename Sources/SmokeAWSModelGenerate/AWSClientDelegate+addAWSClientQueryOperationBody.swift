@@ -39,8 +39,18 @@ internal extension AWSClientDelegate {
             wrappedTypeDeclaration = "NoHTTPRequestInput(encodable: input)"
         }
         
+        let initializerPrefix: String
+        let initializerPostfix: String
+        if case .asyncFunction = invokeType {
+            initializerPrefix = "try await "
+            initializerPostfix = ".get"
+        } else {
+            initializerPrefix = ""
+            initializerPostfix = ""
+        }
+        
         fileBuilder.appendLine("""
-            let handlerDelegate = AWSClientInvocationDelegate(
+            let handlerDelegate = \(initializerPrefix)AWSClientInvocationDelegate\(initializerPostfix)(
                         credentialsProvider: credentialsProvider,
                         awsRegion: awsRegion,
                         service: service,
