@@ -17,21 +17,27 @@
 
 import Foundation
 import ServiceModelEntities
+import SmokeAWSModelGenerate
 
 internal struct CloudwatchConfiguration {
-    static let modelOverride = ModelOverride(fieldRawTypeOverride: ["Long": CommonConfiguration.intOverride])
-    
+    static let modelOverride = ModelOverride(
+        fieldRawTypeOverride: ["Long": CommonConfiguration.intOverride],
+        additionalErrors: ["ThrottlingException"])
+
     static let httpClientConfiguration = HttpClientConfiguration(
         retryOnUnknownError: true,
         knownErrorsDefaultRetryBehavior: .fail,
         unretriableUnknownErrors: [],
-        retriableUnknownErrors: ["LimitExceededFault", "LimitExceededException"],
+        retriableUnknownErrors: ["LimitExceededFault", "LimitExceededException", "ThrottlingException"],
+        clientDelegateNameOverride: "FormEncodedXMLAWSHttpClientDelegate",
         clientDelegateParameters: ["outputListDecodingStrategy: .collapseListUsingItemTag(\"member\")",
                                    "inputQueryListEncodingStrategy: .expandListWithIndexAndItemTag(itemTag: \"member\")"])
-    
+
     static let serviceModelDetails = ServiceModelDetails(
         serviceName: "monitoring", serviceVersion: "2010-08-01",
         baseName: "CloudWatch", modelOverride: modelOverride,
         httpClientConfiguration: httpClientConfiguration,
-        signAllHeaders: false)
+        signAllHeaders: false,
+        awsCodeGenerationCustomizations: AWSCodeGenerationCustomizations(
+            contentTypeHeaderOverride: "application/x-www-form-urlencoded; charset=utf-8"))
 }
