@@ -6,13 +6,13 @@
         "repositoryURL": "https://github.com/amzn/service-model-swift-code-generate.git",
         "state": {
           "branch": null,
-          "revision": "40631a9fbcab5b7ac889b3d891923410a428d364",
-          "version": "2.6.0"
+          "revision": "5a6882138c61f23fc343405e8ad70c8b71b5c219",
+          "version": "2.6.1"
         }
       },
       {
         "package": "SwaggerParser",
-        "repositoryURL": "https://github.com/tachyonics/SwaggerParser.git",
+        "repositoryURL": "https://github.com/knovichikhin/SwaggerParser.git",
         "state": {
           "branch": null,
           "revision": "c0eb70485c59a9d7dd6765dcd303b49fdb3040ee",
