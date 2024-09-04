@@ -37,7 +37,8 @@ internal struct SNSConfiguration {
                              "PlatformApplicationDisabledException.message": "Message",
                              "SubscriptionLimitExceededException.message": "Message",
                              "ThrottledException.message": "Message",
-                             "TopicLimitExceededException.message": "Message"])
+                             "TopicLimitExceededException.message": "Message"],
+        additionalErrors: ["Throttling"])
     
     static let httpClientConfiguration = HttpClientConfiguration(
         retryOnUnknownError: true,
@@ -45,7 +46,7 @@ internal struct SNSConfiguration {
         unretriableUnknownErrors: [],
         retriableUnknownErrors: ["FilterPolicyLimitExceededException", "KMSThrottlingException",
                                  "SubscriptionLimitExceededException", "ThrottledException",
-                                 "TopicLimitExceededException"],
+                                 "TopicLimitExceededException", "Throttling"],
         clientDelegateNameOverride: "FormEncodedXMLAWSHttpClientDelegate")
     
     static let serviceModelDetails = ServiceModelDetails(
